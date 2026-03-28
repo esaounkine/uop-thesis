@@ -1,0 +1,28 @@
+.env
+.env.*
+*.iml
+.idea
+.vscode
+
+.tool-versions
+
+# npm/yarn
+node_modules/
+.yarn
+yarn-error.log
+
+# typescript output
+dist/
+
+# vim
+.*.swp
+
+# test
+out/
+coverage/
+
+# nyc
+/.nyc_output
+
+db-data/*
+.DS_Store
