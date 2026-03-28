@@ -1,0 +1,340 @@
+% !TEX encoding = UTF-8 Unicode
+% !TEX root =  ../main.tex
+
+\chapterr{Σχετικά συστήματα και εργασίες}
+
+% do not leave it empty after \chapterr, it crashes compilation, at least an empty line is enough
+
+Στο κεφάλαιο αυτό θα περιγράψουμε σχετικά συστήματα και εργασίες με το θέμα της εργασίας. Το πιο σχετικό εργαλείο είναι αυτό της συγγραφής της. Κατά συνέπεια θα ξεκινήσουμε με παραδείγματα χρήσης του \LaTeX.
+
+\section{Γράφοντας όμορφες εργασίες: \LaTeX}
+
+Το σύστημα επεξεργασίας κειμένων \emph{\LaTeX} \cite{Lamport86} είναι βασισμένο στο σύστημα \emph{\TeX} του \href{https://en.wikipedia.org/wiki/Donald_Knuth}{Donald Knuth}. Το μεγάλο πλεονέκτημα του {\LaTeX} είναι ότι ο χρήστης του επικεντρώνεται στο περιεχόμενο και όχι στην παρουσίασή του. 
+
+Το πως εμφανίζεται το περιεχόμενο καθορίζεται από το στυλ (class στην ορολογία του \LaTeX) που χρησιμοποιούμε και γενικά έχουμε ελάχιστη (συνήθως καμία) δυνατότητα μεταβολής του. Αυτό μας επιτρέπει (ή ακόμα και επιβάλει) να εστιάσουμε στο περιεχόμενο (δηλαδή σε αυτά που γράφουμε) καθώς το πως θα εμφανιστούν δεν εξαρτάται από εμάς αλλά βασίζονται στο στυλ που έχουμε υιοθετήσει.
+
+Ο καθορισμός του στυλ που θα παρουσιάζονται τα κείμενά μας γίνεται στην αρχή του κειμένου με τις ειδικές εντολές \texttt{documentclass} και \texttt{usepackage}. Σε αυτές καθορίζονται όλες οι αισθητικές πληροφορίες για το κείμενο (π.χ., το μέγεθος και ο τύπος των γραμματοσειρών, τα περιθώρια, τα διαστήματα). Η εναλλαγή από το ένα στυλ του {\LaTeX} σε κάποιο άλλο είναι τόσο απλό όσο να αλλάξεις μια εντολή  \texttt{documentclass} ή \texttt{usepackage}. 
+
+
+\begin{theorem}
+Με το \emph{\LaTeX} \cite{Lamport86} τα κείμενά σας είναι: 
+\begin{enumerate}
+\item
+πιο όμορφα και 
+\item
+γράφονται πιο γρήγορα.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+Για να το (1) αρκεί να δείτε μια εργασία σε {\LaTeX} και την εργασία με το ίδιο περιεχόμενο σε ένα άλλο σύστημα επεξεργασίας κειμένου.  Το (2) θα το διαπιστώσετε αφού διαβάσετε αυτό το κείμενο και κάνετε την πρώτη σας εργασία. 
+\end{proof}
+
+Χρησιμοποιώντας το {\LaTeX} τα διαδικαστικά της συγγραφής γίνονται πολύ εύκολα. Για παράδειγμα:
+\begin{enumerate}
+\item
+Πίνακας περιεχομένων, σχημάτων κλπ. γίνεται με μια γραμμή (\texttt{{\textbackslash}tableofcontents}) και κυρίως ενημερώνεται αυτόματα.
+\item
+Η αρίθμηση των ενοτήτων, υποενοτήτων, σχημάτων, ορισμών, θεωρημάτων, εικόνων κλπ.\ γίνεται αυτόματα και χωρίς λάθη.
+\item
+Μπορείς να γράψεις πολύπλοκες μαθηματικές εκφράσεις με πολύ εύκολο τρόπο, να τις αντιγράψεις και να τις επαναχρησιμοποιήσεις.
+\item
+Μπορείτε να αναφέρεστε σε ενότητες, υποενότητες, σχήματα, ορισμούς, θεωρήματα, εικόνες, κλπ.\ να αριθμούνται αυτόματα και οποιαδήποτε εισαγωγή ή αναφορά να ενημερώνεται αυτόματα και να διατηρείται συνεπές το κείμενο.  
+\item
+Μπορείτε να εισάγετε κώδικα και αυτόματα να χρωματίσει τις δεσμευμένες λέξεις. 
+\end{enumerate}
+
+%
+%%
+%
+\section{Δομή ενός αρχείου σε \LaTeX}
+
+Οι εντολές σε {\LaTeX} ξεκινούν με το χαρακτήρα \textbackslash. Για παράδειγμα με την εντολή \texttt{{\textbackslash}LaTeX} παράγεται το λογότυπό του \LaTeX.
+
+Η πρώτη εντολή του αρχείου σας ορίζει το στυλ καθώς και χρήσιμες παραμέτρους. Για παράδειγμα η παρακάτω εντολή ορίζει ένα κείμενο σε στυλ \texttt{article}, σε σελίδα \texttt{A4} και με μέγεθος βασικού κειμένου \texttt{11} σημεία.
+\begin{latex}
+\documentclass[a4paper,11pt]{article}
+\end{latex}
+
+
+Στην συνέχεια οι ενότητες ορίζονται με την εντολή \texttt{{\textbackslash}section}. Για παράδειγμα η τρέχουσα ενότητα ορίστηκε με την εντολή: 
+\begin{verbatim}
+\section{Δομή ενός αρχείου σε \LaTeX}
+\end{verbatim}
+Αντίστοιχα ορίζουμε τις υποενότητες, τις υπό-υποενότητες κ.ο.κ.:
+\begin{latex}
+\subsection{A subsection}
+Some text
+\subsubsection{A sub-subsection}
+Some more text
+\paragraph{A sub-sub-subsection, just to highlight paragraphs}
+Some more text
+\end{latex}
+
+Δείτε παραδείγματα στην Ενότητα \ref{sec:examples}.
+
+%
+%%
+%
+\section{Παραδείγματα χρήσης}\label{sec:examples}
+
+Στις ακόλουθες ενότητες παρουσιάζουμε παραδείγματα χρήσης του \LaTeX.
+
+%
+%
+\subsection{Ορισμοί, θεωρήματα, αποδείξεις}\label{sec:definitions}
+
+\begin{definition}\label{def:myfirstdef}
+Το σύστημα επεξεργασία κειμένων \emph{\LaTeX} \cite{Lamport86} είναι βασισμένο στο σύστημα \emph{\TeX} του Knuth.
+\end{definition}
+
+\begin{theorem}\label{the:myfirsttheorem}
+Ένα θεώρημα
+\end{theorem}
+
+\begin{proof}\label{the:myfirstproof}
+Μία απόδειξη. 
+\end{proof}
+
+%
+%
+\subsection{Αναφορές}\label{sec:references}
+Παρατηρήστε ότι στην δήλωση κάθε ενότητας, ορισμού, θεωρήματα, κ.λ.π. μπορούμε να ορίσουμε μια πινακίδα, π.χ.:
+\begin{verbatim}
+\section{Παραδείγματα χρήσης}\label{sec:examples}
+\end{verbatim}
+και στο κείμενο να αναφερόμαστε χρησιμοποιώντας την πινακίδα. π.χ.:
+\begin{verbatim}
+όπως είδαμε στην Ενότητα \ref{sec:examples}
+\end{verbatim}
+
+Ο αριθμός του στοιχείου θα εκτυπώνεται και κυρίως θα ενημερώνεται αυτόματα. Π.χ., «Όπως αναλύσαμε στην Ενότητα \ref{sec:examples} και στον Ορισμό \ref{def:myfirstdef}». 
+ 
+
+%
+%
+\subsubsection{Βιβλιογραφικές αναφορές}\label{sec:cite}
+Όλες οι αναφορές γράφονται στο αρχείο sample.bib. Δείτε το την δομή του στα αρχεία που σας δώσαμε. Κάθε βιβλιογραφική αναφορά έχει ένα κωδικό, π.χ., Lamport86, και για να αναφερθείτε σε αυτή χρησιμοποιείτε την εντολή:
+\begin{verbatim}
+\cite{Lamport86}
+\end{verbatim}
+Για παράδειγμα: Ο πατέρας του {\LaTeX} είναι ο L.\ Lamport \cite{Lamport86}.
+
+%
+%
+\subsection{Πίνακες}
+
+Παραθέτουμε ένα παραδείγματα πίνακα στον Πίνακα \ref{tab:example}. Προσέξτε την αυτόματη εναλλαγή χρωμάτων.
+
+\begin{table}
+\centering
+\rowcolors{1}{}{lightgray}
+\begin{tabular}{|c|r|l|}\hline
+\rowcolor{gray}
+Στο κέντρο & Δεξιά & Αριστερά \\\hline\hline
+    1000 & 1000 & 1000 \\\hline
+    100 & 100 & 100 \\ \hline
+    10 & 10 & 10 \\ \hline
+\end{tabular}
+\caption{Ένα παράδειγμα πίνακα: Προσέξτε την αυτόματη εναλλαγή χρωμάτων.}
+\label{tab:example}
+\end{table}
+
+
+
+%
+%
+\subsection{Σύνδεσμοι}
+
+Μερικά παραδείγματα συνδέσμων: \url{http://www.latex-tutorial.com}, \href{mailto:sss@uop.gr}{email} και \href{https://teams.microsoft.com/}{teams}.
+
+
+%
+%
+\subsection{Κώδικας}
+Κώδικας σε SQL:
+\begin{SQLcode}
+SELECT max(diff([arrtime,arrday],[deptime,depday])),
+	   avg(diff([arrtime,arrday],[deptime,depday]))
+FROM route
+GROUP BY sid
+\end{SQLcode}
+
+%Κώδικας σε python:
+%\begin{lstlisting}[language=python]
+%class MyClass(Yourclass):
+%    def __init__(self, test):
+%        self.test = test
+%\end{lstlisting}
+
+Κώδικας σε C:
+\begin{lstlisting}[language=C]
+#include <stdio.h>
+int main() {
+   // printf() displays the string
+   printf("Hello, World!");
+   return 0;
+}
+\end{lstlisting}
+
+Δείτε ότι τα χρώματα έχουν μπει αυτόματα! 
+
+%
+%
+\subsection{Αλγόριθμος}
+
+Ο Αλγόριθμος \textsc{First} παρουσιάζεται στο Σχήμα \ref{alg:first}. O πιο σύνθετος Αλγόριθμος \textsc{Incremental} παρουσιάζεται στο Σχήμα \ref{alg:INCR-BC}.
+
+ \begin{algorithm}[t]
+ \Algorithm{\textsc{First}}
+% \scriptsize
+ \BlankLine
+
+ $T' =T$ \Comment{Initialize output}
+ \For{$i=1$ \KwTo $m$} {
+ a
+ }
+
+ \For(\tcp*[h]{test if $C'=C_i$}){$i=1$ to $t$}{ \label{alg:tCM:for}%
+ a
+ }
+\caption{Ο πρώτος μου αλγόριθμος}
+\label{alg:first}
+ \end{algorithm}
+
+\begin{algorithm}[t]
+\DontPrintSemicolon
+\Algorithm{\textsc{Incremental}}
+\small
+\BlankLine
+\KwIn{Graph $G(V,E)$, the betweenness centrality values $C_{G}$ of $G$ and new edge $e\in V{\times} V$.\\
+}
+\KwOut{The betweenness centrality values $C_{G'}$ of graph $G'$ that is constructed by inserting edge $e$ to graph $G$.}
+
+\BlankLine
+Find the biconnected components of $G'$\label{alg:INCR-comp}\;
+Let $\mathcal{B}'_e(V_{\mathcal{B}'_e}, E_{B'_e})$ be the biconnected component of $G'$ that edge $e$ belongs to \label{alg:INCR-affected}\;
+Let $B_e(V_{B_e}, E_{B_e})$ be $B'_e(V_{B'_e}, E_{B'_e} - \{e\})$ \label{alg:INCR-orig}\;
+Let $Q$ be the set that contains the nodes of $V_{B'_e}$ for which values $s{s}(v)$ change due to $e$'s insertion\label{alg:INCR-Q}\;
+\For{all nodes $s$ of $Q$\label{alg:INCR-for}} {
+		Perform breadth-first search and reverse breadth-first search in the DAG of $s$ in $B_e$ to compute $s{s}(v)$ for all $v\in V_{B_e}$.\label{alg:INCR-sdep}\;
+		Perform partial breadth-first search and reverse breadth-first search in the DAG of $s$ in $B'_e$ to compute $sn{s}(v)$ for all $v\in V_{B'_e}$.\label{alg:INCR-sdepn}\;
+}
+
+%\For(\tcp*[h]{{Use Theorem \ref{the:icentral_bcc}}}){all nodes $v$ of $V_{B'_e}$} {
+\For{all nodes $v$ of $V_{B'_e}$\label{alg:INCR-for2}} {
+Update $BC_{G'}[v]$ 
+%using the equation in Theorem \ref{the:icentral_bcc}
+\label{alg:INCR-BC}
+
+}
+\Return $BC_{G'}$
+\caption{Ένας πιο σύνθετος αλγόριθμος}
+\end{algorithm}
+
+%
+%
+\subsection{Μαθηματικά}
+Μαθηματικά μπορείτε να γράψετε σε ξεχωριστή γραμμή:
+\[ x^n + y^n = z^n \]
+αλλά και μέσα στην παράγραφο $x^n + y^n = z^n$.
+
+%
+\subsubsection{Μαθηματικά}
+Μερικά ακόμα παραδείγματα χρήσης μαθηματικών:
+\[\left\{
+\begin{array}{r@{\:=\:}ll}
+A & 1\\
+B & 2\\
+  f(x) & x^2\\
+  g(x) & \frac{1}{x}\\
+  F(x) & \int^a_b \frac{1}{3}x^3
+\end{array}
+\right.
+\]
+
+%
+%
+\section{Εικόνες}
+
+Παράδειγμα εικόνας με το σύμβολο του πανεπιστημίου εμφανίζεται στο Σχήμα \ref{fig:pelopas}.
+\begin{figure}[t]
+\centering
+\includegraphics[scale=1]{figures/example}
+\caption{Και ο Πέλοπας}
+\label{fig:pelopas}
+\end{figure}
+
+
+%
+%
+\section{Γενικά σχόλια για τα κείμενά σας}
+
+Γενικά το κείμενό σας πρέπει να είναι στοιχισμένο και στα δύο περιθώρια της σελίδας (justified). Εξαιρέσεις υπάρχουν, π.χ., όταν παρουσιάζετε κώδικα ή ποιήματα. Ακόμα:
+
+\begin{enumerate}
+\item
+Χρησιμοποιήστε γραμματοσειρές με μέγεθος 11 ή 12 σημεία (pt). Όχι μεγαλύτερες. 
+
+\item
+Να αριθμείτε τις ενότητες, υποενότητες, κλπ. του κειμένου σας.
+
+\item
+Όταν αναφέρεστε σε κεφάλαιο, ενότητα, σχήμα, πίνακα κ.λ.π. και ακολουθείται από αριθμό το γράφετε με κεφαλαίο. Π.χ., στο Κεφάλαιο 3, στην Ενότητα 3.2, στο Σχήμα 12. 
+
+Αν δεν υπάρχει αριθμός το γράφετε με μικρό, π.χ., όπως είδαμε στο προηγούμενο κεφάλαιο.
+
+\item
+Τα σχήματα, οι πίνακες, ο κώδικας μπαίνει πάντα στην κορυφή της σελίδας με αναφορά στο κείμενο. Δεν γράφεται «όπως βλέπουμε στο παρακάτω σχήμα» αλλά «όπως παρουσιάζεται στο Σχήμα \ref{fig:pelopas}»
+
+Σε {\LaTeX}  τα σχήματα, οι πίνακες κλπ. μπαίνουν στο αντίστοιχο περιβάλλον. Για παράδειγμα το Σχήμα \ref{fig:pelopas} παράχθηκε ως εξής:
+
+\begin{verbatim}
+\begin{figure}[t]
+\centering
+\includegraphics[scale=1]{figures/example}
+\caption{Και ο Πέλοπας}
+\label{fig:pelopas}
+\end{figure}
+\end{verbatim}
+
+\item
+Να χρησιμοποιείτε σωστά τα σημεία στίξεις (δηλαδή τα : . , ; ! ·). Το ? δεν ανήκει στα ελληνικά σημεία στίξης. Μετά τα σημεία στίξης αφήνουμε ένα κενό χαρακτήρα. Πριν τα σημεία στίξης \emph{δεν} αφήνουμε κενό. Δηλαδή γράφουμε:
+
+«Τρομερό γκολ! Πού ήταν κρυμμένος;»
+
+\item
+Πριν την παρένθεση αφήνουμε ένα κενό χαρακτήρα, π.χ.:
+
+«Η βάση δεδομένων που χρησιμοποιούμε (PostgreSQL) εφαρμόζει ...»
+
+\item
+Μην ξεκινάτε ένα κεφάλαιο (αντίστοιχα ενότητα, υποενότητα κ.λ.π.) με ενότητα (αντίστοιχα υποενότητα, υπο-υποενότητα κ.λ.π.). Πρέπει να προηγείται εισαγωγικό κείμενο. Δείτε για παράδειγμα την Ενότητα \ref{sec:examples}.
+
+\item
+Πρέπει να χρησιμοποιείτε πολύ προσεκτικά τα εισαγωγικά («»). Σύμφωνα με την γραμματική εισαγωγικά χρησιμοποιούνται στις παρακάτω περιπτώσεις: 
+\begin{enumerate}
+\item
+για αυτούσια φράση του καθημερινού λόγου,
+\item
+για αυτούσια παράθεση των λεγομένων κάποιου,
+\item
+για να περικλείσουν τίτλους βιβλίων, ταινιών, ή επωνυμίες επιχειρήσεων,
+\item
+για λέξεις με μεταφορική σημασία ή για φράσεις παλιότερης γλωσσικής ή ξένης μορφής,
+\item
+για να περικλείσουν ένα νεολογισμό, και
+\item
+για να δηλωθεί έμφαση, επεξήγηση, αμφισβήτηση ή ειρωνεία.
+\end{enumerate}
+Στην γενική περίπτωση κανένα από τα παραπάνω δεν θα σας χρειαστεί στις εργασίες σας. Πολλοί χρησιμοποιούν τα εισαγωγικά για να αλλάξουν την ερμηνεία μια λέξης (π.χ., είναι πολύ «καλό»). Είναι σαφώς προτιμότερα να βρείτε και να χρησιμοποιήσετε μια ακριβέστερη λέξη (π.χ., δεν είναι ευχάριστο). 
+
+Εν συντομία, δεν χρειάζεται (σχεδόν ποτέ) να χρησιμοποιήσετε εισαγωγικά.
+
+%Αναφορές σε URL
+%
+%Κεφάλαια με μια ενότητα
+
+
+
+\end{enumerate}

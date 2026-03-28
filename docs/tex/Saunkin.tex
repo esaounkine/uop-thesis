@@ -1,0 +1,70 @@
+% !TEX encoding = UTF-8 Unicode
+
+\documentclass[twoside,12pt,a4paper]{book}
+
+\input{include/macros.tex}
+\input{include/macros-ik.tex}
+
+\def\mytitle{Διαχείριση δεδομένων χρονοσειρών}
+\def\myauthor{Ιωάννης Κόκκαλης}
+%\def\mythesis{Διδακτορική διατριβή}
+%\def\mythesis{Μεταπτυχιακή διατριβή}
+\def\mythesis{Πτυχιακή διατριβή}
+\def\mydate{Οκτώβρης 2024}
+
+% \def\mythanks{Φθάνοντας στη λήξη της φοιτητικής μας ιδιότητας με την περάτωση της παρούσας πτυχιακής εργασίας, θα θέλαμε να ευχαριστήσουμε τον ... για την εμπιστοσύνη που μας έδειξε με την ανάθεση αυτής της πτυχιακής εργασίας, για την καθοδήγηση και τις συμβουλές του κατά τη διάρκεια εκπόνησης αυτής.
+
+% Ακόμα, θα θέλαμε να ευχαριστήσουμε τις οικογένειες μας για τη βοήθεια, την υποστήριξη και την ενθάρρυνση τους κατά τη διάρκεια όλων αυτών των ετών.}
+\def\mythanks{Ευχαριστώ \lipsum[1]}
+
+
+% \def\mygrabstract{
+% Η ιατρική εκπαίδευση έχει υποστεί ριζικές αλλαγές... Η πλατφόρμα \textlatin{MeL (Medical e\-/Learning)} αποτελεί ένα ολοκληρωμένο σύστημα ηλεκτρονικής μάθησης και πιστοποίησης... Εκτός από τη διαδικτυακή πλατφόρμα ηλεκτρονικής μάθησης παρέχεται στους χρήστες και ειδικά σχεδιασμένη εφαρμογή για κινητά τηλέφωνα με λειτουργικό σύστημα \textlatin{Android} η οποία καλύπτει μεγάλο μέρος της λειτουργικότητας της πλατφόρμας.
+% }
+\def\mygrabstract{Περίληψη \lipsum[1]}
+
+% \def\myenabstract{
+% Medical learning has undergone radical changes lately mainly because of technological advances...
+% }
+\def\myenabstract{Περίληψη αλλά στα αγγλικά \lipsum[1]}
+
+\def\supervisor{Σπύρος Σκιαδόπουλος, Καθηγητής Πανεπιστήμιου Πελοποννήσου}
+
+\def\committee{
+Κώστας Βασιλάκης, Καθηγητής Πανεπιστήμιου Πελοποννήσου\\
+Χρήστος Τρυφωνόπουλος, Αναπληρωτής Καθηγητής Πανεπιστήμιου Πελοποννήσου
+}
+
+
+\makeindex
+
+\begin{document}
+
+\input{include/matterfront}
+
+\eng % set content to be written in both Greek and English seamlessly
+
+\include{chapters/ch1-introduction}
+\include{chapters/ch2-related_system}
+\include{chapters/ch3-Medical_e-Learning_system}
+\include{chapters/ch4-Usage_Medical_e-Learning}
+\include{chapters/ch5-android_app}
+\include{chapters/ch6-Conclusions}
+\include{chapters/example}
+% and others...
+
+\gre % return to Greek for auto titles etc
+
+\appendix
+
+\backmatter
+
+\newpage
+\addcontentsline{toc}{chapter}{Βιβλιογραφία}
+\bibliographystyle{babplain}
+
+\bibliography{thesis}
+
+\printindex
+
+\end{document}

@@ -1,0 +1,536 @@
+% !TEX root = ../main.tex
+% !TEX encoding = UTF-8 Unicode
+
+% Macros for LateX
+
+%\usepackage[bf,small]{caption}
+\usepackage[colorlinks,linkcolor=blue,linktocpage]{hyperref} % backref pargebackref
+\usepackage[fleqn]{amsmath}
+\usepackage[greek,english]{babel}
+\usepackage{alphabeta}
+\usepackage[square,comma,sort&compress,numbers]{natbib}     %% Citation package
+\usepackage[toc,page]{appendix}
+% \usepackage[T1]{fontenc}
+% \usepackage[utf8]{inputenc}
+\usepackage{amssymb}                                %% Special AMS symbols
+\usepackage{array}                                  %% Extra's for formatting tables
+\usepackage{calc}
+\usepackage{comment}
+\usepackage{enumerate}
+\usepackage{epigraph}
+%\usepackage{epsfig}
+\usepackage{fancyhdr}                               %% Fancy header definition
+\usepackage{graphicx}
+\usepackage{hhline}
+\usepackage{hyperref}
+\usepackage{listings}
+%\usepackage{losnotations}
+%\usepackage{losymbol}
+\usepackage{makeidx}
+\usepackage{multicol}
+\usepackage{setspace}
+\usepackage{subfigure}
+\usepackage{url}
+\usepackage{ucs}
+\usepackage{babelbib}
+\usepackage{float}
+\usepackage{textcomp}
+\usepackage[shortcuts]{extdash}
+\usepackage{listings}
+\usepackage{verbatim}
+\usepackage{color}
+\usepackage{colortbl}
+\usepackage[table]{xcolor}
+\usepackage[figure,vlined,linesnumbered]{algorithm2e}
+
+
+%
+% Page definitions
+%
+\setlength{\textheight}{23cm}
+\setlength{\textwidth}{15.5cm}
+\setlength{\oddsidemargin}{0.2cm}
+\setlength{\evensidemargin}{0.2cm}
+\setlength{\topmargin}{-0.5cm}
+\setlength{\headsep}{1cm}
+%\setlength{\topmargin}{-1.2cm}
+
+\renewcommand{\baselinestretch}{1.5}
+
+\setcounter{topnumber}{2}       % Maximum # of floats at top of page
+\setcounter{bottomnumber}{2}    % Maximum # of floats at bottom of page
+\setcounter{totalnumber}{3}     % Maximum total # of floats on one page
+\setcounter{secnumdepth}{5}
+
+\vfuzz1pc   % Don't bother to report overfull boxes if over-edge is < 1pc
+\hfuzz1pc   % Don't bother to report overfull boxes if over-edge is < 1pc
+
+\sloppy
+
+\frenchspacing
+
+%\bibliographystyle{hellas}
+
+
+%
+% Header
+%
+
+%  \def\ps@headings{%
+%      \let\@oddfoot\@empty\let\@evenfoot\@empty
+%      \def\@evenhead{\thepage\hfil\slshape\leftmark}%
+%      \def\@oddhead{{\slshape\rightmark}\hfil\thepage}%
+%      \let\@mkboth\markboth
+%    \def\chaptermark##1{%
+%      \markboth {\textsc{ %\MakeUppercase{% hack it......
+%        \ifnum \c@secnumdepth >\m@ne
+%          \if@mainmatter
+%            \@chapapp\ \thechapter. \ %
+%          \fi
+%        \fi
+%        ##1}}{}}%
+%    \def\sectionmark##1{%
+%      \markright {\textsc{ %\MakeUppercase{% hack it......
+%        \ifnum \c@secnumdepth >\z@
+%          \thesection. \ %
+%        \fi
+%        ##1}}}}
+
+%\renewcommand{\chaptermark}[1]{\if@mainmatter
+%                                \markboth{Κεφάλαιο \thechapter}{} \markright{#1}
+%                               \else
+%                                \markboth{#1}{#1}
+%                               \fi}
+%\renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+%
+%
+
+%\pagestyle{fancy}
+%\fancyhf{}
+\fancyhead[RO]{\textsc{\footnotesize\rightmark}}
+\fancyhead[LE]{\textsc{\footnotesize\leftmark}}
+\fancyhead[RE,LO]{}
+\fancyfoot[CE,CO]{}
+\fancyfoot[LE,RO]{\thepage}
+
+
+% Command \SetFigFont does NOTHING !!!!!!
+\newcommand{\SetFigFont}[3]{}
+
+%
+% Languages
+%
+\newcommand{\eng}{\selectlanguage{english}}
+\newcommand{\gre}{\selectlanguage{greek}}
+\def\slg{ \selectlanguage{greek} }
+\def\sla{ \selectlanguage{american} }
+
+
+% Code
+
+\makeatletter
+\newenvironment{vercode}{%
+\latintext\par
+\def\verbatim@processline{\the\verbatim@line\\ }%
+\def\@verbatim{\the\every@verbatim
+  \obeylines
+  \let\do\@makeother \dospecials
+  \verbatim@font
+}%
+\def\endverbatim{\endgroup}%
+\noindent
+\verbatim}{\endverbatim}
+\makeatother
+
+\definecolor{lightgray}{gray}{0.9}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+ 
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+    columns=flexible,
+    literate=%
+{α}{{\textgreek{a}}}1%
+{ά}{{\textgreek{'a}}}1%
+{β}{{\textgreek{b}}}1%
+{γ}{{\textgreek{g}}}1%
+{δ}{{\textgreek{d}}}1%
+{ε}{{\textgreek{e}}}1%
+{έ}{{\textgreek{'e}}}1%
+{ζ}{{\textgreek{z}}}1%
+{η}{{\textgreek{h}}}1%
+{ή}{{\textgreek{'h}}}1%
+{θ}{{\textgreek{j}}}1%
+{ι}{{\textgreek{i}}}1%
+{ί}{{\textgreek{'i}}}1%
+{ϊ}{{\textgreek{"i}}}1%
+{ΐ}{{\textgreek{'"i}}}1%
+{κ}{{\textgreek{k}}}1%
+{λ}{{\textgreek{l}}}1%
+{μ}{{\textgreek{m}}}1%
+{ν}{{\textgreek{n}}}1%
+{ξ}{{\textgreek{x}}}1%
+{ο}{{\textgreek{o}}}1%
+{ό}{{\textgreek{'o}}}1%
+{π}{{\textgreek{p}}}1%
+{ρ}{{\textgreek{r}}}1%
+{σ}{{\textgreek{sv}}}1%
+{ς}{{\textgreek{c}}}1%
+{τ}{{\textgreek{t}}}1%
+{υ}{{\textgreek{u}}}1%
+{ύ}{{\textgreek{'u}}}1%
+{ϋ}{{\textgreek{"u}}}1%
+{ΰ}{{\textgreek{'"u}}}1%
+{φ}{{\textgreek{f}}}1%
+{χ}{{\textgreek{q}}}1%
+{ψ}{{\textgreek{y}}}1%
+{ω}{{\textgreek{w}}}1%
+{ώ}{{\textgreek{'w}}}1%
+{Α}{{\textgreek{A}}}1%
+{Β}{{\textgreek{B}}}1%
+{Γ}{{\textgreek{G}}}1%
+{Δ}{{\textgreek{D}}}1%
+{Ε}{{\textgreek{E}}}1%
+{Ζ}{{\textgreek{Z}}}1%
+{Η}{{\textgreek{H}}}1%
+{Θ}{{\textgreek{J}}}1%
+{Ι}{{\textgreek{I}}}1%
+{Κ}{{\textgreek{K}}}1%
+{Λ}{{\textgreek{L}}}1%
+{Μ}{{\textgreek{M}}}1%
+{Ν}{{\textgreek{N}}}1%
+{Ξ}{{\textgreek{X}}}1%
+{Ο}{{\textgreek{O}}}1%
+{Π}{{\textgreek{P}}}1%
+{Ρ}{{\textgreek{R}}}1%
+{Σ}{{\textgreek{S}}}1%
+{Τ}{{\textgreek{T}}}1%
+{Υ}{{\textgreek{U}}}1%
+{Φ}{{\textgreek{F}}}1%
+{Χ}{{\textgreek{Q}}}1%
+{Ψ}{{\textgreek{Y}}}1%
+{Ω}{{\textgreek{W}}}1%
+{À}{{\`{A}}}1%
+{È}{{\`{E}}}1%
+{É}{{\'{E}}}1%
+{Ì}{{\`{I}}}1%
+{Ò}{{\`{O}}}1%
+{à}{{\`{a}}}1%
+{è}{{\`{e}}}1%
+{é}{{\'{e}}}1%
+{ì}{{\`{i}}}1%
+{ò}{{\`{o}}}1%
+{ù}{{\`{u}}}1%
+}
+
+\lstset{style=mystyle}
+
+
+%
+\SetKwInOut{Input}{Input}
+\SetKwInOut{Output}{Output}
+\SetKwInput{Algorithm}{Algorithm}
+\SetKwInput{Remark}{Remark}
+\SetKw{Let}{Let}
+\SetKw{while}{while}
+\SetKw{Add}{Add}
+\SetKwFor{While}{while}{do}{endw}
+\SetKwComment{Comment}{{// }}{}
+
+
+% Math
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}{Corollary}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}[section]
+\newtheorem{notation}{Notation}[section]
+
+\newcommand{\proof}{\noindent {\bf Proof:\ }}
+\newcommand{\defEnd}{\ \rule[-0.25mm]{0.25cm}{0.25cm}}
+\renewenvironment{proof}{\noindent\textbf{Proof:}}{\rule[-0.25mm]{0.25cm}{0.25cm}\vspace{1.8ex}}
+
+%\newenvironment{proof}{{\bf Proof:}}{\rule[-0.25mm]{0.25cm}{0.25cm}}
+%\newcommand{\proofEnd}{\ \rule[-0.25mm]{0.25cm}{0.25cm}}
+%\newenvironment{remark}{{\bf Remark:}}{\rule[-0.25mm]{0.25cm}{0.25cm}}
+
+%\newcommand{\proof}{\noindent {\bf Proof:\ }}
+
+%\newcommand{\defEnd}{\ \rule[-0.25mm]{0.25cm}{0.25cm}}
+%\newcommand{\smalltb}{\hspace*{.5cm}}
+
+% logical connectives
+%\newcommand{\And}{\land}
+\newcommand{\Or}{\lor}
+\newcommand{\Then}{\Longrightarrow}
+%\newcommand{\If}{\longleftarrow}
+\newcommand{\then}{\Longrightarrow}
+%\newcommand{\implies}{\supset}
+\newcommand{\Equiv}{\equiv}
+\newcommand{\Iff}{\Longleftrightarrow}
+% do not add \; to \bigAnd and \bigOr
+\newcommand{\bigAnd}{\bigwedge}
+\newcommand{\bigOr}{\bigvee}
+\newcommand{\poss}{\raisebox{-.2ex}{$\Diamond$}}
+\newcommand{\nec}{\raisebox{-.2ex}{$\Box$}}
+\newcommand{\cert}{\raisebox{-.2ex}{$\Box$}}
+\newcommand{\blackcirc}{\mbox{$\bigcirc \hspace*{-.75em} \bullet \ $}}
+\newcommand{\contains}{\sqsupset}
+
+% set operations
+%\newcommand{\complement}[1]{\overline{#1}}
+\newcommand{\union}{\cup}
+\newcommand{\bigunion}{\bigcup}
+\newcommand{\bigUnion}{\bigcup}
+\newcommand{\intersection}{\cap}
+\newcommand{\bigintersection}{\bigcap}
+\newcommand{\bigIntersection}{\bigcap}
+\newcommand{\maps}{\;\longrightarrow\;}
+
+% qq for "quine's quotes
+\newcommand{\lqq}{\mathopen{\raisebox{-.5ex}{${}^{{}^\lceil}$}\mskip-2.5mu}}
+\newcommand{\rqq}{\mathclose{\raisebox{-.5ex}{${}^{{}^\rceil}$}}}
+\newcommand{\qq}[1]{\lqq{#1}\rqq}
+
+% others
+%\newcommand{\bar}[1]{\overline{#1}}
+\newcommand{\tld}[1]{\widetilde{#1}}   % wide tilde
+\newcommand{\wht}[1]{\widehat{#1}}      % wide hat
+\newcommand{\tb}{\hspace*{0.25in}}
+%\newcommand{\tb}{\hspace*{3ex}}
+\newcommand{\htb}{\hspace*{0.12in}}
+\newcommand{\xor}{\,\otimes\,}
+%\newcommand{\comment}[1]{}
+\newcommand{\pair}[2]{\langle#1,#2\rangle}
+\newcommand{\throu}[2]{#1\ (D\; E\; S\; F)\ #2}
+\newcommand{\comb}[2]{\left( \begin{array}{c} #1 \\ #2 \end{array} \right)}
+\newcommand{\abs}[1]{\left|#1\right|}
+\newcommand{\size}[1]{\left\|#1\right\|}
+%\newcommand{\Intg}{{\Bbb Z}}
+\newcommand{\Rat}{{\Bbb Q}}
+\newcommand{\Real}{{\Bbb R}}
+
+\newcommand{\N}{{\Bbb N}}
+%\newcommand{\Intg}{{\cal Z}}
+%\newcommand{\Rat}{{\cal Q}}
+%\newcommand{\Real}{{\cal R}}
+
+\newcommand{\Int}{{\sf I}}   % intervals
+\newcommand{\tmodels}{\models_{\cal T}}
+\newcommand{\proves}{\vdash}
+\newcommand{\kf}[1]{\underline{\sf {#1}}}
+\newcommand{\mytheta}{\;\theta\;}
+\newcommand{\myxi}{\;\xi\;}
+%\newcommand{\m}[1]{$\sf {#1}$}
+\newcommand{\clog}[1]{\[\sf {#1} \]}
+\newcommand{\arr}{$\rightarrow$}
+%\newcommand{\inft}{$\infty$}
+\newcommand{\la}{$\langle$}
+\newcommand{\ra}{$\rangle$}
+\newcommand{\ch}{$\ $}
+\newcommand{\join}{\Join}
+
+\newcommand{\In}{\;in\;}
+\newcommand{\Isa}{\;isA\;}
+\newcommand{\isA}{\;isA\;}
+
+% thesis macros
+% languages
+\newcommand{\con}{{\cal C}}
+\newcommand{\lang}{{\cal L}}
+\newcommand{\langp}{{\cal L}^+}
+
+% the structures of the above languages
+\newcommand{\Mlang}{{\bf M}_{\cal L}}
+\newcommand{\Mlangp}{{\bf M}_{{\cal L}^+}}
+
+% languages
+%\newcommand{\diPCL}{{\rm diPCL}}
+%\newcommand{\diTCL}{{\em diTCL}}
+%\newcommand{\dePCL}{{\em dePCL}}
+%\newcommand{\deTCL}{{\em deTCL}}
+
+% structures for the above languages
+\newcommand{\Sd}{{\bf D}}
+\newcommand{\Sz}{{\bf Z}}
+\newcommand{\Sq}{{\bf Q}}
+
+\newcommand{\Szi}{{\bf ZI_Z}}
+\newcommand{\Sqi}{{\bf QI_Q}}
+
+\newcommand{\Sdz}{{\bf DZ}}
+\newcommand{\Sdq}{{\bf DQ}}
+
+\newcommand{\Sdzi}{{\bf DZI_Z}}
+\newcommand{\Sdqi}{{\bf DQI_Q}}
+
+
+% Chronos reports
+\newcommand{\val}{\rightarrow}
+
+\def\ibi{\textbf{\textit{i}}}
+\def\ibj{\textbf{\textit{j}}}
+
+% Anomalies
+%\def\rem#1{\marginpar{\scriptsize #1}}
+\def\rem#1{}
+\def\nnn{~\\-------\\}
+
+\def\np{\ensuremath{\cal NP}}
+\def\oo{{\cal O}}
+\def\ibi{\textbf{\textit{i}}}
+\def\ibj{\textbf{\textit{j}}}
+\def\fand{\mbox{  and  }}
+\def\sup{\mathit{sup}}
+\def\inf{\mathit{inf}}
+\def\lv{\mbox{``}}
+\def\rv{\mbox{"}}
+\def\size#1{|\:#1\:|}
+%\def\restr#1#2{\mathit{Restrict}(#1,#2)}
+%\def\st#1{\mathit{Subtext}(#1)}
+\def\ep#1{\mathit{Epoints}(#1)}
+\def\wo#1{\mathit{Words}(#1)}
+
+% Cheats
+\def\figspa{\vspace{-1ex}}
+\def\figspb{\vspace{-3ex}}
+\def\figspc{\vspace{-4ex}}
+
+
+\newcommand{\attn}[1]{ {\bf {[*** #1 ***]}}}
+
+% Titles
+\newcommand{\stitle}[1]{\vspace{.5ex}\noindent\textbf{#1}}
+\newcommand{\sititle}[1]{\vspace{.2ex}\noindent\textit{#1}}
+\newcommand{\sstitle}[1]{\vspace{.5ex}\noindent\textbf{#1}}
+
+% Lists
+\newenvironment{mylisting}[1] {\vspace*{-1ex} \begin{list}{$\bullet$}{
+	\usecounter{enumi}
+	\setlength{\labelwidth}{2ex}
+	\setlength{\labelsep}{1ex}
+	\setlength{\leftmargin}{2.5ex}
+	\setlength{\rightmargin}{0ex}
+	\setlength{\itemsep}{0.4ex}
+	\setlength{\parsep}{0ex}
+} #1 } {\end{list}}
+
+
+\def\rem#1{\marginpar{\scriptsize #1}}
+\newcommand{\snote}[1]{\textbf{\textcolor{teal}{#1}}}
+\newcommand{\enote}[1]{\textbf{\textcolor{blue}{#1}}}
+\newcommand{\scor}[2]{\textbf{\textcolor{red}{#1}} $\rightarrow$ \textbf{\textcolor{teal}{#2}}}
+\def\nnn{~\\-------\\}
+%\def\rem#1{\marginpar{\scriptsize{\textcolor{green}{#1}}}}
+%\def\rem#1{{\scriptsize{\textcolor{green}{#1}}}}
+\def\rem#1{}
+
+
+\newcommand{\commentg}[1]{\noindent
+\colorbox{lightgray}{\parbox{\textwidth}{%
+ \vskip5pt
+ \leftskip5pt\rightskip5pt
+ #1
+ \vskip5pt
+ }
+}
+}
+
+\rowcolors{1}{}{lightgray}
+
+% \input{include/hyphenation}
+
+% ---
+% --- Additions: 2024-10-01
+% ---
+
+\usepackage{lipsum} % \lipsum[n] or \lipsum[n-m]
+
+% \usepackage{minted} % needs python which we dont want
+% \usepackage{xcolor}
+% \setminted{
+%     linenos,
+%     breaklines,
+%     tabsize=4,
+%     bgcolor={rgb,1:red,0.93;green,0.93;blue,0.93},
+% }
+
+
+\newcommand{\chapterr}[2]{
+    \gre
+    \chapter{\foreignlanguage{english}{#1}}
+    \eng
+    #2
+}
+
+\let\lasection\section
+\renewcommand{\section}[1]{\lasection{\foreignlanguage{english}{#1}}}
+
+\let\lasubsection\subsection
+\renewcommand{\subsection}[1]{\lasubsection{\foreignlanguage{english}{#1}}}
+
+\let\lasubsubsection\subsubsection
+\renewcommand{\subsubsection}[1]{\lasubsubsection{\foreignlanguage{english}{#1}}}
+
+\let\lacaption\caption
+\renewcommand{\caption}[1]{\gre\lacaption{\centering\foreignlanguage{english}{#1}}}
+
+
+%
+% SQL
+\lstnewenvironment{SQLcode}{%
+\lstset{language=SQL,%
+%keywordstyle=\bf\sffamily\color{blue},%
+%commentstyle=\color{ForestGreen},%
+%stringstyle=\color{Maroon},%
+%basicstyle=\ttfamily\normalsize\color{black},%
+%frame=lines,%
+showspaces=false,% 
+showstringspaces=false,%
+tabsize=4,% 
+%aboveskip=-10pt,% 
+%belowskip=10pt,%
+lineskip=2pt%
+% numbers=left, numberstyle=\tiny, stepnumber=1, numbersep=5pt, numberblanklines=false, %
+% breaklines, breakatwhitespace, prebreak=\_, breakindent=0pt %
+}}
+{}
+
+%
+% LaTeX
+\lstnewenvironment{latex}{%
+\lstset{language=TeX,%
+keywordstyle=\bf\sffamily\color{blue},%
+commentstyle=\color{ForestGreen},%
+stringstyle=\color{Maroon},%
+basicstyle=\ttfamily\normalsize\color{black},%
+%frame=lines,%
+showspaces=false,% 
+showstringspaces=false,%
+tabsize=4,% 
+aboveskip=10pt,% 
+belowskip=10pt,%
+lineskip=2pt%
+% numbers=left, numberstyle=\tiny, stepnumber=1, numbersep=5pt, numberblanklines=false, %
+% breaklines, breakatwhitespace, prebreak=\_, breakindent=0pt %
+}}
+{}

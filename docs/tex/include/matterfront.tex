@@ -1,0 +1,160 @@
+% !TEX encoding = UTF-8 Unicode
+% !TEX root = ../main.tex
+
+%
+%
+%
+\frontmatter
+
+%
+% First page
+%
+\pagestyle{empty}
+\vspace{-4cm}
+\begingroup
+\vspace{10pt}
+%
+    \begin{minipage}[t]{3cm}
+        %\center
+        \hspace{-10pt}
+        \includegraphics[width=2.5cm]{include/logo-uop}
+    \end{minipage}
+ % 
+    \begin{minipage}[r]{12.5cm}
+        \raggedleft
+	\vspace*{-1.5cm}~\\
+	\textsc{\large Πανεπιστημίο Πελοποννήσου}\\
+	%{Σχολή Οικονομίας, Διοίκησης και Πληροφορικής}\\
+	\vspace*{-5pt}{Τμήμα Πληροφορικής και Τηλεπικοινωνιών}\\
+	\vspace*{-5pt}{\small Ακαδημαϊκού Βλάχου, 22100, Τρίπολη}\\
+	\vspace*{-5pt}{\small Τηλ. 2710-230177}\\
+	\vspace*{-5pt}{\small Φαξ. 2710-372160}\\
+	\vspace*{6ex}
+    \end{minipage}
+\endgroup
+\par
+
+\begin{center}
+
+\vspace*{60pt}{\Huge\sc\mytitle}
+
+\vspace{100pt}{\LARGE \myauthor}
+
+\vspace{100pt}{\LARGE \mythesis}
+
+\vspace{100pt}{\large Τρίπολη, \mydate}
+\end{center}
+
+
+%
+% Copyright
+%
+\newpage
+~\\
+\vfill
+~\\
+\mytitle.\\
+\myauthor.\\
+\mythesis.\\
+Εργαστήριο Συστημάτων Λογισμικού και Βάσεων Δεδομένων.\\
+Τμήμα Πληροφορικής και Τηλεπικοινωνιών,  Πανεπιστήμιο Πελοποννήσου\\
+\textlatin{Copyright~$\copyright$}~\mydate.~\textlatin{All Rights Reserved.} \\
+\newpage
+
+%
+% Committee
+%
+\clearpage
+\vspace{-4cm}
+\begingroup
+\vspace{10pt}
+%
+    \begin{minipage}[t]{3cm}
+        %\center
+        \hspace{-10pt}
+        \includegraphics[width=2.5cm]{include/logo-uop}
+    \end{minipage}
+ % 
+    \begin{minipage}[r]{12.5cm}
+        \raggedleft
+	\vspace*{-1.5cm}~\\
+	\textsc{\large Πανεπιστημίο Πελοποννήσου}\\
+	%{Σχολή Οικονομίας, Διοίκησης και Πληροφορικής}\\
+	\vspace*{-5pt}{Τμήμα Πληροφορικής και Τηλεπικοινωνιών}\\
+	\vspace*{-5pt}{\small Ακαδημαϊκού Βλάχου, 22100, Τρίπολη}\\
+	\vspace*{-5pt}{\small Τηλ. 2710-230177}\\
+	\vspace*{-5pt}{\small Φαξ. 2710-372160}\\
+	\vspace*{6ex}
+    \end{minipage}
+\endgroup
+\par
+\begin{center}
+\vspace*{50pt}{\Large\sc\mytitle}
+
+\vspace{20pt}{\large\bf\myauthor}
+
+\vspace{20pt}{\mythesis}
+
+\end{center}
+
+\vfill
+\noindent Επιβλέπων Καθηγητής:
+
+%\vspace{10pt}
+\begin{minipage}[r]{15cm}
+{\supervisor}
+\end{minipage}
+
+\vspace{10pt} %
+
+\noindent Εξεταστική επιτροπή:
+
+\vspace{10pt}
+\begin{minipage}[r]{15cm}
+{\committee}
+\end{minipage}
+
+%
+% Thanks
+%
+\clearpage
+\setcounter{page}{1}
+\chapter*{Ευχαριστίες}
+{Ελληνικά but also English \mythanks}
+
+
+%
+% Greek abstract
+%
+\clearpage
+\chapter*{Περίληψη}
+{\mygrabstract}
+
+%
+% English abstract
+%
+\clearpage
+{\latintext 
+\chapter*{Abstract}
+{\myenabstract}
+}
+
+
+%% Into the table of contents.
+\clearpage
+\gre
+\addcontentsline{toc}{chapter}{Περιεχόμενα}\tableofcontents
+\cleardoublepage
+\renewcommand{\listfigurename}{Κατάλογος σχημάτων}
+\addcontentsline{toc}{chapter}{Κατάλογος σχημάτων}\listoffigures
+\eng
+\cleardoublepage
+
+
+%\clearpage
+%\tableofcontents\cleardoublepage
+%\listoffigures\cleardoublepage
+
+\mainmatter
+
+\pagestyle{fancy}
