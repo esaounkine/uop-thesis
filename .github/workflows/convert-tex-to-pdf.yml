@@ -1,0 +1,46 @@
+name: Build the .tex file to PDF
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  build-tex:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Latex
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            latexmk \
+            texlive-latex-base \
+            texlive-latex-recommended \
+            texlive-latex-extra \
+            texlive-fonts-recommended \
+            texlive-bibtex-extra \
+            texlive-lang-greek \
+            texlive-science \
+            biber
+
+      - name: Build PDF
+        run: make build
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tex-pdf
+          path: out/tex/main.pdf
+          if-no-files-found: error
+
+      - name: Upload Latex build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tex-build-logs
+          path: out/tex/

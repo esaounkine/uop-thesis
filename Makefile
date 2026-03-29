@@ -14,6 +14,7 @@ install-deps:
 
 setup:
 	mkdir -p $(OUT_DIR)
+	cd $(TEX_DIR) && find . -type d -mindepth 1 -exec mkdir -p $(abspath $(OUT_DIR))/{} \;
 
 # internal tex cmd shortcut
 tex-cmd: setup
