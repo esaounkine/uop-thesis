@@ -1,5 +1,6 @@
 .env
 .env.*
+
 *.iml
 .idea
 .vscode
@@ -11,18 +12,36 @@ node_modules/
 .yarn
 yarn-error.log
 
-# typescript output
+# build outputs
 dist/
+out/
 
-# vim
-.*.swp
+# editor / temp
+*.swp
+*.swo
+tmp/
 
 # test
-out/
 coverage/
-
-# nyc
-/.nyc_output
 
 db-data/*
 .DS_Store
+
+# tex build files
+*.blg
+*.fdb_latexmk
+*.fls
+*.idx
+*.ilg
+*.ind
+*.lof
+*.log
+*.lot
+*.nav
+*.out
+*.run.xml
+*.snm
+*.synctex.gz
+*.toc
+*.xdv
+
