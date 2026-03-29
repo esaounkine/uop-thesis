@@ -7,35 +7,21 @@ on:
   pull_request:
 
 jobs:
-  build-tex:
+  container:
     runs-on: ubuntu-latest
-
+    container: kjarosh/latex:2024.4
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Latex
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            latexmk \
-            texlive-latex-base \
-            texlive-latex-recommended \
-            texlive-latex-extra \
-            texlive-fonts-recommended \
-            texlive-bibtex-extra \
-            texlive-lang-greek \
-            texlive-science \
-            biber
+      - name: Build the tex file
+        run: cd docs/tex && latexmk -pdf -output-directory=../../out main.tex
 
-      - name: Build PDF
-        run: make build
-
-      - name: Upload PDF artifact
+      - name: Upload document
         uses: actions/upload-artifact@v4
         with:
           name: tex-pdf
-          path: out/tex/main.pdf
+          path: out/main.pdf
           if-no-files-found: error
 
       - name: Upload Latex build logs
@@ -43,4 +29,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tex-build-logs
-          path: out/tex/
+          path: out/
