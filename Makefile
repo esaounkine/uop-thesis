@@ -6,6 +6,7 @@ OUT_DIR_ABS := $(abspath $(OUT_DIR))
 LATEXMK ?= latexmk
 LATEXMK_FLAGS := -pdf -interaction=nonstopmode -file-line-error -synctex=1
 LATEXMK_EXTRA_FLAGS ?=
+BASE_BRANCH ?= master
 
 .PHONY: install-deps setup tex-cmd build watch clean distclean
 
@@ -39,3 +40,18 @@ clean:
 
 distclean:
 	rm -rf $(OUT_DIR)
+
+diff:
+	@test -n "$(BASE_BRANCH)" || (echo "BASE_BRANCH=<git-ref> required" && exit 1)
+
+	cd $(TEX_DIR) && rm -f diff.tex base.tex
+
+	git show $(BASE_BRANCH):docs/tex/main.tex > $(TEX_DIR)/base.tex
+
+	cd $(TEX_DIR) && latexdiff base.tex main.tex > diff.tex
+
+	cd $(TEX_DIR) && latexmk -pdf \
+		-output-directory=$(OUT_DIR_ABS) \
+		diff.tex
+
+	cd $(TEX_DIR) && rm -f diff.tex base.tex
