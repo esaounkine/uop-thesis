@@ -28,3 +28,5 @@ Content discussions (line- or paragraph- level) should occur in the PR's.
 
 The project will follow a git-flow process to introduce all changes via PR's.
 
+[Process ADR](docs/decisions/0001-process.md)
+
