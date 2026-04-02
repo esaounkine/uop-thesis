@@ -21,7 +21,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tex-pdf
-          path: out/main.pdf
+          path: out/Saunkin.pdf
           if-no-files-found: error
 
       - name: Upload Latex build logs
