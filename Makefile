@@ -1,6 +1,6 @@
 SHELL ?= /bin/bash
 TEX_DIR ?= docs/tex
-MAIN_TEX ?= main.tex
+MAIN_TEX ?= Saunkin.tex
 OUT_DIR ?= out/tex
 OUT_DIR_ABS := $(abspath $(OUT_DIR))
 LATEXMK ?= latexmk
@@ -46,9 +46,9 @@ diff:
 
 	cd $(TEX_DIR) && rm -f diff.tex base.tex
 
-	git show $(BASE_BRANCH):docs/tex/main.tex > $(TEX_DIR)/base.tex
+	git show $(BASE_BRANCH):docs/tex/Saunkin.tex > $(TEX_DIR)/base.tex
 
-	cd $(TEX_DIR) && latexdiff base.tex main.tex > diff.tex
+	cd $(TEX_DIR) && latexdiff base.tex Saunkin.tex > diff.tex
 
 	cd $(TEX_DIR) && latexmk -pdf \
 		-output-directory=$(OUT_DIR_ABS) \
