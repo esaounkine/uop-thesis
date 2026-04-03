@@ -3,11 +3,8 @@
 
 \chapter{Introduction} \label{c1:intro}
 
-\section{Background} \label{sec:background}
-\scor{}{We do not start a chapter/section/subsection with another section/subsection/subsection... It is case, just delete}\verb=\section{Background} \label{sec:background}=.
-
 Scientific publications build upon previously published work by referencing related research.
-If a publication $y$ \emph{refers} to another publication $x$, we say that $y$ \emph{cites} $x$, and the reference is called a \emph{citation}. \scor{}{new terms are emphasized}
+If a publication $y$ \emph{refers} to another publication $x$, we say that $y$ \emph{cites} $x$, and the reference is called a \emph{citation}.
 
 Citations form a directed relationship between publications and induce a citation network, where nodes correspond to publications, and edges correspond to citation links.
 This network is widely used to assess the impact and relevance of scientific work.
@@ -18,7 +15,6 @@ The citation counts can be aggregated per author to estimate the influence of a 
 Not all citations carry the same meaning.
 In particular, citations can be divided into two main categories:
 
-\scor{}{This should be a description env. See:}
 \begin{description}
 \item
 [Self-citations] where at least one author of the citing publication is also an author of the cited publication.
@@ -50,24 +46,42 @@ distinguish between self-citations and external citations
 \scor{A naive aggregation of citation counts does not capture this distinction and may provide a misleading estimate of research impact.
 In particular, publications with a high number of self-citations may appear influential even when their external recognition is limited.}{I do not understand this. Why you need it?}
 
-\scor{To address this limitation, this work focuses on the identification and classification of citations based on author overlap, providing a more appropriate (accurate/objective?) interpretation of citation metrics.}{same as above?}
+\enote{This paragraph, as well as the below, dictate the \emph{necessity} of the self/external distinction.}
+\enote{In writing this I'm following the pattern that what we build must have a beneficiary, and should provide an ultimate improvement of the previous state. This reasoning comes from my Amazon brainwashing and to be honest I like the approach. But let me know if you still believe this paragraph is unnecessary.}
+
+\scor{To address this limitation, this work focuses on the identification and classification of citations based on author overlap, providing a more objective interpretation of citation metrics.}{same as above?}
 
 \snote{I believe that you just have to say that: Distinguishing self from external citations (Item 3 in the above list) may be cumbersome as the example in Section \label{sec:intro-example} illustrates.}
+
+\enote{To that extent someone would argue that it's only my feelings that were affected by disliking the self-citations, and that deriving statistics from oneself is a bad pattern. That's why the above reasoning to make the point objective: counting backlinks is too generic and prone to miscounting; we need a way to detect inflated stats - that what we are doing in this project.}
 
 \section{Example} \label{sec:intro-example}
 
 To demonstrate the distinction between self-citations and external citations, consider the following example.
 
-Let publication $P_1$ be authored by researchers $A$, $B$ and $C$.
-A second publication $P_2$, authored by $A$ and $D$, includes a reference to $P_1$.
-In this case, the citation from $P_2$ to $P_1$ is a \emph{self-citation}, since the author $A$ appears in both publications.
+Let us consider an article [GPK2007], described as follows.
 
-Now let us consider a third publication $P_3$, authored by researchers $E$ and $F$; it also cites $P_1$.
-As there is no overlap between the authors of $P_3$ and $P_1$, this citation is classified as an \emph{external citation}.
+\begin{quote}
+    \item[{[GPK2007]}] Gabriel Ghinita, Panos Kalnis, Spiros Skiadopoulos:
+    \emph{PRIVE: anonymous location-based queries in distributed mobile systems}. WWW 2007: 371-380
+\end{quote}
 
-This example illustrates how the classification of citations depends on the relationship between the authors of the citing and cited publications.
+Another article [KGMP2007], described as follows, cites [GPK2007].
+
+\begin{quote}
+    \item[{[KGMP2007]}] Panos Kalnis, Gabriel Ghinita, Kyriakos Mouratidis, Dimitris Papadias:
+    \emph{Preventing Location-Based Identity Inference in Anonymous Spatial Queries}. IEEE Trans. Knowl. Data Eng. 19(12): 1719-1733 (2007)
+\end{quote}
+
+
+For Gabriel Ghinita and Panos Kalnis this counts as a \emph{self-citation}, since these authors appear on both papers.
+
+For Spiros Skiadopoulos this counts as a \emph{external citation}.
 
 \snote{Somehow I liked my example better. For starters, It should be a concrete one. If you do not like having my name find another. Still, keep my structure.}
+
+\enote{Sorry completely misread the sentiment: I missed the point that the example should have been concrete (even though you said it in the comment) and tried to abstract it away.}
+\enote{I changed the wording of your example to (a) make it more article-centric, and (b) remove the (b.1) time period "later in that year" (seemed unnecessary to me), (b.2) the proactive conclusion "should be excluded" (seemed too early to decide what to do with them - here was the stage where I just make an example of the relationship), (b.3) unclear statement around Spiros Skiadopoulos citation category "For the case of Spiros Skiadopoulos the choice is not so clear".}
 
 \section{Structure of work} \label{sec:structure-of-work}
 
@@ -80,13 +94,13 @@ The remainder of this work is organised as follows.
 [Chapter 2] presents related work and existing systems for citation analysis, including commonly used citation indices and data sources.
 
 \item
-Chapter 3 will describe the proposed methodology for detecting and classifying citations, including the underlying data model and processing approach.
+[Chapter 3] describes the proposed methodology for detecting and classifying citations, including the underlying data model and processing approach.
 
 \item
-Chapter 4 will present the implementation and evaluation of the system, along with illustrative results.
+[Chapter 4] presents the implementation and evaluation of the system, along with illustrative results.
 
 \item
-Chapter 5 concludes the work and discusses possible future extensions.
+[Chapter 5] concludes the work and discusses possible future extensions.
 
 \end{description}
 
