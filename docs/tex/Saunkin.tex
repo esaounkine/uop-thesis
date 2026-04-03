@@ -5,7 +5,7 @@
 \input{include/macros.tex}
 \input{include/macros-ik.tex}
 
-\def\mytitle{Detection of self-citations in scientific papers}
+\def\mytitle{Categorizing citations in scientific papers}
 \def\myauthor{Ilya Saunkin}
 \def\mythesis{Πτυχιακή διατριβή}
 \def\mydate{June 2026}
@@ -26,6 +26,19 @@ And when we hear \emph{can}, we immediately think \emph{should}.
 \makeindex
 
 \begin{document}
+
+
+\newenvironment{myquote}
+    {
+ \vspace*{1.5ex}
+\noindent
+    \begin{tabular}{lp{12cm}}
+    }
+    { 
+    \end{tabular}
+    \vspace*{2ex}
+    }
+
 
 % TODO - restore before the final document publishing
 % https://github.com/esaounkine/uop-thesis/issues/2

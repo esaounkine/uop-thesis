@@ -29,7 +29,7 @@ In contrast, self-citations may arise naturally in cumulative research but can a
 
 \section{Problem statement} \label{sec:problem-statement}
 
-The objective of this work is to create a tool that can analyse citation relationships at the author level and to distinguish between different types of citations.
+The objective of this work is to create a tool that can analyze citation relationships at the author level and to distinguish between different types of citations.
 
 Given a specific author $A$, we want to:
 
@@ -41,53 +41,77 @@ compute the total number of citations received by these publications
 \item
 distinguish between self-citations and external citations
 \end{enumerate}
-\snote{change the above to enumerate env. Below you will see why.}
 
-\scor{A naive aggregation of citation counts does not capture this distinction and may provide a misleading estimate of research impact.
-In particular, publications with a high number of self-citations may appear influential even when their external recognition is limited.}{I do not understand this. Why you need it?}
+The most important step of the above process is the distinction between self-citations and external citations (Item 3). In our work, we focus on the identification and classification of citations based on author overlap, providing a more clear interpretation of citation metrics.
 
-\enote{This paragraph, as well as the below, dictate the \emph{necessity} of the self/external distinction.}
-\enote{In writing this I'm following the pattern that what we build must have a beneficiary, and should provide an ultimate improvement of the previous state. This reasoning comes from my Amazon brainwashing and to be honest I like the approach. But let me know if you still believe this paragraph is unnecessary.}
+Let us clarify, our idea with the help of the example presented in Section \ref{sec:intro-example}.
 
-\scor{To address this limitation, this work focuses on the identification and classification of citations based on author overlap, providing a more objective interpretation of citation metrics.}{same as above?}
+\section{Self and external citations} \label{sec:intro-example}
 
-\snote{I believe that you just have to say that: Distinguishing self from external citations (Item 3 in the above list) may be cumbersome as the example in Section \label{sec:intro-example} illustrates.}
+%To demonstrate the distinction between self-citations and external citations, consider the following example.
+%
+%Let us consider an article [GPK2007], described as follows.
+%\begin{quote}
+%    \item[{[GPK2007]}] Gabriel Ghinita, Panos Kalnis, Spiros Skiadopoulos:
+%    \emph{PRIVE: anonymous location-based queries in distributed mobile systems}. WWW 2007: 371-380
+%\end{quote}
+%
+%Later in 2007, another article [KGMP2007], described as follows, cites [GPK2007].
+%
+%\begin{quote}
+%    \item[{[KGMP2007]}] Panos Kalnis, Gabriel Ghinita, Kyriakos Mouratidis, Dimitris Papadias:
+%    \emph{Preventing Location-Based Identity Inference in Anonymous Spatial Queries}. IEEE Trans. Knowl. Data Eng. 19(12): 1719-1733 (2007)
+%\end{quote}
+%
+%
+%For Gabriel Ghinita and Panos Kalnis this counts as a \emph{self-citation}, since these authors appear on both papers.
+%
+%For Spiros Skiadopoulos this counts as a \emph{external citation}.
 
-\enote{To that extent someone would argue that it's only my feelings that were affected by disliking the self-citations, and that deriving statistics from oneself is a bad pattern. That's why the above reasoning to make the point objective: counting backlinks is too generic and prone to miscounting; we need a way to detect inflated stats - that what we are doing in this project.}
+Let us consider the researchers named Gabriel Ghinita, Panos Kalnis and Spiros Skiadopoulos that had published article [GPK2007] that is described as follows.
 
-\section{Example} \label{sec:intro-example}
-
-To demonstrate the distinction between self-citations and external citations, consider the following example.
-
-Let us consider an article [GPK2007], described as follows.
-
-\begin{quote}
-    \item[{[GPK2007]}] Gabriel Ghinita, Panos Kalnis, Spiros Skiadopoulos:
-    \emph{PRIVE: anonymous location-based queries in distributed mobile systems}. WWW 2007: 371-380
-\end{quote}
-
-Another article [KGMP2007], described as follows, cites [GPK2007].
-
-\begin{quote}
-    \item[{[KGMP2007]}] Panos Kalnis, Gabriel Ghinita, Kyriakos Mouratidis, Dimitris Papadias:
-    \emph{Preventing Location-Based Identity Inference in Anonymous Spatial Queries}. IEEE Trans. Knowl. Data Eng. 19(12): 1719-1733 (2007)
-\end{quote}
+\begin{myquote}
+[GPK2007] & Gabriel Ghinita, Panos Kalnis, Spiros Skiadopoulos:
+\emph{PRIVE: anonymous location-based queries in distributed mobile systems}. WWW 2007: 371-380
+\end{myquote}
 
 
-For Gabriel Ghinita and Panos Kalnis this counts as a \emph{self-citation}, since these authors appear on both papers.
+Panos Kalnis, a co-author of [GPK2007], later in the same year published article [KGMP2007] that cites [GPK2007] and is detailed as follows.
 
-For Spiros Skiadopoulos this counts as a \emph{external citation}.
+\begin{myquote}
+[KGMP2007] & Panos Kalnis, Gabriel Ghinita, Kyriakos Mouratidis, Dimitris Papadias:
+\emph{Preventing Location-Based Identity Inference in Anonymous Spatial Queries}. IEEE Trans. Knowl. Data Eng. 19(12): 1719-1733 (2007)
+\end{myquote}
 
-\snote{Somehow I liked my example better. For starters, It should be a concrete one. If you do not like having my name find another. Still, keep my structure.}
+It is clear that when we consider the third-party citations of Panos Kalnis and Gabriel Ghinita the citation of [GPK2007] in [KGMP2007] should be excluded (since Panos Kalnis and Gabriel Ghinita co-authored both articles).
 
-\enote{Sorry completely misread the sentiment: I missed the point that the example should have been concrete (even though you said it in the comment) and tried to abstract it away.}
-\enote{I changed the wording of your example to (a) make it more article-centric, and (b) remove the (b.1) time period "later in that year" (seemed unnecessary to me), (b.2) the proactive conclusion "should be excluded" (seemed too early to decide what to do with them - here was the stage where I just make an example of the relationship), (b.3) unclear statement around Spiros Skiadopoulos citation category "For the case of Spiros Skiadopoulos the choice is not so clear".}
+For the case of Spiros Skiadopoulos the choice is not so clear.
+
+\snote{Carry on! Εδώ θα πεις ότι μάλλον δεν είναι σωστά να θεωρηθεί η [KGMP2007] self citation γιατί δεν την έχει γράψει ο Σκιαδόπουλος. Κάποιοι θα το μετρούσαν κάποιοι όχι. } 
+
+\snote{Οπότε εμείς θέλουμε να παρουσιάσουμε όλες τις περιπτώσεις. External citations, Strict self citations, other citations. Βρες κατάλληλα ονόματα δεν μου έρχεται κάτι τώρα. }
+
+\snote{Μετά θα πεις ότι θα σας φτιάξουμε ένα σύστημα στο οποίο θα εμφανίζει όλες τις επιλογές.}
+
+\snote{
+Γενικά σχόλια:
+\begin{itemize}
+\item
+Μην σβήνεις τα σχόλιά μου. Θέλω να βλέπω τι σου είχα γράψει. Αν είμαι ΟΚ θα τα σβήνω εγώ. Επίσης θα αφήνω πολλά πράγματα σε σχόλια αν πιστεύω ότι θα μου είναι χρήσιμα αργότερα. Μην τα σβήνεις. 
+\item
+Μην αλλάζεις το κείμενό μου. Εκτός αν έχω κάνει typo ή λέω κάτι λάθος. Έφαγα χρόνο να το γράψω... 
+\item
+use American english dictionary. 
+\end{itemize}
+}
+
 
 \section{Structure of work} \label{sec:structure-of-work}
 
-The remainder of this work is organised as follows.
+The remainder of this work is organized as follows.
 
-\scor{}{This should be also a description env. Fixed the first, fixed the other. Also use present (and not future) tense.}
+
+
 \begin{description}
 
 \item
