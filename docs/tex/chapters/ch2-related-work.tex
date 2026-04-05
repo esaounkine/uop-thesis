@@ -1,0 +1,48 @@
+% !TEX encoding = UTF-8 Unicode
+% !TEX root = ../Saunkin.tex
+
+\chapter{Related work and systems} \label{c2:related-work}
+
+The analysis of scientific citations has been an active area of research within the field of bibliometrics.
+A number of metrics, data sources, and analytical approaches have been developed to assess the impact of publications and researchers.
+
+This chapter presents an overview of the fundamental concepts and existing systems relevant to citation analysis.
+
+\section{Data sources} \label{sec:data-sources}
+
+Citation data is typically obtained from specialzsed academic search systems that index scientific publications and their references.
+
+Widely used platforms are Google Scholar~\cite{googlescholar} and Semantic Scholar~\cite{semanticscholar}, which provide large-scale coverage of scientific literature and citation relationships.
+These systems allow users to search for publications, track citation counts, and explore connections between works.
+
+A relatively recent initiative, OpenAlex~\cite{openalex}, provides structured access to scholarly metadata, including citation graphs, through publicly available API.
+
+These systems present several limitations.
+Access to data is often restricted or rate limited, metadata is inconsistent across articles, and authors are not uniquely defined across data sources and publications.
+
+\section{Existing approaches} \label{sec:existing-approaches}
+
+Existing approaches to citation analysis primarily rely on the aggregation and examination of citation relationships between publications.
+
+A common representation models publications as nodes in a graph, with directed edges indicating citation relationships.
+This representation enables the application of graph-based methods to quantify influence among the scientific publications~\cite{Boyack2005}.
+
+In addition to trivial citation counts, other metrics have been proposed to evaluate research impact, such as the Hirsch index (h-index)~\cite{Hirsch2005}, which attempts to capture both productivity and citation influence.
+
+These approaches form the base of many existing citation analysis systems and are commonly used in the evaluation of scientific output.
+
+\section{Research on self-citation} \label{sec:research-on-self-citation}
+
+Self-citation has been discussed in the context of bibliometrics to a limited degree.
+
+It is generally defined as a citation where at least one author appears in both the citing and cited publications~\cite{Glnzel2003BIBLIOMETRICSAA, Fowler2007, R2008ImpactReinforcing}.
+
+Self-citations may occur naturally when researchers build upon their own previous work.
+However, excessive self-citation can artificially inflate citation-based metrics and distort the perceived impact of a publication or researcher~\cite{Fowler2007, R2008ImpactReinforcing}.
+
+Several studies have highlighted the importance of distinguishing self-citations from external citations when evaluating scientific impact.
+Nevertheless, definitions and methodologies vary across studies, and many systems do not provide explicit or consistent classification~\cite{Glnzel2003BIBLIOMETRICSAA, Costas2010}.
+
+Recent work has focused specifically on the impact of self-citations.
+For example, Fiorillo (2024) introduces the Fi-score, a metric designed to assess the influence of self-citations on academic impact~\cite{Fiorillo2024}.
+
