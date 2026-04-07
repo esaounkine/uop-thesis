@@ -11,24 +11,28 @@ This chapter presents an overview of the fundamental concepts and existing syste
 \section{Data sources} \label{sec:data-sources}
 
 Citation data is typically obtained from specialized academic search systems that index scientific publications and their references. 
-Widely used platforms, for this task, are Google Scholar\footnote{\url{https://scholar.google.com}}\scor{\cite{googlescholar}}{Αν είναι μόνο URL βάζε το footnote, όπως το έκανα πριν γιατί αν το κάνεις cite πρέπει να βάλεις και authors κλπ. } and Semantic Scholar~\cite{semanticscholar}, which provide large-scale coverage of scientific literature and citation relationships.
+Widely used platforms, for this task, are \textsf{Google Scholar}~\footnote{\url{https://scholar.google.com}} and \textsf{Semantic Scholar}~\footnote{\url{https://www.semanticscholar.org}}, which provide large-scale coverage of scientific literature and citation relationships.
+\scor{\cite{googlescholar}}{Αν είναι μόνο URL βάζε το footnote, όπως το έκανα πριν γιατί αν το κάνεις cite πρέπει να βάλεις και authors κλπ. }
 These systems allow users to search for publications, track citation counts, and explore connections between works.
 
 \snote{Επίσης, συστήματα, γλώσσες προγραμματισμού τα βάζουμε με διαφορετικό font, π.χ.,} \textsf{Google Scholar},  \textsf{Semantic Scholar}, \textsf{OpenAlex}
 
-A relatively recent initiative, OpenAlex~\cite{openalex}, provides structured access to scholarly metadata, including citation graphs, through publicly available \scor{API}{μην χρησιμοποιείς αρχικά χωρίς να τα ορίζεις, εδώ applications programming interface (API). Αφού το ορίσεις μπορείς να το χρησιμοποιείς σε όλο το κεφάλαιο. Σε άλλο πρέπει να το ξαναορίσεις}.
+A recent initiative, \textsf{OpenAlex}~\footnote{\url{https://openalex.org}}, provides structured access to scholarly metadata, including citation graphs, through publicly available Application Programming Interface (API)\scor{API}{μην χρησιμοποιείς αρχικά χωρίς να τα ορίζεις, εδώ applications programming interface (API). Αφού το ορίσεις μπορείς να το χρησιμοποιείς σε όλο το κεφάλαιο. Σε άλλο πρέπει να το ξαναορίσεις}.
 
 These systems present several limitations.
 Access to data is often restricted or rate limited, metadata is inconsistent across articles, and authors are not uniquely defined across data sources and publications.
 
-\snote{The above might be true, but why they affect us. Remember the problem is self/external citation distinction. In any case you do not provide solutions for inconsistent data. You you use existing meta data, right?}
+\snote{The above might be true, but why they affect us. Remember the problem is self/external citation distinction. In any case you do not provide solutions for inconsistent data. You use existing meta data, right?}
+\enote{I just present the existing systems. It's the current state of things, data sources are not all equal.}
+\enote{ID incostistency, insufficient data parity, difficulty matching the authors, limit rated access - all these aspects will become issues down the road of this investigation.}
+\enote{The software I will create as part of this investigation, I will have to justify the preference of one of the data source over another (it might be due to the availability of papers on a data source), provide a solution for author matching, and a way around throttling.}
 
 \section{Existing approaches} \label{sec:existing-approaches}
 
 Existing approaches to citation analysis primarily rely on the aggregation and examination of citation relationships between publications.
 
 A common representation models publications as nodes in a graph, with directed edges indicating citation relationships.
-This representation enables the application of graph-based methods to quantify influence among the scientific publications~\cite{Boyack2005}.
+This representation enables the application of graph-based methods to quantify influence among the scientific publications~\cite{Boyack2005, Chronis2021, Chronis2020}.
 
 \snote{
 Cite also the following. 
@@ -45,7 +49,7 @@ Link Prediction in Bibliographic Networks. ADBIS/TPDL/EDA Workshops 2020: 335-34
 Let me get some citations....
 }
 
-In addition to trivial citation counts, other metrics have been proposed to evaluate research impact, such as the Hirsch index (h-index)~\cite{Hirsch2005}, which attempts to capture both productivity and citation influence.
+In addition to trivial citation counts, other metrics have been proposed to evaluate research impact, such as the \textsf{Hirsch index} (h-index)~\cite{Hirsch2005}, which attempts to capture both productivity and citation influence.
 
 These approaches form the base of many existing citation analysis systems and are commonly used in the evaluation of scientific output.
 
@@ -63,3 +67,4 @@ Recent work has focused specifically on the impact of self-citations.
 For example, Fiorillo~\cite{Fiorillo2024} introduces the Fi-score, a metric designed to assess the influence of self-citations on academic impact.
 
 \snote{You make too small paragraphs. An empty line in \LaTeX separates paragraphs. Typically, I use a single line for a paragraphs (despite the fact that intelij complains. You do not have to do like me. Yet a paragraph should have many sentences of a coherent content. You typically break the coherent content into many paragraphs. I corrected some, still keep this in mind.}
+\enote{I find dense paragraphs harder to read. But I obviously can adapt and will do as you suggest.}
