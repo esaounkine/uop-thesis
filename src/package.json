@@ -1,0 +1,12 @@
+{
+  "name": "@esaounkine/thesis",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "repository": "https://github.com/esaounkine/uop-thesis.git",
+  "author": "Ilya Saunkin <dit03066@go.uop.gr>",
+  "license": "MIT"
+}
