@@ -1,0 +1,21 @@
+{
+  "name": "@esaounkine/thesis-backend",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "node src/db/migrate.js",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+  },
+  "dependencies": {
+    "drizzle-orm": "1.0.0-rc.4"
+  },
+  "devDependencies": {
+    "drizzle-kit": "1.0.0-rc.4",
+    "jest": "^30.4.2"
+  },
+  "engines": {
+    "node": "25.7.0"
+  }
+}

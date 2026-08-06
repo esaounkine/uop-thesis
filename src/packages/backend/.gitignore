@@ -1,0 +1,23 @@
+.env
+.env.*
+
+# npm/yarn
+node_modules/
+.yarn
+yarn-error.log
+
+# build outputs
+dist/
+out/
+
+# editor / temp
+*.swp
+*.swo
+tmp/
+
+# test
+coverage/
+
+# DB data file
+**/db-data/*
+
