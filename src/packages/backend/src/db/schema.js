@@ -1,4 +1,5 @@
 import { integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { CITATION_TYPES } from '../constants/citation-type.js';
 
 export const publications = sqliteTable('publications', {
   pubId: text('pub_id')
@@ -44,7 +45,7 @@ export const citations = sqliteTable(
       .notNull()
       .references(() => publications.pubId),
     classification: text('classification', {
-      enum: ['external', 'self-direct', 'self-coauthor'],
+      enum: CITATION_TYPES,
     }),
   },
   (t) => [
