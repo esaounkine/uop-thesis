@@ -1,3 +1,4 @@
+import { RetryStrategy } from './RetryStrategy.js';
 import { httpMaxRetries, httpRetryBaseMs } from '../config/env.js';
 
 const createCacheKeyFromUrl = (url) => {
@@ -6,18 +7,39 @@ const createCacheKeyFromUrl = (url) => {
   return normalised.toString();
 };
 
-const sleep = (ms) =>
-  new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
+export class HttpError extends Error {
+  constructor(response) {
+    super(`Request failed with ${response.status}`);
+    this.name = 'HttpError';
+    this.status = response.status;
+    this.retryAfterMs = this.getRetryAfterMs(response);
+  }
 
-const isTransient = (status) =>
-  status === 429 || status >= 500;
+  getRetryAfterMs = (response) => {
+    // The Retry-After header supports two formats: number of seconds, or a date;
+    // this function only supports the number of seconds version.
+    const seconds = Number(response.headers?.get?.('retry-after'));
+
+    return Number.isFinite(seconds) && seconds > 0
+      ? seconds * 1000
+      : undefined;
+  };
+}
+
+const backoffMs = (attempt, baseMs) =>
+  baseMs * (2 ** attempt) + Math.random() * baseMs;
+
+const defaultRetryStrategy = new RetryStrategy({
+  maxRetries: httpMaxRetries,
+  shouldRetry: (error) =>
+    error instanceof HttpError && (error.status === 429 || error.status >= 500),
+  delayMs: (error, attempt) =>
+    error.retryAfterMs ?? backoffMs(attempt, httpRetryBaseMs),
+});
 
 /**
  * UserAgent for HTTP requests.
- * Wrapper around the standard node `fetch`, plus a read-through cache and
- * retries with backoff on transient responses (429, 5xx).
+ * Wrapper around the standard node `fetch`, behind a read-through cache.
  */
 export class HttpClient {
   /**
@@ -25,24 +47,18 @@ export class HttpClient {
    * @param {typeof fetch} [args.fetchImpl]
    * @param {import('../repositories/CacheRepository.js').CacheRepository} [args.cache]
    * @param {{ add: (task: () => Promise<any>) => Promise<any> }} [args.queue] - paces requests (e.g. p-queue)
-   * @param {number} [args.maxRetries]
-   * @param {number} [args.retryBaseMs]
-   * @param {(ms: number) => Promise<void>} [args.sleepFn]
+   * @param {import('./RetryStrategy.js').RetryStrategy} [args.retryStrategy] - overrides the default HTTP retry strategy
    */
   constructor({
     fetchImpl = fetch,
     cache,
     queue,
-    maxRetries = httpMaxRetries,
-    retryBaseMs = httpRetryBaseMs,
-    sleepFn = sleep,
+    retryStrategy = defaultRetryStrategy,
   } = {}) {
     this.fetch = fetchImpl;
     this.cache = cache;
     this.queue = queue;
-    this.maxRetries = maxRetries;
-    this.retryBaseMs = retryBaseMs;
-    this.sleep = sleepFn;
+    this.retryStrategy = retryStrategy;
   }
 
   /**
@@ -63,7 +79,9 @@ export class HttpClient {
       };
     }
 
-    const response = await this.request(url, headers, 0);
+    const response = await this.retryStrategy.run(() =>
+      this.runFetch(url, headers));
+
     const data = await response.json();
     const fetchedAt = this.cache?.put(key, data) ?? new Date();
 
@@ -74,37 +92,14 @@ export class HttpClient {
   }
 
   /**
-   * Fetches url, retrying on a transient status with a backoff.
-   *
-   * @param {string|URL} url
-   * @param {Object} [headers]
-   * @param {number} attempt
-   * @returns {Promise<Response>}
-   * @throws Error on a non-ok response once retries are exhausted
-   */
-  async request(url, headers, attempt) {
-    const response = await this.runFetch(url, headers);
-
-    if (isTransient(response.status) && attempt < this.maxRetries) {
-      await this.sleep(this.retryDelayMs(response, attempt));
-      return this.request(url, headers, attempt + 1);
-    }
-
-    if (!response.ok) {
-      throw new Error(`Request to ${url} failed with ${response.status}`);
-    }
-
-    return response;
-  }
-
-  /**
-   * Runs the fetch through the queue when one is set, so requests are paced.
+   * Fetches url or throws an HttpError.
    *
    * @param {string|URL} url
    * @param {Object} [headers]
    * @returns {Promise<Response>}
+   * @throws HttpError
    */
-  runFetch(url, headers) {
+  async runFetch(url, headers) {
     const task = () =>
       this.fetch(url, {
         headers: {
@@ -112,25 +107,14 @@ export class HttpClient {
         },
       });
 
-    return this.queue
+    const response = await (this.queue
       ? this.queue.add(task)
-      : task();
-  }
+      : task());
 
-  /**
-   * @param {Response} response
-   * @param {number} attempt
-   * @returns {number} the delay in ms - the Retry-After header, or an exponential backoff with jitter
-   */
-  retryDelayMs(response, attempt) {
-    const retryAfterSeconds = Number(response.headers?.get?.('retry-after'));
-
-    if (Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0) {
-      return retryAfterSeconds * 1000;
+    if (!response.ok) {
+      throw new HttpError(response);
     }
 
-    const backoff = this.retryBaseMs * (2 ** attempt);
-    const jitter = Math.random() * this.retryBaseMs;
-    return backoff + jitter;
+    return response;
   }
 }

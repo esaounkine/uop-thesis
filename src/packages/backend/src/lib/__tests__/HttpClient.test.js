@@ -4,6 +4,7 @@ import { migrationsDir } from '../../config/env.js';
 import { DbClient } from '../../db/client.js';
 import { CacheRepository } from '../../repositories/CacheRepository.js';
 import { HttpClient } from '../HttpClient.js';
+import { RetryStrategy } from '../RetryStrategy.js';
 
 const okResponse = (body) => {
   return {
@@ -19,6 +20,17 @@ const createCache = () => {
   migrate(db, { migrationsFolder: migrationsDir });
   return new CacheRepository(db);
 };
+
+// A strategy that always retries with no real delay.
+const retryingStrategy = (maxRetries) =>
+  new RetryStrategy({
+    maxRetries: maxRetries,
+    shouldRetry: () =>
+      true,
+    delayMs: () =>
+      0,
+    sleep: async () => {},
+  });
 
 describe('HttpClient', () => {
   describe('getJson', () => {
@@ -68,7 +80,7 @@ describe('HttpClient', () => {
         beforeEach(async () => {
           calls = 0;
           const client = new HttpClient({
-            sleepFn: async () => {},
+            retryStrategy: retryingStrategy(2),
             fetchImpl: async () => {
               calls += 1;
               if (calls === 1) {
@@ -100,8 +112,7 @@ describe('HttpClient', () => {
         beforeEach(() => {
           calls = 0;
           client = new HttpClient({
-            sleepFn: async () => {},
-            maxRetries: 2,
+            retryStrategy: retryingStrategy(2),
             fetchImpl: async () => {
               calls += 1;
               return {
