@@ -15,18 +15,22 @@ const wire = (dbPath) => {
   migrate(db, { migrationsFolder: migrationsDir });
 
   const cache = new CacheRepository(db);
-  const queue = new PQueue({
+  const requestQueue = new PQueue({
     interval: 1000,
     intervalCap: httpMaxPerSecond,
   });
   const httpClient = new HttpClient({
     cache: cache,
-    queue: queue,
+    queue: requestQueue,
   });
-
-  return new OpenAlexConnector({
+  const connector = new OpenAlexConnector({
     httpClient: httpClient,
   });
+
+  return {
+    connector: connector,
+    requestQueue: requestQueue,
+  };
 };
 
 /**
@@ -36,14 +40,19 @@ const wire = (dbPath) => {
  * @param {Object} [args]
  * @param {string} [args.dbPath]
  * @param {import('./connectors/ProviderConnector.js').ProviderConnector} [args.connector]
- * @returns {{ classificationService: ClassificationService }}
+ * @returns {{ classificationService: ClassificationService, requestQueue: (import('p-queue').default|undefined) }}
  */
 export const createApp = ({
   dbPath = dbFile, connector,
 } = {}) => {
-  const _connector = connector ?? wire(dbPath);
+  const wired = connector
+    ? {
+        connector: connector,
+        requestQueue: undefined,
+      }
+    : wire(dbPath);
   const publicationService = new PublicationService({
-    connector: _connector,
+    connector: wired.connector,
   });
   const classificationService = new ClassificationService({
     publicationService: publicationService,
@@ -51,5 +60,6 @@ export const createApp = ({
 
   return {
     classificationService: classificationService,
+    requestQueue: wired.requestQueue,
   };
 };

@@ -1,10 +1,12 @@
 import { createApp } from './app.js';
+import { withQueueProgressReport } from './lib/queue-progress.js';
 
-const printMetrics = (result) => {
-  const {
-    publication, metrics,
-  } = result;
-
+const printMetrics = (
+  {
+    publication, metrics, citations,
+  },
+  skipDebug = true,
+) => {
   console.log(`
 Paper: ${publication.pubId} - ${publication.title}
 Total citations: ${metrics.total}
@@ -14,7 +16,9 @@ Self: ${metrics.self.total}
 External: ${metrics.external}
 
 Debug details (per citation):
-${JSON.stringify(result.citations, null, 2)}
+${skipDebug
+  ? 'skipped'
+  : JSON.stringify(citations, null, 2)}
  `);
 };
 
@@ -25,8 +29,16 @@ if (!pubId) {
   process.exit(1);
 }
 
-const { classificationService } = createApp();
-const result = await classificationService.getPaperMetrics(pubId);
+const {
+  classificationService,
+  requestQueue,
+} = createApp();
+
+const result = await withQueueProgressReport(
+  requestQueue,
+  () =>
+    classificationService.getPaperMetrics(pubId),
+);
 
 if (!result) {
   console.error(`Paper not found: ${pubId}`);
