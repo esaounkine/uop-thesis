@@ -8,5 +8,17 @@
   ],
   "repository": "https://github.com/esaounkine/uop-thesis.git",
   "author": "Ilya Saunkin <dit03066@go.uop.gr>",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "prepare": "cd .. && husky"
+  },
+  "lint-staged": {
+    "packages/backend/**/*.js": [
+      "eslint --fix"
+    ]
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^17.3.0"
+  }
 }
