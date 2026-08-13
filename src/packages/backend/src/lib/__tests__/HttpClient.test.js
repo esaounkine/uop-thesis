@@ -61,12 +61,49 @@ describe('HttpClient', () => {
         });
       });
 
-      describe('and the response is not ok', () => {
+      describe('and the response is 429 then ok', () => {
+        let result;
+        let calls;
+
+        beforeEach(async () => {
+          calls = 0;
+          const client = new HttpClient({
+            sleepFn: async () => {},
+            fetchImpl: async () => {
+              calls += 1;
+              if (calls === 1) {
+                return {
+                  ok: false,
+                  status: 429,
+                  json: async () => { return {}; },
+                };
+              }
+              return okResponse({ hello: 'world' });
+            },
+          });
+          result = await client.getJson('https://x/');
+        });
+
+        it('retries and returns the data', () => {
+          expect(result.data).toEqual({ hello: 'world' });
+        });
+
+        it('retried once', () => {
+          expect(calls).toBe(2);
+        });
+      });
+
+      describe('and the response keeps being 429', () => {
         let client;
+        let calls;
 
         beforeEach(() => {
+          calls = 0;
           client = new HttpClient({
+            sleepFn: async () => {},
+            maxRetries: 2,
             fetchImpl: async () => {
+              calls += 1;
               return {
                 ok: false,
                 status: 429,
@@ -76,8 +113,33 @@ describe('HttpClient', () => {
           });
         });
 
-        it('throws with the status', async () => {
+        it('throws once retries are exhausted', async () => {
           await expect(client.getJson('https://x/')).rejects.toThrow('429');
+        });
+
+        it('tries maxRetries + 1 times', async () => {
+          await client.getJson('https://x/').catch(() => {});
+          expect(calls).toBe(3);
+        });
+      });
+
+      describe('and the response is a non-transient error', () => {
+        let client;
+
+        beforeEach(() => {
+          client = new HttpClient({
+            fetchImpl: async () => {
+              return {
+                ok: false,
+                status: 404,
+                json: async () => { return {}; },
+              };
+            },
+          });
+        });
+
+        it('throws with the status without retrying', async () => {
+          await expect(client.getJson('https://x/')).rejects.toThrow('404');
         });
       });
     });

@@ -15,3 +15,6 @@ export const openAlexApiKey = process.env.OPENALEX_API_KEY;
 
 export const citationsTtlMs = Number(process.env.CITATIONS_TTL_MS ?? 7 * 24 * 60 * 60 * 1000); // 1 week
 export const metadataTtlMs = Number(process.env.METADATA_TTL_MS ?? 30 * 24 * 60 * 60 * 1000); // 30 days
+
+export const httpMaxRetries = Number(process.env.HTTP_MAX_RETRIES ?? 5);
+export const httpRetryBaseMs = Number(process.env.HTTP_RETRY_BASE_MS ?? 1000);
