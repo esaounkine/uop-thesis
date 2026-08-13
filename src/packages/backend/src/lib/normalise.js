@@ -7,9 +7,7 @@ const DIACRITICS = /[̀-ͯ]/g;
  * @returns {string}
  */
 export const normalise = (value) =>
-  (value ?? '')
-    .normalize('NFKD')
-    .replace(DIACRITICS, '')
+  (value ?? '').normalize('NFKD').replace(DIACRITICS, '')
     .toLowerCase()
     .replace(/\s+/g, ' ')
     .trim();

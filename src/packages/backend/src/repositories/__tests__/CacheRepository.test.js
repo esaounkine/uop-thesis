@@ -24,7 +24,10 @@ describe('CacheRepository', () => {
   });
 
   describe('when the key has a value', () => {
-    const value = { results: [{ id: 'W1' }], page: 1 };
+    const value = {
+      results: [{ id: 'W1' }],
+      page: 1,
+    };
 
     beforeEach(() => {
       repo.put('openalex:W1', value);
@@ -42,7 +45,8 @@ describe('CacheRepository', () => {
 
     describe('and the entry is older than the TTL', () => {
       it('getOrFail throws an outdated error', () => {
-        expect(() => repo.getOrFail('openalex:W1', 0)).toThrow(OutdatedCacheError);
+        expect(() =>
+          repo.getOrFail('openalex:W1', 0)).toThrow(OutdatedCacheError);
       });
 
       it('get returns null', () => {

@@ -13,7 +13,7 @@ export class DbClient {
 
     this.db = drizzle({
       client: this.sqlite,
-      schema,
+      schema: schema,
     });
   }
 

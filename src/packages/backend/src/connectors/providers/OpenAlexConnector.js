@@ -6,7 +6,10 @@ import { ProviderConnector } from '../ProviderConnector.js';
 const PER_PAGE = 200; // OpenAlex maximum
 
 // 'https://openalex.org/W123' -> 'W123'
-const shortId = (id) => (id ? id.split('/').pop() : id);
+const shortId = (id) =>
+  (id
+    ? id.split('/').pop()
+    : id);
 
 /**
  * OpenAlex provider connector.
@@ -22,10 +25,9 @@ export class OpenAlexConnector extends ProviderConnector {
    */
   constructor({
     httpClient = new HttpClient(),
-      baseUrl = openAlexBaseUrl,
-      apiKey = openAlexApiKey,
-    } = {},
-  ) {
+    baseUrl = openAlexBaseUrl,
+    apiKey = openAlexApiKey,
+  } = {}) {
     super();
     this.httpClient = httpClient;
     this.baseUrl = baseUrl;
@@ -47,10 +49,9 @@ export class OpenAlexConnector extends ProviderConnector {
 
   async getAuthorPublications(authorId) {
     return this.fetchAllPages('/works', {
-        filter: `author.id:${authorId}`,
-      }, citationsTtlMs, (work) =>
-        this.toPublication(work),
-    );
+      filter: `author.id:${authorId}`,
+    }, citationsTtlMs, (work) =>
+      this.toPublication(work));
   }
 
   async getPublication(id) {
@@ -60,19 +61,20 @@ export class OpenAlexConnector extends ProviderConnector {
 
   async getCitations(pubId) {
     return this.fetchAllPages('/works', {
-        filter: `cites:${pubId}`,
-      }, citationsTtlMs, (work) =>
-        this.toPublication(work),
-    );
+      filter: `cites:${pubId}`,
+    }, citationsTtlMs, (work) =>
+      this.toPublication(work));
   }
 
   async getContributions(pubId) {
     const work = await this.fetchJson(`/works/${pubId}`, {}, metadataTtlMs);
-    return work.authorships.map((entry, index) => ({
-      pubId,
-      authorId: shortId(entry.author.id),
-      position: index + 1, // OpenAlex returns them in order
-    }));
+    return work.authorships.map((entry, index) => {
+      return {
+        pubId: pubId,
+        authorId: shortId(entry.author.id),
+        position: index + 1, // OpenAlex returns them in order
+      };
+    });
   }
 
   /**
@@ -109,18 +111,14 @@ export class OpenAlexConnector extends ProviderConnector {
     let cursor = '*';
 
     while (cursor) {
-      // eslint-disable-next-line no-await-in-loop -- pages are sequential (cursor based)
-      const data = await this.fetchJson(
-        path,
-        {
-          ...params,
-          cursor,
-          per_page: PER_PAGE,
-        },
-        ttl,
-      );
+      const data = await this.fetchJson(path, {
+        ...params,
+        cursor: cursor,
+        per_page: PER_PAGE,
+      }, ttl);
 
-      data.results.forEach((item) => items.push(map(item)));
+      data.results.forEach((item) =>
+        items.push(map(item)));
       cursor = data.meta?.next_cursor ?? null;
     }
 

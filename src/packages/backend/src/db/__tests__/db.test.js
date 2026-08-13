@@ -13,41 +13,32 @@ describe('db layer', () => {
   test('cache stores and reads back a payload', () => {
     const key = 'openalex:W123';
     const payload = JSON.stringify({
-      results: [
-        { id: 'W1' },
-        { id: 'W2' },
-      ],
+      results: [{ id: 'W1' }, { id: 'W2' }],
       page: 1,
     });
-    db.insert(schema.cache)
-      .values({
-        key,
-        payload,
-        fetchedAt: new Date().toISOString(),
-      })
+    db.insert(schema.cache).values({
+      key: key,
+      payload: payload,
+      fetchedAt: new Date().toISOString(),
+    })
       .run();
 
-    const row = db
-      .select()
-      .from(schema.cache)
+    const row = db.select().from(schema.cache)
       .where(eq(schema.cache.key, key))
       .get();
     expect(row.payload).toBe(payload);
   });
 
   test('publication round-trips through the normalised tables', () => {
-    db.insert(schema.publications)
-      .values({
-        pubId: 'P1',
-        title: 'A Paper',
-        normalisedTitle: 'a paper',
-        externalId: '10.1/x',
-      })
+    db.insert(schema.publications).values({
+      pubId: 'P1',
+      title: 'A Paper',
+      normalisedTitle: 'a paper',
+      externalId: '10.1/x',
+    })
       .run();
 
-    const row = db
-      .select()
-      .from(schema.publications)
+    const row = db.select().from(schema.publications)
       .where(eq(schema.publications.pubId, 'P1'))
       .get();
     expect(row.title).toBe('A Paper');

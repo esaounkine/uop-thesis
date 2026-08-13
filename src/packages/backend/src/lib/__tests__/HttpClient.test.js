@@ -5,11 +5,14 @@ import { DbClient } from '../../db/client.js';
 import { CacheRepository } from '../../repositories/CacheRepository.js';
 import { HttpClient } from '../HttpClient.js';
 
-const okResponse = (body) => ({
-  ok: true,
-  status: 200,
-  json: async () => body,
-});
+const okResponse = (body) => {
+  return {
+    ok: true,
+    status: 200,
+    json: async () =>
+      body,
+  };
+};
 
 const createCache = () => {
   const { db } = new DbClient();
@@ -65,10 +68,11 @@ describe('HttpClient', () => {
           client = new HttpClient({
             fetchImpl: async () => {
               return {
-              ok: false,
-              status: 429,
-              json: async () => ({}),
-            }),
+                ok: false,
+                status: 429,
+                json: async () => { return {}; },
+              };
+            },
           });
         });
 

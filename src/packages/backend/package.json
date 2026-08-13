@@ -6,14 +6,19 @@
   "scripts": {
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node src/db/migrate.js",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "dependencies": {
     "drizzle-orm": "1.0.0-rc.4"
   },
   "devDependencies": {
-    "dotenv": "^17.4.2",
+    "@eslint/js": "^10.0.1",
+    "@stylistic/eslint-plugin": "^5.10.0",
     "drizzle-kit": "1.0.0-rc.4",
+    "eslint": "^10.8.1",
+    "globals": "^17.11.0",
     "jest": "^30.4.2"
   },
   "engines": {

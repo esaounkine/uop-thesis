@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { ClassificationService } from '../ClassificationService.js';
 
-const contribution = (authorId, position) => ({
-  pubId: 'X',
-  authorId,
-  position,
-});
+const contribution = (authorId, position) => {
+  return {
+    pubId: 'X',
+    authorId: authorId,
+    position: position,
+  };
+};
 
 describe('ClassificationService', () => {
   let service;
@@ -26,8 +28,7 @@ describe('ClassificationService', () => {
       });
 
       it('is external', () => {
-        expect(label)
-          .toBe('external');
+        expect(label).toBe('external');
       });
     });
 
@@ -42,8 +43,7 @@ describe('ClassificationService', () => {
       });
 
       it('is a direct self citation', () => {
-        expect(label)
-          .toBe('self-direct');
+        expect(label).toBe('self-direct');
       });
     });
 
@@ -58,8 +58,7 @@ describe('ClassificationService', () => {
       });
 
       it('is a co-author self citation', () => {
-        expect(label)
-          .toBe('self-coauthor');
+        expect(label).toBe('self-coauthor');
       });
     });
 
@@ -74,8 +73,7 @@ describe('ClassificationService', () => {
       });
 
       it('is a co-author self citation', () => {
-        expect(label)
-          .toBe('self-coauthor');
+        expect(label).toBe('self-coauthor');
       });
     });
   });
@@ -95,37 +93,34 @@ describe('ClassificationService', () => {
       });
 
       it('counts the total', () => {
-        expect(metrics.total)
-          .toBe(3);
+        expect(metrics.total).toBe(3);
       });
 
       it('counts the external citations', () => {
-        expect(metrics.external)
-          .toBe(1);
+        expect(metrics.external).toBe(1);
       });
 
       it('counts the self citations', () => {
-        expect(metrics.self.total)
-          .toBe(2);
+        expect(metrics.self.total).toBe(2);
       });
 
       it('counts the direct self citations', () => {
-        expect(metrics.self.direct)
-          .toBe(1);
+        expect(metrics.self.direct).toBe(1);
       });
 
       it('counts the co-author self citations', () => {
-        expect(metrics.self.coauthor)
-          .toBe(1);
+        expect(metrics.self.coauthor).toBe(1);
       });
     });
   });
 
   describe('getPaperMetrics', () => {
-    const citing = (pubId, contributions) => ({
-      publication: { pubId },
-      contributions,
-    });
+    const citing = (pubId, contributions) => {
+      return {
+        publication: { pubId: pubId },
+        contributions: contributions,
+      };
+    };
 
     describe('when the paper exists', () => {
       let result;
@@ -141,38 +136,45 @@ describe('ClassificationService', () => {
           ],
         };
         const publicationService = {
-          getCitationTree: async () => tree,
+          getCitationTree: async () =>
+            tree,
         };
         result = await new ClassificationService({
-          publicationService,
+          publicationService: publicationService,
         }).getPaperMetrics('W1');
       });
 
       it('returns the paper', () => {
-        expect(result.publication.pubId)
-          .toBe('W1');
+        expect(result.publication.pubId).toBe('W1');
       });
 
       it('aggregates the metrics', () => {
-        expect(result.metrics)
-          .toEqual({
-            total: 3,
-            external: 1,
-            self: {
-              total: 2,
-              direct: 1,
-              coauthor: 1,
-            },
-          });
+        expect(result.metrics).toEqual({
+          total: 3,
+          external: 1,
+          self: {
+            total: 2,
+            direct: 1,
+            coauthor: 1,
+          },
+        });
       });
 
       it('labels each citation for the debug details', () => {
-        expect(result.citations)
-          .toEqual([
-            { publication: { pubId: 'W2' }, classification: 'self-direct' },
-            { publication: { pubId: 'W3' }, classification: 'self-coauthor' },
-            { publication: { pubId: 'W4' }, classification: 'external' },
-          ]);
+        expect(result.citations).toEqual([
+          {
+            publication: { pubId: 'W2' },
+            classification: 'self-direct',
+          },
+          {
+            publication: { pubId: 'W3' },
+            classification: 'self-coauthor',
+          },
+          {
+            publication: { pubId: 'W4' },
+            classification: 'external',
+          },
+        ]);
       });
     });
 
@@ -180,9 +182,12 @@ describe('ClassificationService', () => {
       let result;
 
       beforeEach(async () => {
-        const publicationService = { getCitationTree: async () => null };
+        const publicationService = {
+          getCitationTree: async () =>
+            null,
+        };
         result = await new ClassificationService({
-          publicationService,
+          publicationService: publicationService,
         }).getPaperMetrics('missing');
       });
 

@@ -33,9 +33,7 @@ export class CacheRepository {
    * @throws OutdatedCacheError when the entry exists but is past the TTL
    */
   getOrFail(key, ttlMs) {
-    const row = this.db
-      .select()
-      .from(cache)
+    const row = this.db.select().from(cache)
       .where(eq(cache.key, key))
       .get();
 
@@ -51,7 +49,7 @@ export class CacheRepository {
 
     return {
       value: JSON.parse(row.payload),
-      fetchedAt,
+      fetchedAt: fetchedAt,
     };
   }
 
@@ -85,18 +83,16 @@ export class CacheRepository {
     const fetchedAt = new Date().toISOString();
     const payload = JSON.stringify(value);
 
-    this.db
-      .insert(cache)
-      .values({
-        key,
-        payload,
-        fetchedAt,
-      })
+    this.db.insert(cache).values({
+      key: key,
+      payload: payload,
+      fetchedAt: fetchedAt,
+    })
       .onConflictDoUpdate({
         target: cache.key,
         set: {
-          payload,
-          fetchedAt,
+          payload: payload,
+          fetchedAt: fetchedAt,
         },
       })
       .run();

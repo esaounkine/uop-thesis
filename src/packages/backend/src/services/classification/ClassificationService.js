@@ -3,10 +3,12 @@ import { CITATION_TYPE } from '../../constants/citation-type.js';
 /** @typedef {import('../../db/schema.js').Contribution} Contribution */
 
 const leadAuthorId = (contributions) =>
-  contributions.find((contribution) => contribution.position === 1)?.authorId ?? null;
+  contributions.find((contribution) =>
+    contribution.position === 1)?.authorId ?? null;
 
 const authorIdSet = (contributions) =>
-  new Set(contributions.map((contribution) => contribution.authorId));
+  new Set(contributions.map((contribution) =>
+    contribution.authorId));
 
 /**
  * Classifies the citations of a paper.
@@ -52,7 +54,8 @@ export class ClassificationService {
    * }}
    */
   aggregate(labels) {
-    const groups = Map.groupBy(labels, x => x);
+    const groups = Map.groupBy(labels, (x) =>
+      x);
     const countOf = (type) =>
       groups.get(type)?.length ?? 0;
 
@@ -64,8 +67,8 @@ export class ClassificationService {
       external: countOf(CITATION_TYPE.EXTERNAL),
       self: {
         total: direct + coauthor,
-        direct,
-        coauthor,
+        direct: direct,
+        coauthor: coauthor,
       },
     };
   }

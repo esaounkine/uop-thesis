@@ -14,7 +14,10 @@ export class HttpClient {
    * @param {typeof fetch} [args.fetchImpl]
    * @param {import('../repositories/CacheRepository.js').CacheRepository} [args.cache]
    */
-  constructor({ fetchImpl = fetch, cache } = {}) {
+  constructor({
+    fetchImpl = fetch,
+    cache,
+  } = {}) {
     this.fetch = fetchImpl;
     this.cache = cache;
   }
@@ -51,8 +54,8 @@ export class HttpClient {
     const fetchedAt = this.cache?.put(key, data) ?? new Date();
 
     return {
-      data,
-      fetchedAt,
+      data: data,
+      fetchedAt: fetchedAt,
     };
   }
 }

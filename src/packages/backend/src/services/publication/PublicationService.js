@@ -34,17 +34,19 @@ export class PublicationService {
     const citations = await this.connector.getCitations(pubId);
 
     const citing = await Promise.all(
-      citations.map(async (citation) => ({
-        publication: citation,
-        contributions: await this.connector.getContributions(citation.pubId),
-      })),
+      citations.map(async (citation) => {
+        return {
+          publication: citation,
+          contributions: await this.connector.getContributions(citation.pubId),
+        };
+      }),
     );
 
     return {
-      publication,
-      citedContributions,
-      citing,
-      citations,
+      publication: publication,
+      citedContributions: citedContributions,
+      citing: citing,
+      citations: citations,
     };
   }
 }
