@@ -18,3 +18,4 @@ export const metadataTtlMs = Number(process.env.METADATA_TTL_MS ?? 30 * 24 * 60 
 
 export const httpMaxRetries = Number(process.env.HTTP_MAX_RETRIES ?? 5);
 export const httpRetryBaseMs = Number(process.env.HTTP_RETRY_BASE_MS ?? 1000);
+export const httpMaxPerSecond = Number(process.env.HTTP_MAX_PER_SECOND ?? 10);

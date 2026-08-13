@@ -123,6 +123,35 @@ describe('HttpClient', () => {
         });
       });
 
+      describe('and a queue is provided', () => {
+        let queueCalls;
+        let result;
+
+        beforeEach(async () => {
+          queueCalls = 0;
+          const queue = {
+            add: (task) => {
+              queueCalls += 1;
+              return task();
+            },
+          };
+          const client = new HttpClient({
+            queue: queue,
+            fetchImpl: async () =>
+              okResponse({ hello: 'world' }),
+          });
+          result = await client.getJson('https://x/');
+        });
+
+        it('routes the request through the queue', () => {
+          expect(queueCalls).toBe(1);
+        });
+
+        it('still returns the data', () => {
+          expect(result.data).toEqual({ hello: 'world' });
+        });
+      });
+
       describe('and the response is a non-transient error', () => {
         let client;
 

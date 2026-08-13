@@ -24,6 +24,7 @@ export class HttpClient {
    * @param {Object} [args]
    * @param {typeof fetch} [args.fetchImpl]
    * @param {import('../repositories/CacheRepository.js').CacheRepository} [args.cache]
+   * @param {{ add: (task: () => Promise<any>) => Promise<any> }} [args.queue] - paces requests (e.g. p-queue)
    * @param {number} [args.maxRetries]
    * @param {number} [args.retryBaseMs]
    * @param {(ms: number) => Promise<void>} [args.sleepFn]
@@ -31,12 +32,14 @@ export class HttpClient {
   constructor({
     fetchImpl = fetch,
     cache,
+    queue,
     maxRetries = httpMaxRetries,
     retryBaseMs = httpRetryBaseMs,
     sleepFn = sleep,
   } = {}) {
     this.fetch = fetchImpl;
     this.cache = cache;
+    this.queue = queue;
     this.maxRetries = maxRetries;
     this.retryBaseMs = retryBaseMs;
     this.sleep = sleepFn;
@@ -80,11 +83,7 @@ export class HttpClient {
    * @throws Error on a non-ok response once retries are exhausted
    */
   async request(url, headers, attempt) {
-    const response = await this.fetch(url, {
-      headers: {
-        ...(headers ?? {}),
-      },
-    });
+    const response = await this.runFetch(url, headers);
 
     if (isTransient(response.status) && attempt < this.maxRetries) {
       await this.sleep(this.retryDelayMs(response, attempt));
@@ -96,6 +95,26 @@ export class HttpClient {
     }
 
     return response;
+  }
+
+  /**
+   * Runs the fetch through the queue when one is set, so requests are paced.
+   *
+   * @param {string|URL} url
+   * @param {Object} [headers]
+   * @returns {Promise<Response>}
+   */
+  runFetch(url, headers) {
+    const task = () =>
+      this.fetch(url, {
+        headers: {
+          ...(headers ?? {}),
+        },
+      });
+
+    return this.queue
+      ? this.queue.add(task)
+      : task();
   }
 
   /**

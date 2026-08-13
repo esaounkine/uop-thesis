@@ -1,5 +1,8 @@
 import { migrate } from 'drizzle-orm/node-sqlite/migrator';
-import { dbFile, migrationsDir } from './config/env.js';
+import PQueue from 'p-queue';
+import {
+  dbFile, httpMaxPerSecond, migrationsDir,
+} from './config/env.js';
 import { OpenAlexConnector } from './connectors/providers/OpenAlexConnector.js';
 import { DbClient } from './db/client.js';
 import { HttpClient } from './lib/HttpClient.js';
@@ -12,7 +15,14 @@ const wire = (dbPath) => {
   migrate(db, { migrationsFolder: migrationsDir });
 
   const cache = new CacheRepository(db);
-  const httpClient = new HttpClient({ cache: cache });
+  const queue = new PQueue({
+    interval: 1000,
+    intervalCap: httpMaxPerSecond,
+  });
+  const httpClient = new HttpClient({
+    cache: cache,
+    queue: queue,
+  });
 
   return new OpenAlexConnector({
     httpClient: httpClient,
