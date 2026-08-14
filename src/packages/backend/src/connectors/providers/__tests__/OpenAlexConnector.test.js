@@ -68,6 +68,27 @@ describe('OpenAlexConnector', () => {
         });
       });
     });
+
+    describe('when an authorship has no author id', () => {
+      let contributions;
+
+      beforeEach(async () => {
+        contributions = await createConnector({
+          id: 'https://openalex.org/W1',
+          authorships: [{ author: { id: null } }, { author: { id: 'https://openalex.org/A2' } }],
+        }).getContributions('W1');
+      });
+
+      it('drops it but keeps the original position of the rest', () => {
+        expect(contributions).toEqual([
+          {
+            pubId: 'W1',
+            authorId: 'A2',
+            position: 2,
+          },
+        ]);
+      });
+    });
   });
 
   describe('getCitations', () => {

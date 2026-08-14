@@ -98,13 +98,22 @@ export class OpenAlexConnector extends ProviderConnector {
    */
   async getContributions(pubId) {
     const work = await this.fetchJson(`/works/${pubId}`, {}, directFetchTtlMs);
-    return work.authorships.map((entry, index) => {
-      return {
-        pubId: pubId,
-        authorId: OpenAlexConnector.extractShortId(entry.author.id),
-        position: index + 1, // OpenAlex returns them in order
-      };
-    });
+    return work.authorships
+      .map((entry, index) => {
+        return {
+          pubId: pubId,
+          authorId: OpenAlexConnector.extractShortId(entry.author?.id),
+          position: index + 1, // OpenAlex returns them in the order of appearance
+        };
+      })
+      // author.id might be null if:
+      // - there's raw_author_name, but no id, when the author is unmatched
+      // - new records that have not assigned an author id yet
+      // - group authors publishing as a collective
+      // - maybe other cases of missing or low quality data
+      // we just drop these contribution records
+      .filter((contribution) =>
+        contribution.authorId != null);
   }
 
   /**
