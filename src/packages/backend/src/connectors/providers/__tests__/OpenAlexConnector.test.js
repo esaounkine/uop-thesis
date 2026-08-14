@@ -1,20 +1,16 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { OpenAlexConnector } from '../OpenAlexConnector.js';
 
-// getJson returns next page on each call
 const createConnector = (...pages) => {
-  let call = 0;
-  const getJson = async () => {
-    const page = pages[call];
-    call += 1;
-    return {
+  const getJsonMock = jest.fn();
+  pages.forEach((page) =>
+    getJsonMock.mockResolvedValueOnce({
       data: page,
       fetchedAt: new Date(),
-    };
-  };
+    }));
 
   return new OpenAlexConnector({
-    httpClient: { getJson: getJson },
+    httpClient: { getJson: getJsonMock },
     baseUrl: 'https://api.openalex.org',
     apiKey: undefined,
   });

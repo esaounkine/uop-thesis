@@ -1,4 +1,6 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import {
+  beforeEach, describe, expect, it, jest,
+} from '@jest/globals';
 import { createApp } from '../app.js';
 
 const publication = (pubId) => {
@@ -23,18 +25,16 @@ describe('createApp', () => {
     let result;
 
     beforeEach(async () => {
-      const connector = {
+      const connectorMock = {
         id: 'stub',
-        getPublication: async () =>
-          publication('W1'),
-        getContributions: async (pubId) =>
-          [contribution(pubId, 'A1')],
-        getCitations: async () =>
-          [publication('W2')],
+        getPublication: jest.fn().mockResolvedValue(publication('W1')),
+        getContributions: jest.fn(async (pubId) =>
+          [contribution(pubId, 'A1')]),
+        getCitations: jest.fn().mockResolvedValue([publication('W2')]),
       };
       const { classificationService } = createApp({
         dbPath: ':memory:',
-        connector: connector,
+        connector: connectorMock,
       });
       result = await classificationService.getPaperMetrics('W1');
     });

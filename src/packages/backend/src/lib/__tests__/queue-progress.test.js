@@ -12,12 +12,12 @@ const createMockQueue = () => {
 };
 
 describe('withQueueProgressReport', () => {
-  let onProgress;
-  let onDone;
+  let onProgressMock;
+  let onDoneMock;
 
   beforeEach(() => {
-    onProgress = jest.fn();
-    onDone = jest.fn();
+    onProgressMock = jest.fn();
+    onDoneMock = jest.fn();
   });
 
   describe('when there is no queue', () => {
@@ -25,7 +25,7 @@ describe('withQueueProgressReport', () => {
 
     beforeEach(async () => {
       result = await withQueueProgressReport(undefined, async () =>
-        'value', onProgress, onDone);
+        'value', onProgressMock, onDoneMock);
     });
 
     it('runs the function and returns its result', () => {
@@ -33,7 +33,7 @@ describe('withQueueProgressReport', () => {
     });
 
     it('does not report progress', () => {
-      expect(onProgress).not.toHaveBeenCalled();
+      expect(onProgressMock).not.toHaveBeenCalled();
     });
   });
 
@@ -51,7 +51,7 @@ describe('withQueueProgressReport', () => {
         result = await withQueueProgressReport(queue, async () => {
           queue.emit('completed');
           return 'done';
-        }, onProgress, onDone);
+        }, onProgressMock, onDoneMock);
       });
 
       it('returns the result', () => {
@@ -59,7 +59,7 @@ describe('withQueueProgressReport', () => {
       });
 
       it('reports the queue status on each completed request', () => {
-        expect(onProgress).toHaveBeenCalledWith({
+        expect(onProgressMock).toHaveBeenCalledWith({
           completed: 1,
           pending: 2,
           queued: 3,
@@ -67,7 +67,7 @@ describe('withQueueProgressReport', () => {
       });
 
       it('reports done with the completed count', () => {
-        expect(onDone).toHaveBeenCalledWith(1);
+        expect(onDoneMock).toHaveBeenCalledWith(1);
       });
 
       it('detaches the listener afterwards', () => {
@@ -81,7 +81,7 @@ describe('withQueueProgressReport', () => {
       beforeEach(async () => {
         rejection = await withQueueProgressReport(queue, async () => {
           throw new Error('err');
-        }, onProgress, onDone).catch((error) =>
+        }, onProgressMock, onDoneMock).catch((error) =>
           error);
       });
 
@@ -90,7 +90,7 @@ describe('withQueueProgressReport', () => {
       });
 
       it('still reports done', () => {
-        expect(onDone).toHaveBeenCalledWith(0);
+        expect(onDoneMock).toHaveBeenCalledWith(0);
       });
 
       it('still detaches the listener', () => {

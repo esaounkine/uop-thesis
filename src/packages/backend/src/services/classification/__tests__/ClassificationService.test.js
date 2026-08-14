@@ -1,4 +1,6 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import {
+  beforeEach, describe, expect, it, jest,
+} from '@jest/globals';
 import { ClassificationService } from '../ClassificationService.js';
 
 const contribution = (authorId, position) => {
@@ -135,12 +137,11 @@ describe('ClassificationService', () => {
             citing('W4', [contribution('Z1', 1)]), // external
           ],
         };
-        const publicationService = {
-          getCitationTree: async () =>
-            tree,
+        const publicationServiceMock = {
+          getCitationTree: jest.fn().mockResolvedValue(tree),
         };
         result = await new ClassificationService({
-          publicationService: publicationService,
+          publicationService: publicationServiceMock,
         }).getPaperMetrics('W1');
       });
 
@@ -182,12 +183,11 @@ describe('ClassificationService', () => {
       let result;
 
       beforeEach(async () => {
-        const publicationService = {
-          getCitationTree: async () =>
-            null,
+        const publicationServiceMock = {
+          getCitationTree: jest.fn().mockResolvedValue(null),
         };
         result = await new ClassificationService({
-          publicationService: publicationService,
+          publicationService: publicationServiceMock,
         }).getPaperMetrics('missing');
       });
 

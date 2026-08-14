@@ -1,4 +1,6 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import {
+  beforeEach, describe, expect, it, jest,
+} from '@jest/globals';
 import { PublicationService } from '../PublicationService.js';
 
 const contribution = (pubId, authorId, position) => {
@@ -23,12 +25,10 @@ const createConnector = ({
 }) => {
   return {
     id: 'openalex',
-    getPublication: async () =>
-      paper,
-    getContributions: async (pubId) =>
-      authorsByPub[pubId] ?? [],
-    getCitations: async () =>
-      citations,
+    getPublication: jest.fn().mockResolvedValue(paper),
+    getContributions: jest.fn(async (pubId) =>
+      authorsByPub[pubId] ?? []),
+    getCitations: jest.fn().mockResolvedValue(citations),
   };
 };
 
@@ -38,7 +38,7 @@ describe('PublicationService', () => {
       let tree;
 
       beforeEach(async () => {
-        const connector = createConnector({
+        const connectorMock = createConnector({
           paper: publication('W1'),
           citations: [publication('W2'), publication('W3')],
           authorsByPub: {
@@ -48,7 +48,7 @@ describe('PublicationService', () => {
           },
         });
         tree = await new PublicationService({
-          connector: connector,
+          connector: connectorMock,
         }).getCitationTree('W1');
       });
 
@@ -78,9 +78,9 @@ describe('PublicationService', () => {
       let tree;
 
       beforeEach(async () => {
-        const connector = createConnector({ paper: null });
+        const connectorMock = createConnector({ paper: null });
         tree = await new PublicationService({
-          connector: connector,
+          connector: connectorMock,
         }).getCitationTree('missing');
       });
 

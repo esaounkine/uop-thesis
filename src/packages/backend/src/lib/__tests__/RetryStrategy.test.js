@@ -1,4 +1,6 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import {
+  beforeEach, describe, expect, it, jest,
+} from '@jest/globals';
 import { RetryStrategy } from '../RetryStrategy.js';
 
 const createRetryStrategy = (overrides) =>
@@ -15,15 +17,12 @@ const createRetryStrategy = (overrides) =>
 describe('RetryStrategy', () => {
   describe('run', () => {
     describe('when the function succeeds', () => {
-      let calls;
+      let fnMock;
       let result;
 
       beforeEach(async () => {
-        calls = 0;
-        result = await createRetryStrategy().run(async () => {
-          calls += 1;
-          return 'ok';
-        });
+        fnMock = jest.fn().mockResolvedValue('ok');
+        result = await createRetryStrategy().run(fnMock);
       });
 
       it('returns the value', () => {
@@ -31,20 +30,17 @@ describe('RetryStrategy', () => {
       });
 
       it('calls the function once', () => {
-        expect(calls).toBe(1);
+        expect(fnMock).toHaveBeenCalledTimes(1);
       });
     });
 
     describe('when the function keeps failing and the error is retryable', () => {
-      let calls;
+      let fnMock;
       let rejection;
 
       beforeEach(async () => {
-        calls = 0;
-        rejection = await createRetryStrategy().run(async () => {
-          calls += 1;
-          throw new Error('boom');
-        })
+        fnMock = jest.fn().mockRejectedValue(new Error('boom'));
+        rejection = await createRetryStrategy().run(fnMock)
           .catch((error) =>
             error);
       });
@@ -54,43 +50,36 @@ describe('RetryStrategy', () => {
       });
 
       it('tries maxRetries + 1 times', () => {
-        expect(calls).toBe(3);
+        expect(fnMock).toHaveBeenCalledTimes(3);
       });
     });
 
     describe('when the error is not retryable', () => {
-      let calls;
+      let fnMock;
 
       beforeEach(async () => {
-        calls = 0;
+        fnMock = jest.fn().mockRejectedValue(new Error('nope'));
         await createRetryStrategy({
           shouldRetry: () =>
             false,
-        }).run(async () => {
-          calls += 1;
-          throw new Error('nope');
-        })
+        }).run(fnMock)
           .catch(() => {});
       });
 
       it('does not retry', () => {
-        expect(calls).toBe(1);
+        expect(fnMock).toHaveBeenCalledTimes(1);
       });
     });
 
     describe('when the function eventually succeeds', () => {
-      let calls;
+      let fnMock;
       let result;
 
       beforeEach(async () => {
-        calls = 0;
-        result = await createRetryStrategy().run(async () => {
-          calls += 1;
-          if (calls < 2) {
-            throw new Error('retry');
-          }
-          return 'done';
-        });
+        fnMock = jest.fn()
+          .mockRejectedValueOnce(new Error('retry'))
+          .mockResolvedValue('done');
+        result = await createRetryStrategy().run(fnMock);
       });
 
       it('returns the eventual value', () => {
@@ -98,26 +87,24 @@ describe('RetryStrategy', () => {
       });
 
       it('stops calling once it succeeds', () => {
-        expect(calls).toBe(2);
+        expect(fnMock).toHaveBeenCalledTimes(2);
       });
     });
 
     describe('the retry condition', () => {
-      let seen;
+      let shouldRetryMock;
 
       beforeEach(async () => {
-        const shouldRetry = (error) => {
-          seen = error;
-          return false;
-        };
-        await createRetryStrategy({ shouldRetry: shouldRetry }).run(async () => {
-          throw new Error('specific');
-        })
+        shouldRetryMock = jest.fn(() =>
+          false);
+        const fnMock = jest.fn().mockRejectedValue(new Error('specific'));
+        await createRetryStrategy({ shouldRetry: shouldRetryMock }).run(fnMock)
           .catch(() => {});
       });
 
       it('receives the thrown error', () => {
-        expect(seen.message).toBe('specific');
+        const [error] = shouldRetryMock.mock.calls[0];
+        expect(error.message).toBe('specific');
       });
     });
   });
