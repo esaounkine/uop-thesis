@@ -17,15 +17,18 @@ export class ClassificationService {
   /**
    * @param {Object} [args]
    * @param {import('../publication/PublicationService.js').PublicationService} [args.publicationService]
+   * @param {import('../author/AuthorService.js').AuthorService} [args.authorService]
    * @param {import('../tree/TreeService.js').TreeService} [args.treeService]
    */
   constructor(
     {
       publicationService,
+      authorService,
       treeService,
     } = {},
   ) {
     this.publicationService = publicationService;
+    this.authorService = authorService;
     this.treeService = treeService;
   }
 
@@ -138,6 +141,44 @@ export class ClassificationService {
           classification: entry.classification,
         };
       }),
+    };
+  }
+
+  /**
+   * Scenario 2: citation metrics for an author aggregated across all their papers.
+   *
+   * @param {string} authorId
+   * @returns {Promise<null | {
+   *   author: import('../../db/schema.js').Author,
+   *   metrics: ReturnType<ClassificationService['aggregate']>,
+   *   publications: Awaited<ReturnType<ClassificationService['getPaperMetrics']>>[],
+   * }>} null when the author is not found
+   */
+  async getAuthorMetrics(authorId) {
+    const tree = await this.authorService.getPublications(authorId);
+
+    if (!tree) {
+      return null;
+    }
+
+    const publications = (
+      await Promise.all(
+        tree.publications.map((publication) =>
+          this.getPaperMetrics(publication.pubId)),
+      )
+    ).filter((entry) =>
+      entry != null);
+
+    const metrics = this.aggregate(
+      publications.flatMap((entry) =>
+        entry.citations.map((citation) =>
+          citation.classification)),
+    );
+
+    return {
+      author: tree.author,
+      metrics: metrics,
+      publications: publications,
     };
   }
 }

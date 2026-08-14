@@ -14,6 +14,7 @@ import { PublicationRepository } from './repositories/PublicationRepository.js';
 import { TreeService } from './services/tree/TreeService.js';
 import { ClassificationService } from './services/classification/ClassificationService.js';
 import { PublicationService } from './services/publication/PublicationService.js';
+import { AuthorService } from './services/author/AuthorService.js';
 
 const wire = (dbPath) => {
   const { db } = new DbClient(dbPath);
@@ -68,8 +69,12 @@ export const createApp = ({
   const publicationService = new PublicationService({
     connector: wired.connector,
   });
+  const authorService = new AuthorService({
+    connector: wired.connector,
+  });
   const classificationService = new ClassificationService({
     publicationService: publicationService,
+    authorService: authorService,
     treeService: wired.treeService,
   });
 

@@ -196,4 +196,86 @@ describe('ClassificationService', () => {
       });
     });
   });
+
+  describe('getAuthorMetrics', () => {
+    const citing = (pubId, contributions) => {
+      return {
+        publication: { pubId: pubId },
+        contributions: contributions,
+      };
+    };
+
+    describe('when the author exists', () => {
+      let result;
+
+      beforeEach(async () => {
+        const trees = {
+          W1: {
+            publication: { pubId: 'W1' },
+            citedContributions: [contribution('A1', 1)],
+            // direct, external
+            citing: [citing('W10', [contribution('A1', 1)]), citing('W11', [contribution('Z1', 1)])],
+          },
+          W2: {
+            publication: { pubId: 'W2' },
+            citedContributions: [contribution('A1', 1)],
+            // co-author
+            citing: [citing('W20', [contribution('C1', 1), contribution('A1', 2)])],
+          },
+        };
+        const publicationServiceMock = {
+          getCitationTree: jest.fn(async (pubId) =>
+            trees[pubId]),
+        };
+        const authorServiceMock = {
+          getPublications: jest.fn().mockResolvedValue({
+            author: { authorId: 'A1' },
+            publications: [{ pubId: 'W1' }, { pubId: 'W2' }],
+          }),
+        };
+        result = await new ClassificationService({
+          publicationService: publicationServiceMock,
+          authorService: authorServiceMock,
+        }).getAuthorMetrics('A1');
+      });
+
+      it('returns the author', () => {
+        expect(result.author.authorId).toBe('A1');
+      });
+
+      it('aggregates the metrics across all their papers', () => {
+        expect(result.metrics).toEqual({
+          total: 3,
+          external: 1,
+          self: {
+            total: 2,
+            direct: 1,
+            coauthor: 1,
+          },
+        });
+      });
+
+      it('keeps the per-paper metrics for the debug details', () => {
+        expect(result.publications.map((entry) =>
+          entry.publication.pubId)).toEqual(['W1', 'W2']);
+      });
+    });
+
+    describe('when the author is not found', () => {
+      let result;
+
+      beforeEach(async () => {
+        const authorServiceMock = {
+          getPublications: jest.fn().mockResolvedValue(null),
+        };
+        result = await new ClassificationService({
+          authorService: authorServiceMock,
+        }).getAuthorMetrics('missing');
+      });
+
+      it('returns null', () => {
+        expect(result).toBeNull();
+      });
+    });
+  });
 });

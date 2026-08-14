@@ -3,25 +3,37 @@ import { withQueueProgressReport } from './lib/queue-progress.js';
 
 const CANDIDATE_LIMIT = 10;
 
-const printMetrics = (
-  {
-    publication, metrics, citations,
-  },
-  skipDebug = true,
-) => {
-  console.log(`
-Paper: ${publication.pubId} - ${publication.title}
-Total citations: ${metrics.total}
+const formatMetrics = (metrics) =>
+  `Total citations: ${metrics.total}
 Self: ${metrics.self.total}
   direct ${metrics.self.direct}
   co-author ${metrics.self.coauthor}
-External: ${metrics.external}
+External: ${metrics.external}`;
+
+const printMetrics = ({
+  publication, metrics, citations,
+}, skipDebug = true) => {
+  console.log(`
+Paper: ${publication.pubId} - ${publication.title}
+${formatMetrics(metrics)}
 
 Debug details (per citation):
 ${skipDebug
   ? 'skipped'
   : JSON.stringify(citations, null, 2)}
- `);
+`);
+};
+
+const printAuthorMetrics = ({
+  author, metrics, publications,
+}) => {
+  console.log(`
+Author: ${author.authorId} - ${author.originalName}
+Publication count: ${publications.length}
+
+${formatMetrics(metrics)}
+
+`);
 };
 
 const printCandidates = (name, candidates) => {
@@ -32,7 +44,12 @@ const printCandidates = (name, candidates) => {
 };
 
 const printUsageAndDie = () => {
-  console.error('Usage:\n  node src/cli.js <paperId>\n  node src/cli.js name <paper title>');
+  console.error(`
+Usage:
+node src/cli.js <paperId>
+node src/cli.js name <paper title>
+node src/cli.js author <authorId>
+`);
   process.exit(1);
 };
 
@@ -55,7 +72,23 @@ const runMetrics = async (pubId) => {
   printMetrics(result);
 };
 
-if (args[0] === 'name') {
+if (args[0] === 'author') {
+  const authorId = args[1];
+
+  if (!authorId) {
+    printUsageAndDie();
+  }
+
+  const result = await withQueueProgressReport(requestQueue, () =>
+    classificationService.getAuthorMetrics(authorId));
+
+  if (!result) {
+    console.error(`Author not found: ${authorId}`);
+    process.exit(1);
+  }
+
+  printAuthorMetrics(result);
+} else if (args[0] === 'name') {
   const name = args.slice(1).join(' ');
 
   if (!name) {
