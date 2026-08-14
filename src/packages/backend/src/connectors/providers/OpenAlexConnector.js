@@ -1,22 +1,22 @@
-import { citationsTtlMs, metadataTtlMs, openAlexApiKey, openAlexBaseUrl } from '../../config/env.js';
+import { directFetchTtlMs, openAlexApiKey, openAlexBaseUrl, searchTtlMs } from '../../config/env.js';
 import { HttpClient } from '../../lib/HttpClient.js';
 import { normalise } from '../../lib/normalise.js';
 import { ProviderConnector } from '../ProviderConnector.js';
 import { stripMarkup } from '../../lib/strip-markup.js';
-
-const PER_PAGE = 200; // OpenAlex maximum
-
-// 'https://openalex.org/W123' -> 'W123'
-const shortId = (id) =>
-  (id
-    ? id.split('/').pop()
-    : id);
 
 /**
  * OpenAlex provider connector.
  */
 export class OpenAlexConnector extends ProviderConnector {
   id = 'openalex';
+
+  static PER_PAGE = 200; // OpenAlex maximum
+
+  // 'https://openalex.org/W123' -> 'W123'
+  static extractShortId = (id) =>
+    (id
+      ? id.split('/').pop()
+      : id);
 
   /**
    * @param {Object} [args]
@@ -35,44 +35,62 @@ export class OpenAlexConnector extends ProviderConnector {
     this.apiKey = apiKey;
   }
 
+  /**
+   * @see https://github.com/ourresearch/openalex-docs/blob/main/api-entities/authors/search-authors.md
+   */
   async searchAuthors(name) {
     const data = await this.fetchJson('/authors', {
       search: name,
-    }, citationsTtlMs);
+    }, searchTtlMs);
     return data.results.map((author) =>
       this.toAuthor(author));
   }
 
+  /**
+   * @see https://github.com/ourresearch/openalex-docs/blob/main/api-entities/authors/get-a-single-author.md
+   */
   async getAuthorById(id) {
-    const author = await this.fetchJson(`/authors/${id}`, {}, metadataTtlMs);
+    const author = await this.fetchJson(`/authors/${id}`, {}, directFetchTtlMs);
     return this.toAuthor(author);
   }
 
+  /**
+   * @see https://github.com/ourresearch/openalex-docs/blob/main/api-entities/works/filter-works.md
+   */
   async getAuthorPublications(authorId) {
     return this.fetchAllPages('/works', {
       filter: `author.id:${authorId}`,
-    }, citationsTtlMs, (work) =>
+    }, searchTtlMs, (work) =>
       this.toPublication(work));
   }
 
+  /**
+   * @see https://github.com/ourresearch/openalex-docs/blob/main/api-entities/works/get-a-single-work.md
+   */
   async getPublication(id) {
-    const work = await this.fetchJson(`/works/${id}`, {}, metadataTtlMs);
+    const work = await this.fetchJson(`/works/${id}`, {}, directFetchTtlMs);
     return this.toPublication(work);
   }
 
+  /**
+   * @see https://github.com/ourresearch/openalex-docs/blob/main/api-entities/works/filter-works.md
+   */
   async getCitations(pubId) {
     return this.fetchAllPages('/works', {
       filter: `cites:${pubId}`,
-    }, citationsTtlMs, (work) =>
+    }, searchTtlMs, (work) =>
       this.toPublication(work));
   }
 
+  /**
+   * @see https://github.com/ourresearch/openalex-docs/blob/main/api-entities/works/work-object/authorship-object.md
+   */
   async getContributions(pubId) {
-    const work = await this.fetchJson(`/works/${pubId}`, {}, metadataTtlMs);
+    const work = await this.fetchJson(`/works/${pubId}`, {}, directFetchTtlMs);
     return work.authorships.map((entry, index) => {
       return {
         pubId: pubId,
-        authorId: shortId(entry.author.id),
+        authorId: OpenAlexConnector.extractShortId(entry.author.id),
         position: index + 1, // OpenAlex returns them in order
       };
     });
@@ -115,7 +133,7 @@ export class OpenAlexConnector extends ProviderConnector {
       const data = await this.fetchJson(path, {
         ...params,
         cursor: cursor,
-        per_page: PER_PAGE,
+        per_page: OpenAlexConnector.PER_PAGE,
       }, ttl);
 
       data.results.forEach((item) =>
@@ -130,7 +148,7 @@ export class OpenAlexConnector extends ProviderConnector {
     const title = stripMarkup(work.title);
 
     return {
-      pubId: shortId(work.id),
+      pubId: OpenAlexConnector.extractShortId(work.id),
       title: title,
       normalisedTitle: normalise(title),
       externalId: work.doi ?? null,
@@ -139,7 +157,7 @@ export class OpenAlexConnector extends ProviderConnector {
 
   toAuthor(author) {
     return {
-      authorId: shortId(author.id),
+      authorId: OpenAlexConnector.extractShortId(author.id),
       originalName: author.display_name,
       normalisedName: normalise(author.display_name),
     };
