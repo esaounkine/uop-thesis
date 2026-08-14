@@ -21,16 +21,36 @@ const createPublication = (pubId) => {
 };
 
 const createConnector = ({
-  author = null, publications = [],
+  author = null, publications = [], searchResults = [],
 }) => {
   return {
     id: 'openalex',
     getAuthorById: jest.fn().mockResolvedValue(author),
     getAuthorPublications: jest.fn().mockResolvedValue(publications),
+    searchAuthors: jest.fn().mockResolvedValue(searchResults),
   };
 };
 
 describe('AuthorService', () => {
+  describe('searchByName', () => {
+    describe('when authors match', () => {
+      let candidates;
+
+      beforeEach(async () => {
+        const connectorMock = createConnector({
+          searchResults: [createAuthor('A1'), createAuthor('A2')],
+        });
+        candidates = await new AuthorService({
+          connector: connectorMock,
+        }).searchByName('jane');
+      });
+
+      it('returns the candidate authors', () => {
+        expect(candidates).toEqual([createAuthor('A1'), createAuthor('A2')]);
+      });
+    });
+  });
+
   describe('getPublications', () => {
     describe('when the author exists', () => {
       let result;

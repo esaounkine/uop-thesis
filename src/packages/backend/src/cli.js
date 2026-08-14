@@ -43,12 +43,20 @@ const printCandidates = (name, candidates) => {
   });
 };
 
+const printAuthorCandidates = (name, candidates) => {
+  console.log(`Matches for "${name}":`);
+  candidates.slice(0, CANDIDATE_LIMIT).forEach((author) => {
+    console.log(`- ${author.authorId}  ${author.originalName}`);
+  });
+};
+
 const printUsageAndDie = () => {
   console.error(`
 Usage:
-node src/cli.js <paperId>
-node src/cli.js name <paper title>
-node src/cli.js author <authorId>
+node src/cli.js -p <paperId>
+node src/cli.js -pn <paper name>
+node src/cli.js -a <authorId>
+node src/cli.js -an <author name>
 `);
   process.exit(1);
 };
@@ -57,10 +65,11 @@ const args = process.argv.slice(2);
 const {
   classificationService,
   publicationService,
+  authorService,
   requestQueue,
 } = createApp();
 
-const runMetrics = async (pubId) => {
+const runPaperMetrics = async (pubId) => {
   const result = await withQueueProgressReport(requestQueue, () =>
     classificationService.getPaperMetrics(pubId));
 
@@ -72,13 +81,7 @@ const runMetrics = async (pubId) => {
   printMetrics(result);
 };
 
-if (args[0] === 'author') {
-  const authorId = args[1];
-
-  if (!authorId) {
-    printUsageAndDie();
-  }
-
+const runAuthorMetrics = async (authorId) => {
   const result = await withQueueProgressReport(requestQueue, () =>
     classificationService.getAuthorMetrics(authorId));
 
@@ -88,13 +91,9 @@ if (args[0] === 'author') {
   }
 
   printAuthorMetrics(result);
-} else if (args[0] === 'name') {
-  const name = args.slice(1).join(' ');
+};
 
-  if (!name) {
-    printUsageAndDie();
-  }
-
+const runPaperSearch = async (name) => {
   const candidates = await withQueueProgressReport(requestQueue, () =>
     publicationService.searchByName(name));
 
@@ -102,12 +101,38 @@ if (args[0] === 'author') {
     console.error(`No papers match: ${name}`);
     process.exit(1);
   } else if (candidates.length === 1) {
-    await runMetrics(candidates[0].pubId);
+    await runPaperMetrics(candidates[0].pubId);
   } else {
     printCandidates(name, candidates);
   }
-} else if (args[0]) {
-  await runMetrics(args[0]);
-} else {
+};
+
+const runAuthorSearch = async (name) => {
+  const candidates = await withQueueProgressReport(requestQueue, () =>
+    authorService.searchByName(name));
+
+  if (candidates.length === 0) {
+    console.error(`No authors match: ${name}`);
+    process.exit(1);
+  } else if (candidates.length === 1) {
+    await runAuthorMetrics(candidates[0].authorId);
+  } else {
+    printAuthorCandidates(name, candidates);
+  }
+};
+
+const handlers = {
+  '-p': runPaperMetrics,
+  '-pn': runPaperSearch,
+  '-a': runAuthorMetrics,
+  '-an': runAuthorSearch,
+};
+
+const handler = handlers[args[0]];
+const value = args.slice(1).join(' ');
+
+if (!handler || !value) {
   printUsageAndDie();
 }
+
+await handler(value);

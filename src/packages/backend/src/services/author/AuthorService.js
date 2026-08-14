@@ -15,6 +15,16 @@ export class AuthorService {
   }
 
   /**
+   * Authors with name matching the search term.
+   *
+   * @param {string} name
+   * @returns {Promise<Author[]>}
+   */
+  async searchByName(name) {
+    return this.connector.searchAuthors(name);
+  }
+
+  /**
    * @param {string} authorId
    * @returns {Promise<null | {
    *   author: Author,
