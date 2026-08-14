@@ -2,6 +2,7 @@ import { citationsTtlMs, metadataTtlMs, openAlexApiKey, openAlexBaseUrl } from '
 import { HttpClient } from '../../lib/HttpClient.js';
 import { normalise } from '../../lib/normalise.js';
 import { ProviderConnector } from '../ProviderConnector.js';
+import { stripMarkup } from '../../lib/strip-markup.js';
 
 const PER_PAGE = 200; // OpenAlex maximum
 
@@ -126,10 +127,12 @@ export class OpenAlexConnector extends ProviderConnector {
   }
 
   toPublication(work) {
+    const title = stripMarkup(work.title);
+
     return {
       pubId: shortId(work.id),
-      title: work.title,
-      normalisedTitle: normalise(work.title),
+      title: title,
+      normalisedTitle: normalise(title),
       externalId: work.doi ?? null,
     };
   }
