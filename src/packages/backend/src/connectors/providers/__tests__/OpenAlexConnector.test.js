@@ -130,4 +130,33 @@ describe('OpenAlexConnector', () => {
       });
     });
   });
+
+  describe('searchPublications', () => {
+    describe('when works match', () => {
+      let publications;
+
+      beforeEach(async () => {
+        publications = await createConnector({
+          results: [
+            {
+              id: 'https://openalex.org/W1',
+              title: 'A Paper',
+              doi: 'https://doi.org/10.1/x',
+            },
+          ],
+        }).searchPublications('paper');
+      });
+
+      it('maps the results to publications', () => {
+        expect(publications).toEqual([
+          {
+            pubId: 'W1',
+            title: 'A Paper',
+            normalisedTitle: 'a paper',
+            externalId: 'https://doi.org/10.1/x',
+          },
+        ]);
+      });
+    });
+  });
 });

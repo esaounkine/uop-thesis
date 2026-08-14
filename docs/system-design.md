@@ -378,6 +378,7 @@ flowchart TD
 To interact with the Providers, the Backend defines an interface that each Provider is expected to implement:
 
 - **searchAuthors(name: string)** - Search authors by name.
+- **searchPublications(name: string)** - Search publications by name.
 - **getAuthorById(id: string)** - Get an author by unique ID
 - **getAuthorPublications(authorId: string)** - Get the publications of an author.
 - **getPublication(id: string)** - Get a publication by unique ID or DOI

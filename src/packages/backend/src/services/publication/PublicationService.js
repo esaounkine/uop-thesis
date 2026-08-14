@@ -15,6 +15,16 @@ export class PublicationService {
   }
 
   /**
+   * Papers with title matching name.
+   *
+   * @param {string} name
+   * @returns {Promise<Publication[]>}
+   */
+  async searchByName(name) {
+    return this.connector.searchPublications(name);
+  }
+
+  /**
    * @param {string} pubId
    * @returns {Promise<null | {
    *   publication: Publication,

@@ -1,6 +1,8 @@
 import { createApp } from './app.js';
 import { withQueueProgressReport } from './lib/queue-progress.js';
 
+const CANDIDATE_LIMIT = 10;
+
 const printMetrics = (
   {
     publication, metrics, citations,
@@ -22,27 +24,57 @@ ${skipDebug
  `);
 };
 
-const [pubId] = process.argv.slice(2);
+const printCandidates = (name, candidates) => {
+  console.log(`Matches for "${name}":`);
+  candidates.slice(0, CANDIDATE_LIMIT).forEach((publication) => {
+    console.log(`- ${publication.pubId}  ${publication.title}`);
+  });
+};
 
-if (!pubId) {
-  console.error('Usage: node src/cli.js <paperId>');
+const printUsageAndDie = () => {
+  console.error('Usage:\n  node src/cli.js <paperId>\n  node src/cli.js name <paper title>');
   process.exit(1);
-}
+};
 
+const args = process.argv.slice(2);
 const {
   classificationService,
+  publicationService,
   requestQueue,
 } = createApp();
 
-const result = await withQueueProgressReport(
-  requestQueue,
-  () =>
-    classificationService.getPaperMetrics(pubId),
-);
+const runMetrics = async (pubId) => {
+  const result = await withQueueProgressReport(requestQueue, () =>
+    classificationService.getPaperMetrics(pubId));
 
-if (!result) {
-  console.error(`Paper not found: ${pubId}`);
-  process.exit(1);
+  if (!result) {
+    console.error(`Paper not found: ${pubId}`);
+    process.exit(1);
+  }
+
+  printMetrics(result);
+};
+
+if (args[0] === 'name') {
+  const name = args.slice(1).join(' ');
+
+  if (!name) {
+    printUsageAndDie();
+  }
+
+  const candidates = await withQueueProgressReport(requestQueue, () =>
+    publicationService.searchByName(name));
+
+  if (candidates.length === 0) {
+    console.error(`No papers match: ${name}`);
+    process.exit(1);
+  } else if (candidates.length === 1) {
+    await runMetrics(candidates[0].pubId);
+  } else {
+    printCandidates(name, candidates);
+  }
+} else if (args[0]) {
+  await runMetrics(args[0]);
+} else {
+  printUsageAndDie();
 }
-
-printMetrics(result);

@@ -53,7 +53,7 @@ const wire = (dbPath) => {
  * @param {Object} [args]
  * @param {string} [args.dbPath]
  * @param {import('./connectors/ProviderConnector.js').ProviderConnector} [args.connector]
- * @returns {{ classificationService: ClassificationService, requestQueue: (import('p-queue').default|undefined) }}
+ * @returns {{ classificationService: ClassificationService, publicationService: PublicationService, requestQueue: (import('p-queue').default|undefined) }}
  */
 export const createApp = ({
   dbPath = dbFile, connector,
@@ -75,6 +75,7 @@ export const createApp = ({
 
   return {
     classificationService: classificationService,
+    publicationService: publicationService,
     requestQueue: wired.requestQueue,
   };
 };
