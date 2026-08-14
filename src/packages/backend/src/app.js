@@ -6,7 +6,12 @@ import {
 import { OpenAlexConnector } from './connectors/providers/OpenAlexConnector.js';
 import { DbClient } from './db/client.js';
 import { HttpClient } from './lib/HttpClient.js';
+import { AuthorRepository } from './repositories/AuthorRepository.js';
 import { CacheRepository } from './repositories/CacheRepository.js';
+import { CitationRepository } from './repositories/CitationRepository.js';
+import { ContributionRepository } from './repositories/ContributionRepository.js';
+import { PublicationRepository } from './repositories/PublicationRepository.js';
+import { TreeService } from './services/tree/TreeService.js';
 import { ClassificationService } from './services/classification/ClassificationService.js';
 import { PublicationService } from './services/publication/PublicationService.js';
 
@@ -27,9 +32,17 @@ const wire = (dbPath) => {
     httpClient: httpClient,
   });
 
+  const treeService = new TreeService({
+    publicationRepository: new PublicationRepository(db),
+    authorRepository: new AuthorRepository(db),
+    contributionRepository: new ContributionRepository(db),
+    citationRepository: new CitationRepository(db),
+  });
+
   return {
     connector: connector,
     requestQueue: requestQueue,
+    treeService: treeService,
   };
 };
 
@@ -49,6 +62,7 @@ export const createApp = ({
     ? {
         connector: connector,
         requestQueue: undefined,
+        treeService: undefined,
       }
     : wire(dbPath);
   const publicationService = new PublicationService({
@@ -56,6 +70,7 @@ export const createApp = ({
   });
   const classificationService = new ClassificationService({
     publicationService: publicationService,
+    treeService: wired.treeService,
   });
 
   return {

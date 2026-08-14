@@ -17,13 +17,16 @@ export class ClassificationService {
   /**
    * @param {Object} [args]
    * @param {import('../publication/PublicationService.js').PublicationService} [args.publicationService]
+   * @param {import('../tree/TreeService.js').TreeService} [args.treeService]
    */
   constructor(
     {
       publicationService,
+      treeService,
     } = {},
   ) {
     this.publicationService = publicationService;
+    this.treeService = treeService;
   }
 
   /**
@@ -105,9 +108,10 @@ export class ClassificationService {
       return null;
     }
 
-    const citations = tree.citing.map((entry) => {
+    const classified = tree.citing.map((entry) => {
       return {
         publication: entry.publication,
+        contributions: entry.contributions,
         classification: this.classifyCitation(
           tree.citedContributions,
           entry.contributions,
@@ -115,14 +119,25 @@ export class ClassificationService {
       };
     });
 
+    this.treeService?.save({
+      publication: tree.publication,
+      citedContributions: tree.citedContributions,
+      citing: classified,
+    });
+
     const metrics = this.aggregate(
-      citations.map((citation) =>
-        citation.classification));
+      classified.map((entry) =>
+        entry.classification));
 
     return {
       publication: tree.publication,
       metrics: metrics,
-      citations: citations,
+      citations: classified.map((entry) => {
+        return {
+          publication: entry.publication,
+          classification: entry.classification,
+        };
+      }),
     };
   }
 }
