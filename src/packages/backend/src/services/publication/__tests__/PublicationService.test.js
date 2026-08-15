@@ -11,23 +11,23 @@ const createContribution = (pubId, authorId, position) => {
   };
 };
 
-const createPublication = (pubId) => {
+const createPublication = (pubId, contributions = []) => {
   return {
     pubId: pubId,
     title: pubId,
     normalisedTitle: pubId.toLowerCase(),
     externalId: null,
+    year: null,
+    contributions: contributions,
   };
 };
 
 const createConnector = ({
-  paper = null, citations = [], authorsByPub = {}, searchResults = [],
+  paper = null, citations = [], searchResults = [],
 }) => {
   return {
     id: 'openalex',
     getPublication: jest.fn().mockResolvedValue(paper),
-    getContributions: jest.fn(async (pubId) =>
-      authorsByPub[pubId] ?? []),
     getCitations: jest.fn().mockResolvedValue(citations),
     searchPublications: jest.fn().mockResolvedValue(searchResults),
   };
@@ -40,13 +40,8 @@ describe('PublicationService', () => {
 
       beforeEach(async () => {
         const connectorMock = createConnector({
-          paper: createPublication('W1'),
-          citations: [createPublication('W2'), createPublication('W3')],
-          authorsByPub: {
-            W1: [createContribution('W1', 'A1', 1)],
-            W2: [createContribution('W2', 'A1', 1)],
-            W3: [createContribution('W3', 'Z1', 1)],
-          },
+          paper: createPublication('W1', [createContribution('W1', 'A1', 1)]),
+          citations: [createPublication('W2', [createContribution('W2', 'A1', 1)]), createPublication('W3', [createContribution('W3', 'Z1', 1)])],
         });
         tree = await new PublicationService({
           connector: connectorMock,
@@ -57,7 +52,7 @@ describe('PublicationService', () => {
         expect(tree.publication.pubId).toBe('W1');
       });
 
-      it('includes the cited contributions', () => {
+      it('takes the cited contributions from the publication', () => {
         expect(tree.citedContributions).toEqual([createContribution('W1', 'A1', 1)]);
       });
 
@@ -66,12 +61,12 @@ describe('PublicationService', () => {
           entry.publication.pubId)).toEqual(['W2', 'W3']);
       });
 
-      it('includes the contributions of each citing publication', () => {
+      it('takes the contributions from each citing publication', () => {
         expect(tree.citing[0].contributions).toEqual([createContribution('W2', 'A1', 1)]);
       });
 
       it('includes the citations', () => {
-        expect(tree.citations).toEqual([createPublication('W2'), createPublication('W3')]);
+        expect(tree.citations).toEqual([createPublication('W2', [createContribution('W2', 'A1', 1)]), createPublication('W3', [createContribution('W3', 'Z1', 1)])]);
       });
     });
 
