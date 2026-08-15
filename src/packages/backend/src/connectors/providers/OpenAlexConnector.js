@@ -33,7 +33,10 @@ export class OpenAlexConnector extends ProviderConnector {
       // - new records that have not assigned an author id yet
       // - group authors publishing as a collective
       // - maybe other cases of missing or low quality data
-      // we just drop these contribution records
+      // We just drop these contribution records
+      // Currently, it is required to drop unmatched names,
+      // to avoid `null` skewing the stats.
+      // TODO fix to use normalised-lemmatised-enriched name instead of the id
       .filter((contribution) =>
         contribution.authorId != null);
 
