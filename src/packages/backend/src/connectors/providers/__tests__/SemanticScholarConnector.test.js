@@ -85,7 +85,6 @@ describe('SemanticScholarConnector', () => {
             pubId: 'p1',
             authorId: 'a2',
             authorName: 'John Doe',
-            organisation: null,
             position: 2,
           },
         ]);
@@ -126,6 +125,34 @@ describe('SemanticScholarConnector', () => {
       it('follows the offset until it is exhausted', () => {
         expect(citations.map((publication) =>
           publication.pubId)).toEqual(['p2', 'p3']);
+      });
+    });
+
+    describe('when a citing paper is outside the corpus (null id)', () => {
+      let citations;
+
+      beforeEach(async () => {
+        citations = await createConnector({
+          data: [
+            {
+              citingPaper: {
+                paperId: null,
+                title: 'Unresolved',
+              },
+            },
+            {
+              citingPaper: {
+                paperId: 'p2',
+                title: 'W2',
+              },
+            },
+          ],
+        }).getCitations('p1');
+      });
+
+      it('drops the unidentified citing paper', () => {
+        expect(citations.map((publication) =>
+          publication.pubId)).toEqual(['p2']);
       });
     });
   });
@@ -194,7 +221,6 @@ describe('SemanticScholarConnector', () => {
             pubId: 'p1',
             authorId: 'a1',
             authorName: 'Jane Roe',
-            organisation: null,
             position: 1,
           },
         ]);

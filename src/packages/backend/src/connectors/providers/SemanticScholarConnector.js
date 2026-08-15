@@ -25,7 +25,6 @@ export class SemanticScholarConnector extends ProviderConnector {
           pubId: paper.paperId,
           authorId: author.authorId,
           authorName: author.name ?? null,
-          organisation: author.affiliations?.[0] ?? null,
           position: index + 1, // Semantic Scholar returns them in the order of appearance
         };
       })
@@ -118,10 +117,17 @@ export class SemanticScholarConnector extends ProviderConnector {
    * @see https://api.semanticscholar.org/api-docs/#tag/Paper-Data/operation/get_graph_get_paper_citations
    */
   async getCitations(pubId) {
-    return this.fetchAllPages(`/paper/${pubId}/citations`, {
+    const citing = await this.fetchAllPages(`/paper/${pubId}/citations`, {
       fields: SemanticScholarConnector.PAPER_FIELDS,
     }, searchTtlMs, (item) =>
-      this.toPublication(item.citingPaper));
+      item.citingPaper);
+    // paperId might be `null` if the paper does not belong to the Semantic Scholar corpus.
+    // We just drop them.
+    return citing
+      .filter((paper) =>
+        paper?.paperId != null)
+      .map((paper) =>
+        this.toPublication(paper));
   }
 
   /**
