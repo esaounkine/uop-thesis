@@ -6,6 +6,7 @@ export const publications = sqliteTable('publications', {
   title: text('title'),
   normalisedTitle: text('normalised_title'),
   externalId: text('external_id'),
+  year: integer('year'),
 });
 
 export const authors = sqliteTable('authors', {

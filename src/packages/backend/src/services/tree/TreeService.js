@@ -1,3 +1,5 @@
+import { normalise } from '../../lib/normalise.js';
+
 /**
  * @typedef {{
  *   publication: import('../../db/schema.js').Publication,
@@ -41,24 +43,42 @@ export class TreeService {
   save({
     publication, citedContributions, citing,
   }) {
-    const publicationRows = [
-      publication,
-      ...citing.map((entry) =>
-        entry.publication),
-    ];
-    const contributionRows = [
+    const contributions = [
       citedContributions,
       ...citing.map((entry) =>
         entry.contributions),
     ].flat();
+
+    const publicationRows = [
+      publication,
+      ...citing.map((entry) =>
+        entry.publication),
+    ].map((row) => {
+      return {
+        pubId: row.pubId,
+        title: row.title,
+        normalisedTitle: row.normalisedTitle,
+        externalId: row.externalId,
+        year: row.year ?? null,
+      };
+    });
+    const contributionRows = contributions.map((contribution) => {
+      return {
+        pubId: contribution.pubId,
+        authorId: contribution.authorId,
+        position: contribution.position,
+      };
+    });
     const authorRows = [
-      ...new Set(contributionRows.map((contribution) =>
-        contribution.authorId)),
-    ].map((authorId) => {
+      ...new Map(contributions.map((contribution) =>
+        [contribution.authorId, contribution.authorName ?? null])),
+    ].map(([authorId, name]) => {
       return {
         authorId: authorId,
-        originalName: null,
-        normalisedName: null,
+        originalName: name,
+        normalisedName: name == null
+          ? null
+          : normalise(name),
       };
     });
     const citationRows = citing.map((entry) => {

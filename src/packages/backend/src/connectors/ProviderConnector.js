@@ -54,12 +54,4 @@ export class ProviderConnector {
   getCitations(pubId) {
     throw new Error('not implemented');
   }
-
-  /**
-   * @param {string} pubId
-   * @returns {Promise<Contribution[]>}
-   */
-  getContributions(pubId) {
-    throw new Error('not implemented');
-  }
 }

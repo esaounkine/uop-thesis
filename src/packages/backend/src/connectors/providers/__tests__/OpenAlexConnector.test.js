@@ -26,6 +26,7 @@ describe('OpenAlexConnector', () => {
           id: 'https://openalex.org/W1',
           title: 'A Paper',
           doi: 'https://doi.org/10.1/x',
+          publication_year: 2020,
         }).getPublication('W1');
       });
 
@@ -41,52 +42,84 @@ describe('OpenAlexConnector', () => {
       it('keeps the DOI as the external id', () => {
         expect(publication.externalId).toBe('https://doi.org/10.1/x');
       });
+
+      it('keeps the publication year', () => {
+        expect(publication.year).toBe(2020);
+      });
     });
-  });
 
-  describe('getContributions', () => {
-    describe('when the work has authors', () => {
-      let contributions;
+    describe('contributions', () => {
+      describe('when the work has authors', () => {
+        let publication;
 
-      beforeEach(async () => {
-        contributions = await createConnector({
-          id: 'https://openalex.org/W1',
-          authorships: [{ author: { id: 'https://openalex.org/A1' } }, { author: { id: 'https://openalex.org/A2' } }],
-        }).getContributions('W1');
-      });
+        beforeEach(async () => {
+          publication = await createConnector({
+            id: 'https://openalex.org/W1',
+            authorships: [
+              {
+                author: {
+                  id: 'https://openalex.org/A1',
+                  display_name: 'Jane Roe',
+                },
+              },
+              {
+                author: {
+                  id: 'https://openalex.org/A2',
+                  display_name: 'John Doe',
+                },
+              },
+            ],
+          }).getPublication('W1');
+        });
 
-      it('numbers the positions by order', () => {
-        expect(contributions.map((entry) =>
-          entry.position)).toEqual([1, 2]);
-      });
+        it('numbers the positions by order', () => {
+          expect(publication.contributions.map((entry) =>
+            entry.position)).toEqual([1, 2]);
+        });
 
-      it('carries the pub id and a short author id', () => {
-        expect(contributions[0]).toEqual({
-          pubId: 'W1',
-          authorId: 'A1',
-          position: 1,
+        it('carries the pub id, short author id and name', () => {
+          expect(publication.contributions[0]).toEqual({
+            pubId: 'W1',
+            authorId: 'A1',
+            authorName: 'Jane Roe',
+            position: 1,
+          });
         });
       });
-    });
 
-    describe('when an authorship has no author id', () => {
-      let contributions;
+      describe('when an authorship has no author id', () => {
+        let publication;
 
-      beforeEach(async () => {
-        contributions = await createConnector({
-          id: 'https://openalex.org/W1',
-          authorships: [{ author: { id: null } }, { author: { id: 'https://openalex.org/A2' } }],
-        }).getContributions('W1');
-      });
+        beforeEach(async () => {
+          publication = await createConnector({
+            id: 'https://openalex.org/W1',
+            authorships: [
+              {
+                author: {
+                  id: null,
+                  display_name: 'Anon',
+                },
+              },
+              {
+                author: {
+                  id: 'https://openalex.org/A2',
+                  display_name: 'John Doe',
+                },
+              },
+            ],
+          }).getPublication('W1');
+        });
 
-      it('drops it but keeps the original position of the rest', () => {
-        expect(contributions).toEqual([
-          {
-            pubId: 'W1',
-            authorId: 'A2',
-            position: 2,
-          },
-        ]);
+        it('drops it but keeps the original position of the rest', () => {
+          expect(publication.contributions).toEqual([
+            {
+              pubId: 'W1',
+              authorId: 'A2',
+              authorName: 'John Doe',
+              position: 2,
+            },
+          ]);
+        });
       });
     });
   });
@@ -163,18 +196,47 @@ describe('OpenAlexConnector', () => {
               id: 'https://openalex.org/W1',
               title: 'A Paper',
               doi: 'https://doi.org/10.1/x',
+              authorships: [
+                {
+                  author: {
+                    id: 'https://openalex.org/A1',
+                    display_name: 'Jane Roe',
+                  },
+                },
+                {
+                  author: {
+                    id: 'https://openalex.org/A2',
+                    display_name: 'John Doe',
+                  },
+                },
+              ],
             },
           ],
         }).searchPublications('paper');
       });
 
       it('maps the results to publications', () => {
-        expect(publications).toEqual([
+        expect(publications[0]).toMatchObject({
+          pubId: 'W1',
+          title: 'A Paper',
+          normalisedTitle: 'a paper',
+          externalId: 'https://doi.org/10.1/x',
+        });
+      });
+
+      it('carries the contributions with author names', () => {
+        expect(publications[0].contributions).toEqual([
           {
             pubId: 'W1',
-            title: 'A Paper',
-            normalisedTitle: 'a paper',
-            externalId: 'https://doi.org/10.1/x',
+            authorId: 'A1',
+            authorName: 'Jane Roe',
+            position: 1,
+          },
+          {
+            pubId: 'W1',
+            authorId: 'A2',
+            authorName: 'John Doe',
+            position: 2,
           },
         ]);
       });

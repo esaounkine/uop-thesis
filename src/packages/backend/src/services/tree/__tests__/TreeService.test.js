@@ -17,6 +17,7 @@ const createPublication = (pubId) => {
     title: pubId,
     normalisedTitle: pubId.toLowerCase(),
     externalId: null,
+    year: null,
   };
 };
 
@@ -66,37 +67,67 @@ describe('TreeService', () => {
   });
 
   describe('save', () => {
-    beforeEach(() => {
-      treeService.save(createTree());
+    describe('a classified tree', () => {
+      beforeEach(() => {
+        treeService.save(createTree());
+      });
+
+      it('stores every publication', () => {
+        const ids = db.select().from(schema.publications)
+          .all()
+          .map((row) =>
+            row.pubId)
+          .sort();
+        expect(ids).toEqual([
+          'W1',
+          'W2',
+          'W3',
+        ]);
+      });
+
+      it('stores the citation edges with their classification', () => {
+        expect(db.select().from(schema.citations)
+          .all()).toEqual([
+          {
+            sourcePubId: 'W2',
+            targetPubId: 'W1',
+            classification: 'self-direct',
+          },
+          {
+            sourcePubId: 'W3',
+            targetPubId: 'W1',
+            classification: 'external',
+          },
+        ]);
+      });
     });
 
-    it('stores every publication', () => {
-      const ids = db.select().from(schema.publications)
-        .all()
-        .map((row) =>
-          row.pubId)
-        .sort();
-      expect(ids).toEqual([
-        'W1',
-        'W2',
-        'W3',
-      ]);
-    });
+    describe('when the contributions carry author names', () => {
+      beforeEach(() => {
+        treeService.save({
+          publication: createPublication('W1'),
+          citedContributions: [
+            {
+              pubId: 'W1',
+              authorId: 'A1',
+              authorName: 'Jane Roe',
+              position: 1,
+            },
+          ],
+          citing: [],
+        });
+      });
 
-    it('stores the citation edges with their classification', () => {
-      expect(db.select().from(schema.citations)
-        .all()).toEqual([
-        {
-          sourcePubId: 'W2',
-          targetPubId: 'W1',
-          classification: 'self-direct',
-        },
-        {
-          sourcePubId: 'W3',
-          targetPubId: 'W1',
-          classification: 'external',
-        },
-      ]);
+      it('stores the author with a normalised name', () => {
+        expect(db.select().from(schema.authors)
+          .all()).toEqual([
+          {
+            authorId: 'A1',
+            originalName: 'Jane Roe',
+            normalisedName: 'jane roe',
+          },
+        ]);
+      });
     });
   });
 

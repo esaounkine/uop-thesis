@@ -3,20 +3,22 @@ import {
 } from '@jest/globals';
 import { createApp } from '../app.js';
 
-const publication = (pubId) => {
+const createContribution = (pubId, authorId) => {
+  return {
+    pubId: pubId,
+    authorId: authorId,
+    position: 1,
+  };
+};
+
+const createPublication = (pubId) => {
   return {
     pubId: pubId,
     title: pubId,
     normalisedTitle: pubId.toLowerCase(),
     externalId: null,
-  };
-};
-
-const contribution = (pubId, authorId) => {
-  return {
-    pubId: pubId,
-    authorId: authorId,
-    position: 1,
+    year: null,
+    contributions: [createContribution(pubId, 'A1')],
   };
 };
 
@@ -27,10 +29,8 @@ describe('createApp', () => {
     beforeEach(async () => {
       const connectorMock = {
         id: 'stub',
-        getPublication: jest.fn().mockResolvedValue(publication('W1')),
-        getContributions: jest.fn(async (pubId) =>
-          [contribution(pubId, 'A1')]),
-        getCitations: jest.fn().mockResolvedValue([publication('W2')]),
+        getPublication: jest.fn().mockResolvedValue(createPublication('W1')),
+        getCitations: jest.fn().mockResolvedValue([createPublication('W2')]),
       };
       const { classificationService } = createApp({
         dbPath: ':memory:',

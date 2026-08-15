@@ -267,6 +267,7 @@ erDiagram
     string title
     string normalisedTitle "normalised form of the title"
     string externalId "external identifier where available, e.g. DOI"
+    int year "publication year where available"
   }
 
   AUTHOR {
@@ -381,9 +382,10 @@ To interact with the Providers, the Backend defines an interface that each Provi
 - **searchPublications(name: string)** - Search publications by name.
 - **getAuthorById(id: string)** - Get an author by unique ID
 - **getAuthorPublications(authorId: string)** - Get the publications of an author.
-- **getPublication(id: string)** - Get a publication by unique ID or DOI
-- **getCitations(pubId: string)** - Get the publications that cite a publication (*cited-by*).
-- **getContributions(pubId: string)** - Get the author list (with positions) of a publication.
+- **getPublication(id: string)** - Get a publication by unique ID or DOI, with its contributions (the author list with positions).
+- **getCitations(pubId: string)** - Get the publications that cite a publication (*cited-by*), each with its contributions.
+
+A publication is returned together with its contributions. Where a Provider embeds the author list in the work record (e.g. OpenAlex's `authorships`), this costs no extra request; a Provider that exposes the author list separately fetches it internally.
 
 **Request Support per Provider**
 
@@ -394,7 +396,7 @@ To interact with the Providers, the Backend defines an interface that each Provi
 | getAuthorPublications       | Scrape only    | Yes      | Partial (by name) | Yes              | By ORCID        | Yes       | Yes            | Yes (sub) | Unreliable  |
 | getPublication              | Scrape only    | Yes      | Yes               | Yes              | Yes             | By search | Yes            | Yes (sub) | Unreliable  |
 | getCitations list           | Scrape only    | Yes      | No (count only)   | Yes              | Yes             | Yes       | No (external)  | Yes (sub) | Unreliable  |
-| getContributions | Scrape only    | Yes      | Yes               | Yes (by order)   | Yes (by order)   | Partial   | Yes (by order) | Yes (sub)  | Unreliable  |
+| contributions (author list) | Scrape only    | Yes      | Yes               | Yes (by order)   | Yes (by order)   | Partial   | Yes (by order) | Yes (sub)  | Unreliable  |
 
 `(sub)` = supported, but only with a paid subscription.
 

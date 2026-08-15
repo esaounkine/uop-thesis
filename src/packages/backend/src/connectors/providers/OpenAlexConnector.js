@@ -18,6 +18,25 @@ export class OpenAlexConnector extends ProviderConnector {
       ? id.split('/').pop()
       : id);
 
+  static toContributions = (work) =>
+    (work.authorships ?? [])
+      .map((entry, index) => {
+        return {
+          pubId: OpenAlexConnector.extractShortId(work.id),
+          authorId: OpenAlexConnector.extractShortId(entry.author?.id),
+          authorName: entry.author?.display_name ?? null,
+          position: index + 1, // OpenAlex returns them in the order of appearance
+        };
+      })
+      // author.id might be null if:
+      // - there's raw_author_name, but no id, when the author is unmatched
+      // - new records that have not assigned an author id yet
+      // - group authors publishing as a collective
+      // - maybe other cases of missing or low quality data
+      // we just drop these contribution records
+      .filter((contribution) =>
+        contribution.authorId != null);
+
   /**
    * @param {Object} [args]
    * @param {HttpClient} [args.httpClient]
@@ -94,29 +113,6 @@ export class OpenAlexConnector extends ProviderConnector {
   }
 
   /**
-   * @see https://github.com/ourresearch/openalex-docs/blob/main/api-entities/works/work-object/authorship-object.md
-   */
-  async getContributions(pubId) {
-    const work = await this.fetchJson(`/works/${pubId}`, {}, directFetchTtlMs);
-    return work.authorships
-      .map((entry, index) => {
-        return {
-          pubId: pubId,
-          authorId: OpenAlexConnector.extractShortId(entry.author?.id),
-          position: index + 1, // OpenAlex returns them in the order of appearance
-        };
-      })
-      // author.id might be null if:
-      // - there's raw_author_name, but no id, when the author is unmatched
-      // - new records that have not assigned an author id yet
-      // - group authors publishing as a collective
-      // - maybe other cases of missing or low quality data
-      // we just drop these contribution records
-      .filter((contribution) =>
-        contribution.authorId != null);
-  }
-
-  /**
    * @param {string} path
    * @param {Object} params
    * @param {number} ttl - cache lifetime in ms
@@ -172,6 +168,8 @@ export class OpenAlexConnector extends ProviderConnector {
       title: title,
       normalisedTitle: normalise(title),
       externalId: work.doi ?? null,
+      year: work.publication_year ?? null,
+      contributions: OpenAlexConnector.toContributions(work),
     };
   }
 
