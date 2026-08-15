@@ -2,6 +2,7 @@ import { createApp } from './app.js';
 import { withQueueProgressReport } from './lib/queue-progress.js';
 
 const CANDIDATE_LIMIT = 10;
+const PREVIEW_LIMIT = 3; // papers per author or authors per paper, when listing either
 
 const formatMetrics = (metrics) =>
   `Total citations: ${metrics.total}
@@ -40,14 +41,26 @@ const printCandidates = (name, candidates) => {
   console.log(`Matches for "${name}":`);
   candidates.slice(0, CANDIDATE_LIMIT).forEach((publication) => {
     console.log(`- ${publication.pubId}  ${publication.title}`);
+    const authorNames = (publication.contributions ?? [])
+      .slice(0, PREVIEW_LIMIT)
+      .map((contribution) =>
+        contribution.authorName);
+    if (authorNames.length) {
+      console.log(`${authorNames.join('\n')}`);
+    }
   });
 };
 
 const printAuthorCandidates = (name, candidates) => {
   console.log(`Matches for "${name}":`);
-  candidates.slice(0, CANDIDATE_LIMIT).forEach((author) => {
-    console.log(`- ${author.authorId}  ${author.originalName}`);
-  });
+  candidates
+    .slice(0, CANDIDATE_LIMIT)
+    .forEach((author) => {
+      console.log(`- ${author.authorId}  ${author.originalName}`);
+      if (author.topPapers?.length) {
+        console.log(`${author.topPapers.join('\n')}`);
+      }
+    });
 };
 
 const printUsageAndDie = () => {
@@ -117,7 +130,23 @@ const runAuthorSearch = async (name) => {
   } else if (candidates.length === 1) {
     await runAuthorMetrics(candidates[0].authorId);
   } else {
-    printAuthorCandidates(name, candidates);
+    const withTopPapers = await withQueueProgressReport(requestQueue, () =>
+      Promise.all(
+        candidates
+          .slice(0, CANDIDATE_LIMIT)
+          .map(async (author) => {
+            const { publications } = await authorService.getPublications(author.authorId);
+
+            return {
+              ...author,
+              topPapers: publications
+                .slice(0, PREVIEW_LIMIT)
+                .map((paper) =>
+                  `${paper.title} (${paper.year})`),
+            };
+          }),
+      ));
+    printAuthorCandidates(name, withTopPapers);
   }
 };
 
