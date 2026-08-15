@@ -71,14 +71,17 @@ export class TreeService {
     });
     const authorRows = [
       ...new Map(contributions.map((contribution) =>
-        [contribution.authorId, contribution.authorName ?? null])),
-    ].map(([authorId, name]) => {
+        [contribution.authorId, contribution])),
+    ].map(([authorId, contribution]) => {
+      const name = contribution.authorName ?? null;
+
       return {
         authorId: authorId,
         originalName: name,
         normalisedName: name == null
           ? null
           : normalise(name),
+        organisation: contribution.organisation ?? null,
       };
     });
     const citationRows = citing.map((entry) => {

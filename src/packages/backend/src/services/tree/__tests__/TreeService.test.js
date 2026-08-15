@@ -102,7 +102,7 @@ describe('TreeService', () => {
       });
     });
 
-    describe('when the contributions carry author names', () => {
+    describe('when the contributions carry author names and affiliations', () => {
       beforeEach(() => {
         treeService.save({
           publication: createPublication('W1'),
@@ -111,6 +111,7 @@ describe('TreeService', () => {
               pubId: 'W1',
               authorId: 'A1',
               authorName: 'Jane Roe',
+              organisation: 'University 1',
               position: 1,
             },
           ],
@@ -118,13 +119,14 @@ describe('TreeService', () => {
         });
       });
 
-      it('stores the author with a normalised name', () => {
+      it('stores the author with a normalised name and organisation', () => {
         expect(db.select().from(schema.authors)
           .all()).toEqual([
           {
             authorId: 'A1',
             originalName: 'Jane Roe',
             normalisedName: 'jane roe',
+            organisation: 'University 1',
           },
         ]);
       });

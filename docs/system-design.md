@@ -274,6 +274,7 @@ erDiagram
     string authorId PK "internal author ID"
     string originalName
     string normalisedName "normalised form of the name"
+    string organisation "organisation (university) where available"
   }
 
   CONTRIBUTION {

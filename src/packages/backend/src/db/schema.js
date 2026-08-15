@@ -13,6 +13,7 @@ export const authors = sqliteTable('authors', {
   authorId: text('author_id').primaryKey(),
   originalName: text('original_name'),
   normalisedName: text('normalised_name'),
+  organisation: text('organisation'),
 });
 
 export const contributions = sqliteTable(

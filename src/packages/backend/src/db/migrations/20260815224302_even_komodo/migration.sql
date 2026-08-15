@@ -1,0 +1,1 @@
+ALTER TABLE `authors` ADD `organisation` text;

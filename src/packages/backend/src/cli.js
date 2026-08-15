@@ -4,6 +4,25 @@ import { withQueueProgressReport } from './lib/queue-progress.js';
 const CANDIDATE_LIMIT = 10;
 const PREVIEW_LIMIT = 3; // papers per author or authors per paper, when listing either
 
+const getMostRecentPapers = (publications, limit) =>
+  [...publications]
+    .sort((left, right) =>
+      (right.year ?? 0) - (left.year ?? 0))
+    .slice(0, limit);
+
+const toPaperView = (paper) =>
+  `${paper.title} (${paper.year})`;
+
+const toAuthorLabel = (author) =>
+  [
+    author.authorId,
+    author.originalName,
+    author.organisation,
+    author.papers && `papers: ${author.papers.length}`,
+  ]
+    .filter(Boolean)
+    .join(' | ');
+
 const formatMetrics = (metrics) =>
   `Total citations: ${metrics.total}
 Self: ${metrics.self.total}
@@ -29,7 +48,7 @@ const printAuthorMetrics = ({
   author, metrics, publications,
 }) => {
   console.log(`
-Author: ${author.authorId} - ${author.originalName}
+Author: ${author.authorId} - ${toAuthorLabel(author)}
 Publication count: ${publications.length}
 
 ${formatMetrics(metrics)}
@@ -56,9 +75,12 @@ const printAuthorCandidates = (name, candidates) => {
   candidates
     .slice(0, CANDIDATE_LIMIT)
     .forEach((author) => {
-      console.log(`- ${author.authorId}  ${author.originalName}`);
-      if (author.topPapers?.length) {
-        console.log(`${author.topPapers.join('\n')}`);
+      console.log(`- ${toAuthorLabel(author)}`);
+      if (author.papers?.length) {
+        const recentPapers = getMostRecentPapers(author.papers, PREVIEW_LIMIT)
+          .map(toPaperView)
+          .join('\n');
+        console.log(`${recentPapers}`);
       }
     });
 };
@@ -135,14 +157,13 @@ const runAuthorSearch = async (name) => {
         candidates
           .slice(0, CANDIDATE_LIMIT)
           .map(async (author) => {
-            const { publications } = await authorService.getPublications(author.authorId);
+            const { publications } = await authorService.getPublications(
+              author.authorId,
+            );
 
             return {
               ...author,
-              topPapers: publications
-                .slice(0, PREVIEW_LIMIT)
-                .map((paper) =>
-                  `${paper.title} (${paper.year})`),
+              papers: publications,
             };
           }),
       ));

@@ -50,7 +50,7 @@ describe('SemanticScholarConnector', () => {
         });
       });
 
-      it('carries the contributions with author names', () => {
+      it('carries the contributions with author name, no organisation', () => {
         expect(publication.contributions[0]).toEqual({
           pubId: 'p1',
           authorId: 'a1',
@@ -85,6 +85,7 @@ describe('SemanticScholarConnector', () => {
             pubId: 'p1',
             authorId: 'a2',
             authorName: 'John Doe',
+            organisation: null,
             position: 2,
           },
         ]);
@@ -139,17 +140,19 @@ describe('SemanticScholarConnector', () => {
             {
               authorId: 'a1',
               name: 'Jane Roe',
+              affiliations: ['University 1'],
             },
           ],
         }).searchAuthors('jane');
       });
 
-      it('maps the results', () => {
+      it('maps the results with organisation', () => {
         expect(authors).toEqual([
           {
             authorId: 'a1',
             originalName: 'Jane Roe',
             normalisedName: 'jane roe',
+            organisation: 'University 1',
           },
         ]);
       });
@@ -191,6 +194,7 @@ describe('SemanticScholarConnector', () => {
             pubId: 'p1',
             authorId: 'a1',
             authorName: 'Jane Roe',
+            organisation: null,
             position: 1,
           },
         ]);

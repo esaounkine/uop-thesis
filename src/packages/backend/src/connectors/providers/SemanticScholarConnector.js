@@ -16,6 +16,8 @@ export class SemanticScholarConnector extends ProviderConnector {
 
   static PAPER_FIELDS = 'title,year,externalIds,authors';
 
+  static AUTHOR_FIELDS = 'name,externalIds,homepage,paperCount,affiliations,papers';
+
   static toContributions = (paper) =>
     (paper.authors ?? [])
       .map((author, index) => {
@@ -23,6 +25,7 @@ export class SemanticScholarConnector extends ProviderConnector {
           pubId: paper.paperId,
           authorId: author.authorId,
           authorName: author.name ?? null,
+          organisation: author.affiliations?.[0] ?? null,
           position: index + 1, // Semantic Scholar returns them in the order of appearance
         };
       })
@@ -61,7 +64,7 @@ export class SemanticScholarConnector extends ProviderConnector {
   async searchAuthors(name) {
     const data = await this.fetchJson('/author/search', {
       query: name,
-      fields: 'name',
+      fields: SemanticScholarConnector.AUTHOR_FIELDS,
       limit: SemanticScholarConnector.SEARCH_LIMIT,
     }, searchTtlMs);
     return (data.data ?? []).map((author) =>
@@ -86,7 +89,7 @@ export class SemanticScholarConnector extends ProviderConnector {
    */
   async getAuthorById(id) {
     const author = await this.fetchJson(`/author/${id}`, {
-      fields: 'name',
+      fields: SemanticScholarConnector.AUTHOR_FIELDS,
     }, directFetchTtlMs);
     return this.toAuthor(author);
   }
@@ -189,6 +192,7 @@ export class SemanticScholarConnector extends ProviderConnector {
       authorId: author.authorId,
       originalName: author.name,
       normalisedName: normalise(author.name),
+      organisation: author.affiliations?.[0] ?? null,
     };
   }
 }

@@ -61,6 +61,7 @@ describe('OpenAlexConnector', () => {
                   id: 'https://openalex.org/A1',
                   display_name: 'Jane Roe',
                 },
+                institutions: [{ display_name: 'University 1' }],
               },
               {
                 author: {
@@ -77,11 +78,12 @@ describe('OpenAlexConnector', () => {
             entry.position)).toEqual([1, 2]);
         });
 
-        it('carries the pub id, short author id and name', () => {
+        it('carries the pub id, author id, name and organisation', () => {
           expect(publication.contributions[0]).toEqual({
             pubId: 'W1',
             authorId: 'A1',
             authorName: 'Jane Roe',
+            organisation: 'University 1',
             position: 1,
           });
         });
@@ -116,6 +118,7 @@ describe('OpenAlexConnector', () => {
               pubId: 'W1',
               authorId: 'A2',
               authorName: 'John Doe',
+              organisation: null,
               position: 2,
             },
           ]);
@@ -168,17 +171,19 @@ describe('OpenAlexConnector', () => {
             {
               id: 'https://openalex.org/A1',
               display_name: 'Jane Roe',
+              last_known_institutions: [{ display_name: 'University 1' }],
             },
           ],
         }).searchAuthors('jane');
       });
 
-      it('maps the results', () => {
+      it('maps the results with organisation', () => {
         expect(authors).toEqual([
           {
             authorId: 'A1',
             originalName: 'Jane Roe',
             normalisedName: 'jane roe',
+            organisation: 'University 1',
           },
         ]);
       });
@@ -230,12 +235,14 @@ describe('OpenAlexConnector', () => {
             pubId: 'W1',
             authorId: 'A1',
             authorName: 'Jane Roe',
+            organisation: null,
             position: 1,
           },
           {
             pubId: 'W1',
             authorId: 'A2',
             authorName: 'John Doe',
+            organisation: null,
             position: 2,
           },
         ]);

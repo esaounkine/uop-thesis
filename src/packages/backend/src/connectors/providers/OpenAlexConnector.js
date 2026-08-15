@@ -25,6 +25,7 @@ export class OpenAlexConnector extends ProviderConnector {
           pubId: OpenAlexConnector.extractShortId(work.id),
           authorId: OpenAlexConnector.extractShortId(entry.author?.id),
           authorName: entry.author?.display_name ?? null,
+          organisation: entry.institutions?.[0]?.display_name ?? null,
           position: index + 1, // OpenAlex returns them in the order of appearance
         };
       })
@@ -181,6 +182,7 @@ export class OpenAlexConnector extends ProviderConnector {
       authorId: OpenAlexConnector.extractShortId(author.id),
       originalName: author.display_name,
       normalisedName: normalise(author.display_name),
+      organisation: author.last_known_institutions?.[0]?.display_name ?? null,
     };
   }
 }
