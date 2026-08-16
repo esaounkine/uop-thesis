@@ -5,6 +5,7 @@
  * @template T
  * @param {({ on: Function, off: Function, pending: number, size: number }) | undefined} queue
  * @param {() => Promise<T>} fn - the function to call
+ * @param {string} [label] - name of the queue to prefix the status line
  * @param {(status: { completed: number, pending: number, queued: number }) => void} [onProgress] - callback after each completed step
  * @param {(completed: number) => void} [onDone] - callback when fn settles
  * @returns {Promise<T>} the result of fn
@@ -12,11 +13,12 @@
 export const withQueueProgressReport = async (
   queue,
   fn,
+  label = 'queue',
   onProgress = ({
     completed, pending, queued,
   }) => {
     process.stderr.write(
-      `\rqueue | done: ${completed}  running: ${pending}  queued: ${queued}   `,
+      `\r${label} | done: ${completed}  running: ${pending}  queued: ${queued}   `,
     );
   },
   onDone = (completed) => {

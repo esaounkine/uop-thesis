@@ -10,7 +10,11 @@ export const dbFile = process.env.DB_FILE ?? path.join(packageRoot, 'db-data', '
 export const schemaFile = path.join(packageRoot, 'src', 'db', 'schema.js');
 export const migrationsDir = path.join(packageRoot, 'src', 'db', 'migrations');
 
-export const provider = process.env.PROVIDER ?? 'openalex';
+export const providers = process.env.PROVIDERS
+  ?.split(',')
+  .map((id) =>
+    id.trim())
+  .filter(Boolean);
 
 export const openAlexBaseUrl = process.env.OPENALEX_BASE_URL ?? 'https://api.openalex.org';
 export const openAlexApiKey = process.env.OPENALEX_API_KEY;

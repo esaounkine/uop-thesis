@@ -1,4 +1,4 @@
-import { createApp } from './app.js';
+import { wire } from './app.js';
 import { withQueueProgressReport } from './lib/queue-progress.js';
 
 const CANDIDATE_LIMIT = 10;
@@ -36,7 +36,7 @@ Self: ${metrics.self.total}
   co-author ${metrics.self.coauthor}
 External: ${metrics.external}`;
 
-const printMetrics = ({
+const printPaperMetrics = ({
   publication, metrics, citations,
 }, skipDebug = true) => {
   console.log(`
@@ -93,100 +93,141 @@ const printAuthorCandidates = (name, candidates) => {
     });
 };
 
+const printSection = (provider) => {
+  console.log(`\n=== ${provider} ===`);
+};
+
+const args = process.argv.slice(2);
+const providers = wire();
+
 const printUsageAndDie = () => {
   console.error(`
 Usage:
-node src/cli.js -p <paperId>
+node src/cli.js -p <provider>:<paperId>
 node src/cli.js -pn <paper name>
-node src/cli.js -a <authorId>
+node src/cli.js -a <provider>:<authorId>
 node src/cli.js -an <author name>
+
+Active providers: ${providers.map((provider) =>
+  provider.id).join(', ')}
 `);
   process.exit(1);
 };
 
-const args = process.argv.slice(2);
-const {
-  classificationService,
-  publicationService,
-  authorService,
-  requestQueue,
-} = createApp();
+const parseId = (value) => {
+  const [_pId, ..._parts] = value.split(':');
+  const _id = _parts.join(':');
+  const provider = providers.find(({ id }) =>
+    id === _pId);
 
-const runPaperMetrics = async (pubId) => {
-  const result = await withQueueProgressReport(requestQueue, () =>
-    classificationService.getPaperMetrics(pubId));
+  if (!_pId || !_id || !provider) {
+    printUsageAndDie();
+  }
+
+  return {
+    provider: provider,
+    id: _id,
+  };
+};
+
+const runPaperById = async (value) => {
+  const {
+    provider, id,
+  } = parseId(value);
+
+  printSection(provider.id);
+
+  const result = await withQueueProgressReport(provider.queue, () =>
+    provider.classification.getPaperMetrics(id), provider.id);
 
   if (!result) {
-    console.error(`Paper not found: ${pubId}`);
+    console.error(`Paper not found: ${id}`);
     process.exit(1);
   }
 
-  printMetrics(result);
+  printPaperMetrics(result);
 };
 
-const runAuthorMetrics = async (authorId) => {
-  const result = await withQueueProgressReport(requestQueue, () =>
-    classificationService.getAuthorMetrics(authorId));
+const runAuthorById = async (value) => {
+  const {
+    provider, id,
+  } = parseId(value);
+
+  printSection(provider.id);
+
+  const result = await withQueueProgressReport(provider.queue, () =>
+    provider.classification.getAuthorMetrics(id), provider.id);
 
   if (!result) {
-    console.error(`Author not found: ${authorId}`);
+    console.error(`Author not found: ${id}`);
     process.exit(1);
   }
 
   printAuthorMetrics(result);
 };
 
-const runPaperSearch = async (name) => {
-  const candidates = await withQueueProgressReport(requestQueue, () =>
-    publicationService.searchByName(name));
+const resolvePapers = async (provider, name) => {
+  const candidates = await provider.publications.searchByName(name);
 
-  if (candidates.length === 0) {
-    console.error(`No papers match: ${name}`);
-    process.exit(1);
-  } else if (candidates.length === 1) {
-    await runPaperMetrics(candidates[0].pubId);
-  } else {
+  return candidates.slice(0, CANDIDATE_LIMIT);
+};
+
+const resolveAuthor = async (provider, name) => {
+  const candidates = await provider.authors.searchByName(name);
+
+  const shortlist = candidates.slice(0, CANDIDATE_LIMIT);
+  const settled = await Promise.allSettled(
+    shortlist.map(async (author) => {
+      const { publications } = await provider.authors.getPublications(
+        author.authorId,
+      );
+
+      return {
+        ...author,
+        papers: publications,
+      };
+    }),
+  );
+
+  return settled.map((result, index) =>
+    (result.status === 'fulfilled'
+      ? result.value
+      : shortlist[index]));
+};
+
+const runPaperSearch = async (name) => {
+  await Promise.all(providers.map(async (provider) => {
+    const candidates = await withQueueProgressReport(
+      provider.queue,
+      () =>
+        resolvePapers(provider, name),
+      provider.id,
+    );
+
+    printSection(provider.id);
+
     printPaperCandidates(name, candidates);
-  }
+  }));
 };
 
 const runAuthorSearch = async (name) => {
-  const candidates = await withQueueProgressReport(requestQueue, () =>
-    authorService.searchByName(name));
+  await Promise.all(providers.map(async (provider) => {
+    const candidates = await withQueueProgressReport(
+      provider.queue,
+      () =>
+        resolveAuthor(provider, name),
+      provider.id);
 
-  if (candidates.length === 0) {
-    console.error(`No authors match: ${name}`);
-    process.exit(1);
-  } else if (candidates.length === 1) {
-    await runAuthorMetrics(candidates[0].authorId);
-  } else {
-    const settled = await withQueueProgressReport(requestQueue, () =>
-      Promise.allSettled(
-        candidates
-          .slice(0, CANDIDATE_LIMIT)
-          .map(async (author) => {
-            const { publications } = await authorService.getPublications(
-              author.authorId,
-            );
+    printSection(provider.id);
 
-            return {
-              ...author,
-              papers: publications,
-            };
-          }),
-      ));
-    const withPapers = settled.map((result, index) =>
-      (result.status === 'fulfilled'
-        ? result.value
-        : candidates[index]));
-    printAuthorCandidates(name, withPapers);
-  }
+    printAuthorCandidates(name, candidates);
+  }));
 };
 
 const handlers = {
-  '-p': runPaperMetrics,
+  '-p': runPaperById,
   '-pn': runPaperSearch,
-  '-a': runAuthorMetrics,
+  '-a': runAuthorById,
   '-an': runAuthorSearch,
 };
 

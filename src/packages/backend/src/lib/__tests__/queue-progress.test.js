@@ -25,7 +25,7 @@ describe('withQueueProgressReport', () => {
 
     beforeEach(async () => {
       result = await withQueueProgressReport(undefined, async () =>
-        'value', onProgressMock, onDoneMock);
+        'value', 'openalex', onProgressMock, onDoneMock);
     });
 
     it('runs the function and returns its result', () => {
@@ -51,7 +51,7 @@ describe('withQueueProgressReport', () => {
         result = await withQueueProgressReport(queue, async () => {
           queue.emit('completed');
           return 'done';
-        }, onProgressMock, onDoneMock);
+        }, 'openalex', onProgressMock, onDoneMock);
       });
 
       it('returns the result', () => {
@@ -81,7 +81,7 @@ describe('withQueueProgressReport', () => {
       beforeEach(async () => {
         rejection = await withQueueProgressReport(queue, async () => {
           throw new Error('err');
-        }, onProgressMock, onDoneMock).catch((error) =>
+        }, 'openalex', onProgressMock, onDoneMock).catch((error) =>
           error);
       });
 

@@ -20,7 +20,13 @@ const REGISTRY = {
 };
 
 /**
- * Looks provider up by id. Only one provider is active at a time.
+ * @returns {string[]} every registered provider id
+ */
+export const listProviders = () =>
+  Object.keys(REGISTRY);
+
+/**
+ * Looks provider up by id.
  *
  * @param {string} id
  * @returns {{ requestsPerSecond: number, create: (httpClient: import('../../lib/HttpClient.js').HttpClient) => import('../ProviderConnector.js').ProviderConnector }}
@@ -29,7 +35,7 @@ export const selectProvider = (id) => {
   const spec = REGISTRY[id];
 
   if (!spec) {
-    throw new Error(`Unknown provider "${id}". Known providers: ${Object.keys(REGISTRY).join(', ')}`);
+    throw new Error(`Unknown provider "${id}". Known providers: ${listProviders().join(', ')}`);
   }
 
   return spec;

@@ -1,7 +1,7 @@
 import {
   beforeEach, describe, expect, it, jest,
 } from '@jest/globals';
-import { createApp } from '../app.js';
+import { wire } from '../app.js';
 
 const createContribution = (pubId, authorId) => {
   return {
@@ -22,8 +22,8 @@ const createPublication = (pubId) => {
   };
 };
 
-describe('createApp', () => {
-  describe('when wired with a stub connector', () => {
+describe('wire', () => {
+  describe('with a stub connector', () => {
     let result;
 
     beforeEach(async () => {
@@ -32,14 +32,14 @@ describe('createApp', () => {
         getPublication: jest.fn().mockResolvedValue(createPublication('W1')),
         getCitations: jest.fn().mockResolvedValue([createPublication('W2')]),
       };
-      const { classificationService } = createApp({
+      const [provider] = wire({
         dbPath: ':memory:',
         connector: connectorMock,
       });
-      result = await classificationService.getPaperMetrics('W1');
+      result = await provider.classification.getPaperMetrics('W1');
     });
 
-    it('computes metrics through the wired services', () => {
+    it('builds a working provider for the injected connector', () => {
       expect(result.metrics.total).toBe(1);
     });
 
