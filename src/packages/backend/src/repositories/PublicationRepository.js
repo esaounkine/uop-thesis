@@ -1,4 +1,4 @@
-import { inArray } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { publications } from '../db/schema.js';
 
 export class PublicationRepository {
@@ -22,10 +22,11 @@ export class PublicationRepository {
   }
 
   /**
+   * @param {string} provider
    * @param {string[]} ids
    * @returns {import('../db/schema.js').Publication[]}
    */
-  findByIds(ids) {
+  findByIds(provider, ids) {
     if (ids.length === 0) {
       return [];
     }
@@ -33,7 +34,10 @@ export class PublicationRepository {
     return this.db
       .select()
       .from(publications)
-      .where(inArray(publications.pubId, ids))
+      .where(and(
+        eq(publications.provider, provider),
+        inArray(publications.pubId, ids),
+      ))
       .all();
   }
 }

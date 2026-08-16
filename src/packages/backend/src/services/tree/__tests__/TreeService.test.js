@@ -11,8 +11,11 @@ import { ContributionRepository } from '../../../repositories/ContributionReposi
 import { PublicationRepository } from '../../../repositories/PublicationRepository.js';
 import { TreeService } from '../TreeService.js';
 
+const PROVIDER = 'openalex';
+
 const createPublication = (pubId) => {
   return {
+    provider: PROVIDER,
     pubId: pubId,
     title: pubId,
     normalisedTitle: pubId.toLowerCase(),
@@ -23,6 +26,7 @@ const createPublication = (pubId) => {
 
 const createContribution = (pubId, authorId) => {
   return {
+    provider: PROVIDER,
     pubId: pubId,
     authorId: authorId,
     position: 1,
@@ -50,6 +54,7 @@ const createTree = () => {
 
 const createTreeService = (db) =>
   new TreeService({
+    provider: PROVIDER,
     publicationRepository: new PublicationRepository(db),
     authorRepository: new AuthorRepository(db),
     contributionRepository: new ContributionRepository(db),
@@ -89,11 +94,13 @@ describe('TreeService', () => {
         expect(db.select().from(schema.citations)
           .all()).toEqual([
           {
+            provider: PROVIDER,
             sourcePubId: 'W2',
             targetPubId: 'W1',
             classification: 'self-direct',
           },
           {
+            provider: PROVIDER,
             sourcePubId: 'W3',
             targetPubId: 'W1',
             classification: 'external',
@@ -123,6 +130,7 @@ describe('TreeService', () => {
         expect(db.select().from(schema.authors)
           .all()).toEqual([
           {
+            provider: PROVIDER,
             authorId: 'A1',
             originalName: 'Jane Roe',
             normalisedName: 'jane roe',

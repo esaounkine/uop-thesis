@@ -1,36 +1,65 @@
-import { integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { foreignKey, integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { CITATION_TYPES } from '../constants/citation-type.js';
 
-export const publications = sqliteTable('publications', {
-  pubId: text('pub_id').primaryKey(),
-  title: text('title'),
-  normalisedTitle: text('normalised_title'),
-  externalId: text('external_id'),
-  year: integer('year'),
-});
+export const publications = sqliteTable(
+  'publications',
+  {
+    provider: text('provider').notNull(),
+    pubId: text('pub_id').notNull(),
+    title: text('title'),
+    normalisedTitle: text('normalised_title'),
+    externalId: text('external_id'),
+    year: integer('year'),
+  },
+  (t) =>
+    [
+      primaryKey({
+        columns: [t.provider, t.pubId],
+      }),
+    ],
+);
 
-export const authors = sqliteTable('authors', {
-  authorId: text('author_id').primaryKey(),
-  originalName: text('original_name'),
-  normalisedName: text('normalised_name'),
-  organisation: text('organisation'),
-});
+export const authors = sqliteTable(
+  'authors',
+  {
+    provider: text('provider').notNull(),
+    authorId: text('author_id').notNull(),
+    originalName: text('original_name'),
+    normalisedName: text('normalised_name'),
+    organisation: text('organisation'),
+  },
+  (t) =>
+    [
+      primaryKey({
+        columns: [t.provider, t.authorId],
+      }),
+    ],
+);
 
 export const contributions = sqliteTable(
   'contributions',
   {
-    pubId: text('pub_id').notNull()
-      .references(() =>
-        publications.pubId),
-    authorId: text('author_id').notNull()
-      .references(() =>
-        authors.authorId),
+    provider: text('provider').notNull(),
+    pubId: text('pub_id').notNull(),
+    authorId: text('author_id').notNull(),
     position: integer('position').notNull(),
   },
   (t) =>
     [
       primaryKey({
-        columns: [t.pubId, t.authorId],
+        columns: [
+          t.provider,
+          t.pubId,
+          t.authorId,
+        ],
+      }),
+      foreignKey({
+        columns: [t.provider, t.pubId],
+        foreignColumns: [publications.provider, publications.pubId],
+      }),
+      foreignKey({
+        columns: [t.provider, t.authorId],
+        foreignColumns: [authors.provider, authors.authorId],
       }),
     ],
 );
@@ -38,12 +67,9 @@ export const contributions = sqliteTable(
 export const citations = sqliteTable(
   'citations',
   {
-    sourcePubId: text('source_pub_id').notNull()
-      .references(() =>
-        publications.pubId),
-    targetPubId: text('target_pub_id').notNull()
-      .references(() =>
-        publications.pubId),
+    provider: text('provider').notNull(),
+    sourcePubId: text('source_pub_id').notNull(),
+    targetPubId: text('target_pub_id').notNull(),
     classification: text('classification', {
       enum: CITATION_TYPES,
     }),
@@ -51,9 +77,20 @@ export const citations = sqliteTable(
   (t) =>
     [
       primaryKey({
-        columns: [t.sourcePubId, t.targetPubId],
-      },
-      ),
+        columns: [
+          t.provider,
+          t.sourcePubId,
+          t.targetPubId,
+        ],
+      }),
+      foreignKey({
+        columns: [t.provider, t.sourcePubId],
+        foreignColumns: [publications.provider, publications.pubId],
+      }),
+      foreignKey({
+        columns: [t.provider, t.targetPubId],
+        foreignColumns: [publications.provider, publications.pubId],
+      }),
     ],
 );
 

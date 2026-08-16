@@ -33,6 +33,7 @@ const wire = (dbPath) => {
   const connector = providerSpec.create(httpClient);
 
   const treeService = new TreeService({
+    provider: provider,
     publicationRepository: new PublicationRepository(db),
     authorRepository: new AuthorRepository(db),
     contributionRepository: new ContributionRepository(db),

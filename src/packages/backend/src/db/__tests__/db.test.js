@@ -31,6 +31,7 @@ describe('db layer', () => {
 
   test('publication round-trips through the normalised tables', () => {
     db.insert(schema.publications).values({
+      provider: 'openalex',
       pubId: 'P1',
       title: 'A Paper',
       normalisedTitle: 'a paper',

@@ -1,4 +1,4 @@
-import { inArray } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { contributions } from '../db/schema.js';
 
 export class ContributionRepository {
@@ -22,10 +22,11 @@ export class ContributionRepository {
   }
 
   /**
+   * @param {string} provider
    * @param {string[]} pubIds
    * @returns {import('../db/schema.js').Contribution[]}
    */
-  findByPubIds(pubIds) {
+  findByPubIds(provider, pubIds) {
     if (pubIds.length === 0) {
       return [];
     }
@@ -33,7 +34,10 @@ export class ContributionRepository {
     return this.db
       .select()
       .from(contributions)
-      .where(inArray(contributions.pubId, pubIds))
+      .where(and(
+        eq(contributions.provider, provider),
+        inArray(contributions.pubId, pubIds),
+      ))
       .all();
   }
 }

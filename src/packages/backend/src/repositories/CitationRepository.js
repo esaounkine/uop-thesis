@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { citations } from '../db/schema.js';
 
 export class CitationRepository {
@@ -24,14 +24,18 @@ export class CitationRepository {
   /**
    * The citation edges pointing at a cited publication (papers that cite it).
    *
+   * @param {string} provider
    * @param {string} targetPubId
    * @returns {import('../db/schema.js').Citation[]}
    */
-  findByTarget(targetPubId) {
+  findByTarget(provider, targetPubId) {
     return this.db
       .select()
       .from(citations)
-      .where(eq(citations.targetPubId, targetPubId))
+      .where(and(
+        eq(citations.provider, provider),
+        eq(citations.targetPubId, targetPubId),
+      ))
       .all();
   }
 }
