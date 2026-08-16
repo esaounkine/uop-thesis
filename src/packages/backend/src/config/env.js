@@ -10,6 +10,9 @@ export const dbFile = process.env.DB_FILE ?? path.join(packageRoot, 'db-data', '
 export const schemaFile = path.join(packageRoot, 'src', 'db', 'schema.js');
 export const migrationsDir = path.join(packageRoot, 'src', 'db', 'migrations');
 
+export const port = Number(process.env.PORT ?? 3000);
+export const corsOrigin = process.env.CORS_ORIGIN ?? '*';
+
 export const providers = process.env.PROVIDERS
   ?.split(',')
   .map((id) =>
