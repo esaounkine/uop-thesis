@@ -152,6 +152,7 @@ export class ClassificationService {
    *   author: import('../../db/schema.js').Author,
    *   metrics: ReturnType<ClassificationService['aggregate']>,
    *   publications: Awaited<ReturnType<ClassificationService['getPaperMetrics']>>[],
+   *   fetch: { total: number, fetched: number, failed: number },
    * }>} null when the author is not found
    */
   async getAuthorMetrics(authorId) {
@@ -161,13 +162,17 @@ export class ClassificationService {
       return null;
     }
 
-    const publications = (
-      await Promise.all(
-        tree.publications.map((publication) =>
-          this.getPaperMetrics(publication.pubId)),
-      )
-    ).filter((entry) =>
-      entry != null);
+    const settled = await Promise.allSettled(
+      tree.publications.map((publication) =>
+        this.getPaperMetrics(publication.pubId)),
+    );
+    const publications = settled
+      .filter((result) =>
+        result.status === 'fulfilled' && result.value != null)
+      .map((result) =>
+        result.value);
+    const failed = settled.filter((result) =>
+      result.status === 'rejected').length;
 
     const metrics = this.aggregate(
       publications.flatMap((entry) =>
@@ -179,6 +184,11 @@ export class ClassificationService {
       author: tree.author,
       metrics: metrics,
       publications: publications,
+      stats: {
+        total: tree.publications.length,
+        fetched: publications.length,
+        failed: failed,
+      },
     };
   }
 }

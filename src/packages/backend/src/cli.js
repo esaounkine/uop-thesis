@@ -11,7 +11,13 @@ const getMostRecentPapers = (publications, limit) =>
     .slice(0, limit);
 
 const toPaperView = (paper) =>
-  `${paper.title} (${paper.year})`;
+  [
+    paper.pubId,
+    paper.title,
+    paper.year,
+  ]
+    .filter(Boolean)
+    .join(' | ');
 
 const toAuthorLabel = (author) =>
   [
@@ -34,7 +40,7 @@ const printMetrics = ({
   publication, metrics, citations,
 }, skipDebug = true) => {
   console.log(`
-Paper: ${publication.pubId} - ${publication.title}
+Paper: ${toPaperView(publication)}
 ${formatMetrics(metrics)}
 
 Debug details (per citation):
@@ -45,21 +51,23 @@ ${skipDebug
 };
 
 const printAuthorMetrics = ({
-  author, metrics, publications,
+  author, metrics, stats,
 }) => {
   console.log(`
-Author: ${author.authorId} - ${toAuthorLabel(author)}
-Publication count: ${publications.length}
+Author: ${toAuthorLabel(author)}
+Papers fetched: ${stats.fetched} of ${stats.total}${stats.failed
+  ? ` (failed to fetch: ${stats.failed})`
+  : ''}
 
 ${formatMetrics(metrics)}
 
 `);
 };
 
-const printCandidates = (name, candidates) => {
+const printPaperCandidates = (name, candidates) => {
   console.log(`Matches for "${name}":`);
   candidates.slice(0, CANDIDATE_LIMIT).forEach((publication) => {
-    console.log(`- ${publication.pubId}  ${publication.title}`);
+    console.log(`- ${toPaperView(publication)}`);
     const authorNames = (publication.contributions ?? [])
       .slice(0, PREVIEW_LIMIT)
       .map((contribution) =>
@@ -138,7 +146,7 @@ const runPaperSearch = async (name) => {
   } else if (candidates.length === 1) {
     await runPaperMetrics(candidates[0].pubId);
   } else {
-    printCandidates(name, candidates);
+    printPaperCandidates(name, candidates);
   }
 };
 
@@ -152,8 +160,8 @@ const runAuthorSearch = async (name) => {
   } else if (candidates.length === 1) {
     await runAuthorMetrics(candidates[0].authorId);
   } else {
-    const withTopPapers = await withQueueProgressReport(requestQueue, () =>
-      Promise.all(
+    const settled = await withQueueProgressReport(requestQueue, () =>
+      Promise.allSettled(
         candidates
           .slice(0, CANDIDATE_LIMIT)
           .map(async (author) => {
@@ -167,7 +175,11 @@ const runAuthorSearch = async (name) => {
             };
           }),
       ));
-    printAuthorCandidates(name, withTopPapers);
+    const withPapers = settled.map((result, index) =>
+      (result.status === 'fulfilled'
+        ? result.value
+        : candidates[index]));
+    printAuthorCandidates(name, withPapers);
   }
 };
 

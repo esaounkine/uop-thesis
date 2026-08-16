@@ -259,6 +259,56 @@ describe('ClassificationService', () => {
         expect(result.publications.map((entry) =>
           entry.publication.pubId)).toEqual(['W1', 'W2']);
       });
+
+      it('reports the fetch stats', () => {
+        expect(result.stats).toEqual({
+          total: 2,
+          fetched: 2,
+          failed: 0,
+        });
+      });
+    });
+
+    describe('when some papers fail to fetch', () => {
+      let result;
+
+      beforeEach(async () => {
+        const publicationServiceMock = {
+          getCitationTree: jest.fn(async (pubId) => {
+            if (pubId === 'W2') {
+              throw new Error('rate limited');
+            }
+
+            return {
+              publication: { pubId: 'W1' },
+              citedContributions: [contribution('A1', 1)],
+              citing: [citing('W10', [contribution('A1', 1)])], // direct
+            };
+          }),
+        };
+        const authorServiceMock = {
+          getPublications: jest.fn().mockResolvedValue({
+            author: { authorId: 'A1' },
+            publications: [{ pubId: 'W1' }, { pubId: 'W2' }],
+          }),
+        };
+        result = await new ClassificationService({
+          publicationService: publicationServiceMock,
+          authorService: authorServiceMock,
+        }).getAuthorMetrics('A1');
+      });
+
+      it('skips the failed paper and counts it', () => {
+        expect(result.stats).toEqual({
+          total: 2,
+          fetched: 1,
+          failed: 1,
+        });
+      });
+
+      it('aggregates over the papers it could fetch', () => {
+        expect(result.metrics.total).toBe(1);
+      });
     });
 
     describe('when the author is not found', () => {
