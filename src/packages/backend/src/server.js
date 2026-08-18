@@ -2,7 +2,9 @@ import { createServer } from 'node:http';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { wire } from './app.js';
-import { corsOrigin, port } from './config/env.js';
+import { corsOrigin, dbFile, port } from './config/env.js';
+import { DbClient } from './db/client.js';
+import { JobRepository } from './repositories/JobRepository.js';
 import { JobService } from './services/jobs/JobService.js';
 import { SearchController } from './controllers/SearchController.js';
 import { JobController } from './controllers/JobController.js';
@@ -47,6 +49,9 @@ export const buildServer = ({
   app.post('/jobs', (req, res) => {
     res.status(202).json(jobController.submitJob(req));
   });
+  app.get('/jobs', (req, res) => {
+    res.json(jobController.listJobs());
+  });
   app.get('/jobs/:id', (req, res) => {
     res.json(jobController.getJob(req));
   });
@@ -67,9 +72,11 @@ export const buildServer = ({
 
 // Avoid running when imported (needed for unit tests)
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const { db } = new DbClient(dbFile);
+
   buildServer({
     providers: wire(),
-    jobs: new JobService(),
+    jobs: new JobService(new JobRepository(db)),
   }).listen(port, () => {
     process.stdout.write(`listening on ${port}\n`);
   });

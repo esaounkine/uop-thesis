@@ -36,10 +36,11 @@ export class JobController {
         throw new ApiError(400, `unknown kind "${kind}"`);
     }
 
-    const requestId = this.jobs.submit(run, {
+    const requestId = this.jobs.submitJob(run, {
       queue: provider.queue,
       kind: kind,
       provider: provider.id,
+      subjectId: id,
     });
 
     return {
@@ -48,12 +49,16 @@ export class JobController {
   }
 
   getJob({ params }) {
-    const job = this.jobs.get(params.id);
+    const job = this.jobs.getJob(params.id);
 
     if (!job) {
       throw new ApiError(404, 'job not found');
     }
 
     return job;
+  }
+
+  listJobs() {
+    return this.jobs.listJobs();
   }
 }

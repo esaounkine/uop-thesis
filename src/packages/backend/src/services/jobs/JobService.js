@@ -1,11 +1,17 @@
 import { randomUUID } from 'node:crypto';
+import { JOB_STATUS } from '../../constants/job-status.js';
 
 /**
  * Executes long-running tasks asynchronously and tracks their progress.
  */
 export class JobService {
-  constructor() {
-    this.jobs = new Map();
+  /**
+   * @param {import('../../repositories/JobRepository.js').JobRepository} jobRepository
+   */
+  constructor(jobRepository) {
+    this.jobRepository = jobRepository;
+    this.running = new Map();
+    this.jobRepository.interruptRunningJobs();
   }
 
   /**
@@ -14,14 +20,14 @@ export class JobService {
    * @param {Object} [meta] - fields stored on the job; a `queue` reports progress
    * @returns {string} the requestId
    */
-  submit(run, {
+  submitJob(run, {
     queue, ...meta
   } = {}) {
     const id = randomUUID();
     const job = {
       id: id,
       ...meta,
-      status: 'running',
+      status: JOB_STATUS.RUNNING,
       progress: {
         done: 0,
         running: 0,
@@ -30,7 +36,14 @@ export class JobService {
       result: null,
       error: null,
     };
-    this.jobs.set(id, job);
+    const now = new Date().toISOString();
+
+    this.jobRepository.createJob({
+      ...job,
+      createdAt: now,
+      updatedAt: now,
+    });
+    this.running.set(id, job);
 
     const onCompleted = () => {
       job.progress = {
@@ -43,15 +56,26 @@ export class JobService {
 
     run()
       .then((result) => {
-        job.status = 'done';
+        job.status = JOB_STATUS.DONE;
         job.result = result;
+        this.jobRepository.updateJob(id, {
+          status: JOB_STATUS.DONE,
+          progress: job.progress,
+          result: result,
+        });
       })
       .catch((error) => {
-        job.status = 'error';
+        job.status = JOB_STATUS.ERROR;
         job.error = error.message;
+        this.jobRepository.updateJob(id, {
+          status: JOB_STATUS.ERROR,
+          progress: job.progress,
+          error: error.message,
+        });
       })
       .finally(() => {
         queue?.off('completed', onCompleted);
+        this.running.delete(id);
       });
 
     return id;
@@ -61,7 +85,17 @@ export class JobService {
    * @param {string} id
    * @returns {Object | undefined}
    */
-  get(id) {
-    return this.jobs.get(id);
+  getJob(id) {
+    return this.running.get(id) ?? this.jobRepository.findJobById(id);
+  }
+
+  /**
+   * @returns {Object[]} all jobs, newest first
+   */
+  listJobs() {
+    return this.jobRepository
+      .findAllJobs()
+      .map((job) =>
+        this.running.get(job.id) ?? job);
   }
 }

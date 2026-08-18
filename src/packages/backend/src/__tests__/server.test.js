@@ -1,9 +1,20 @@
 import {
   afterEach, beforeEach, describe, expect, it, jest,
 } from '@jest/globals';
+import { migrate } from 'drizzle-orm/node-sqlite/migrator';
 import { buildServer } from '../server.js';
 import { wire } from '../app.js';
+import { migrationsDir } from '../config/env.js';
+import { DbClient } from '../db/client.js';
+import { JOB_STATUS } from '../constants/job-status.js';
+import { JobRepository } from '../repositories/JobRepository.js';
 import { JobService } from '../services/jobs/JobService.js';
+
+const createJobService = () => {
+  const { db } = new DbClient();
+  migrate(db, { migrationsFolder: migrationsDir });
+  return new JobService(new JobRepository(db));
+};
 
 const createContribution = (pubId, authorId) => {
   return {
@@ -28,7 +39,7 @@ const pollJob = async (url) => {
   for (let attempt = 0; attempt < 50; attempt += 1) {
     const job = await (await fetch(url)).json();
 
-    if (job.status !== 'running') {
+    if (job.status !== JOB_STATUS.RUNNING) {
       return job;
     }
 
@@ -64,7 +75,7 @@ describe('the HTTP API', () => {
       providers: wire({
         connector: connector,
       }),
-      jobs: new JobService(),
+      jobs: createJobService(),
     });
     await new Promise((resolve) =>
       server.listen(0, resolve));
@@ -110,8 +121,19 @@ describe('the HTTP API', () => {
 
     it('finishes with the computed metrics', () => {
       expect(job).toMatchObject({
-        status: 'done',
+        status: JOB_STATUS.DONE,
         result: { metrics: { total: 1 } },
+      });
+    });
+
+    it('is listed by GET /jobs for the page-load view', async () => {
+      const body = await (await fetch(`${base}/jobs`)).json();
+      expect(body).toHaveLength(1);
+      expect(body[0]).toMatchObject({
+        status: JOB_STATUS.DONE,
+        kind: 'paper',
+        provider: 'stub',
+        subjectId: 'W1',
       });
     });
   });

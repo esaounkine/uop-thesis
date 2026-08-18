@@ -1,5 +1,6 @@
 import { foreignKey, integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { CITATION_TYPES } from '../constants/citation-type.js';
+import { JOB_STATUSES } from '../constants/job-status.js';
 
 export const publications = sqliteTable(
   'publications',
@@ -98,6 +99,25 @@ export const cache = sqliteTable('cache', {
   key: text('key').primaryKey(),
   payload: text('payload'),
   fetchedAt: text('fetched_at').notNull(),
+});
+
+export const jobs = sqliteTable('jobs', {
+  id: text('id').primaryKey(),
+  provider: text('provider').notNull(),
+  kind: text('kind').notNull(),
+  subjectId: text('subject_id').notNull(),
+  status: text('status', {
+    enum: JOB_STATUSES,
+  }).notNull(),
+  progress: text('progress', {
+    mode: 'json',
+  }),
+  result: text('result', {
+    mode: 'json',
+  }),
+  error: text('error'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
 });
 
 // Entity types, inferred from the tables above. Single source of truth.
