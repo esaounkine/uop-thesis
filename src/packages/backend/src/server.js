@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { wire } from './app.js';
 import { corsOrigin, dbFile, port } from './config/env.js';
-import { DbClient } from './db/client.js';
+import { DbClient } from './db/DbClient.js';
 import { JobRepository } from './repositories/JobRepository.js';
 import { JobService } from './services/jobs/JobService.js';
 import { SearchController } from './controllers/SearchController.js';

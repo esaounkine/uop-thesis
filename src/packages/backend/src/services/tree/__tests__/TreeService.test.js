@@ -3,7 +3,7 @@ import {
 } from '@jest/globals';
 import { migrate } from 'drizzle-orm/node-sqlite/migrator';
 import { migrationsDir } from '../../../config/env.js';
-import { DbClient } from '../../../db/client.js';
+import { DbClient } from '../../../db/DbClient.js';
 import * as schema from '../../../db/schema.js';
 import { AuthorRepository } from '../../../repositories/AuthorRepository.js';
 import { CitationRepository } from '../../../repositories/CitationRepository.js';

@@ -3,7 +3,7 @@ import {
   dbFile, migrationsDir, providers as providerIds,
 } from './config/env.js';
 import { listProviders, selectProvider } from './connectors/providers/registry.js';
-import { DbClient } from './db/client.js';
+import { DbClient } from './db/DbClient.js';
 import { HttpClient } from './lib/HttpClient.js';
 import { RequestQueue } from './lib/RequestQueue.js';
 import { AuthorRepository } from './repositories/AuthorRepository.js';

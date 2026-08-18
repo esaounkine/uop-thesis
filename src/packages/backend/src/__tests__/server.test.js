@@ -5,7 +5,7 @@ import { migrate } from 'drizzle-orm/node-sqlite/migrator';
 import { buildServer } from '../server.js';
 import { wire } from '../app.js';
 import { migrationsDir } from '../config/env.js';
-import { DbClient } from '../db/client.js';
+import { DbClient } from '../db/DbClient.js';
 import { JOB_STATUS } from '../constants/job-status.js';
 import { JobRepository } from '../repositories/JobRepository.js';
 import { JobService } from '../services/jobs/JobService.js';

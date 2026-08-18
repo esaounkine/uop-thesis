@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { migrate } from 'drizzle-orm/node-sqlite/migrator';
 import { migrationsDir } from '../../config/env.js';
-import { DbClient } from '../../db/client.js';
+import { DbClient } from '../../db/DbClient.js';
 import { CacheRepository, OutdatedCacheError } from '../CacheRepository.js';
 
 const createRepo = () => {

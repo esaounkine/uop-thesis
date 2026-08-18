@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { migrate } from 'drizzle-orm/node-sqlite/migrator';
 import * as schema from '../schema.js';
 import { migrationsDir } from '../../config/env.js';
-import { DbClient } from '../client.js';
+import { DbClient } from '../DbClient.js';
 
 // In-memory DB so the check is self-contained and never touches the real file.
 const { db } = new DbClient();
