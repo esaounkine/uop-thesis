@@ -1,9 +1,8 @@
 /**
  * Loans a live progress reporter around an async operation.
- * The queue is any event emitter that exposes `pending` and `size` counters.
  *
  * @template T
- * @param {({ on: Function, off: Function, pending: number, size: number }) | undefined} queue
+ * @param {import('./RequestQueue.js').RequestQueue | undefined} queue
  * @param {() => Promise<T>} fn - the function to call
  * @param {string} [label] - name of the queue to prefix the status line
  * @param {(status: { completed: number, pending: number, queued: number }) => void} [onProgress] - callback after each completed step
@@ -32,7 +31,7 @@ export const withQueueProgressReport = async (
   }
 
   let completed = 0;
-  const _onCompleted = () => {
+  const _onTaskCompleted = () => {
     completed += 1;
 
     onProgress({
@@ -42,12 +41,12 @@ export const withQueueProgressReport = async (
     });
   };
 
-  queue.on('completed', _onCompleted);
+  queue.onTaskCompleted(_onTaskCompleted);
 
   try {
     return await fn();
   } finally {
-    queue.off('completed', _onCompleted);
+    queue.offTaskCompleted(_onTaskCompleted);
     onDone(completed);
   }
 };

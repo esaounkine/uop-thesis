@@ -4,7 +4,7 @@ import {
 } from '@jest/globals';
 import { migrate } from 'drizzle-orm/node-sqlite/migrator';
 import { migrationsDir } from '../../../config/env.js';
-import { DbClient } from '../../../db/client.js';
+import { DbClient } from '../../../db/DbClient.js';
 import { JOB_STATUS } from '../../../constants/job-status.js';
 import { JobRepository } from '../../../repositories/JobRepository.js';
 import { JobService } from '../JobService.js';
@@ -96,6 +96,10 @@ describe('JobService', () => {
         pending: 2,
         size: 5,
       });
+      queue.onCompleted = (listener) =>
+        queue.on('completed', listener);
+      queue.offCompleted = (listener) =>
+        queue.off('completed', listener);
       const id = jobs.submitJob(async () => {
         queue.emit('completed');
         queue.emit('completed');

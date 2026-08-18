@@ -46,7 +46,7 @@ export class HttpClient {
    * @param {Object} [args]
    * @param {typeof fetch} [args.fetchImpl]
    * @param {import('../repositories/CacheRepository.js').CacheRepository} [args.cache]
-   * @param {{ add: (task: () => Promise<any>) => Promise<any> }} [args.queue] - paces requests (e.g. p-queue)
+   * @param {import('./RequestQueue.js').RequestQueue} [args.queue] - paces requests
    * @param {import('./RetryStrategy.js').RetryStrategy} [args.retryStrategy] - overrides the default HTTP retry strategy
    */
   constructor({

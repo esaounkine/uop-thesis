@@ -1,11 +1,11 @@
 import { migrate } from 'drizzle-orm/node-sqlite/migrator';
-import PQueue from 'p-queue';
 import {
   dbFile, migrationsDir, providers as providerIds,
 } from './config/env.js';
 import { listProviders, selectProvider } from './connectors/providers/registry.js';
 import { DbClient } from './db/client.js';
 import { HttpClient } from './lib/HttpClient.js';
+import { RequestQueue } from './lib/RequestQueue.js';
 import { AuthorRepository } from './repositories/AuthorRepository.js';
 import { CacheRepository } from './repositories/CacheRepository.js';
 import { CitationRepository } from './repositories/CitationRepository.js';
@@ -74,9 +74,8 @@ export const wire = ({
 
   return (providerIds ?? listProviders()).map((id) => {
     const spec = selectProvider(id);
-    const queue = new PQueue({
-      interval: 1000,
-      intervalCap: spec.requestsPerSecond,
+    const queue = new RequestQueue({
+      requestsPerSecond: spec.requestsPerSecond,
     });
 
     return createProvider({

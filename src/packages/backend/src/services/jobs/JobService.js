@@ -16,7 +16,7 @@ export class JobService {
 
   /**
    * @param {() => Promise<any>} run
-   * @param {import('p-queue').default} queue
+   * @param {import('../../lib/RequestQueue.js').RequestQueue} queue
    * @param {Object} [meta] - fields stored on the job; a `queue` reports progress
    * @returns {string} the requestId
    */
@@ -45,14 +45,14 @@ export class JobService {
     });
     this.running.set(id, job);
 
-    const onCompleted = () => {
+    const onTaskCompleted = () => {
       job.progress = {
         done: job.progress.done + 1,
         running: queue.pending,
         queued: queue.size,
       };
     };
-    queue?.on('completed', onCompleted);
+    queue?.onTaskCompleted(onTaskCompleted);
 
     run()
       .then((result) => {
@@ -74,7 +74,7 @@ export class JobService {
         });
       })
       .finally(() => {
-        queue?.off('completed', onCompleted);
+        queue?.offTaskCompleted(onTaskCompleted);
         this.running.delete(id);
       });
 
