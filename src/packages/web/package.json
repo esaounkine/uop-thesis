@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node_modules/.bin/vite",
     "build": "node_modules/.bin/vite build",
-    "lint": "node_modules/.bin/eslint ",
+    "lint": "node_modules/.bin/eslint src",
     "preview": "node_modules/.bin/vite preview"
   },
   "dependencies": {
@@ -17,6 +17,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "^10.8.1",
     "globals": "^17.5.0",
     "vite": "^8.0.10"
   }
