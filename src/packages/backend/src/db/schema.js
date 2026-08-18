@@ -97,7 +97,9 @@ export const citations = sqliteTable(
 
 export const cache = sqliteTable('cache', {
   key: text('key').primaryKey(),
-  payload: text('payload'),
+  payload: text('payload', {
+    mode: 'json',
+  }),
   fetchedAt: text('fetched_at').notNull(),
 });
 

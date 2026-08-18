@@ -12,10 +12,10 @@ migrate(db, { migrationsFolder: migrationsDir });
 describe('db layer', () => {
   test('cache stores and reads back a payload', () => {
     const key = 'openalex:W123';
-    const payload = JSON.stringify({
+    const payload = {
       results: [{ id: 'W1' }, { id: 'W2' }],
       page: 1,
-    });
+    };
     db.insert(schema.cache).values({
       key: key,
       payload: payload,
@@ -26,7 +26,7 @@ describe('db layer', () => {
     const row = db.select().from(schema.cache)
       .where(eq(schema.cache.key, key))
       .get();
-    expect(row.payload).toBe(payload);
+    expect(row.payload).toEqual(payload);
   });
 
   test('publication round-trips through the normalised tables', () => {

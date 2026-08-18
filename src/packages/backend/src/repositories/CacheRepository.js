@@ -48,7 +48,7 @@ export class CacheRepository {
     }
 
     return {
-      value: JSON.parse(row.payload),
+      value: row.payload,
       fetchedAt: fetchedAt,
     };
   }
@@ -81,17 +81,16 @@ export class CacheRepository {
    */
   put(key, value) {
     const fetchedAt = new Date().toISOString();
-    const payload = JSON.stringify(value);
 
     this.db.insert(cache).values({
       key: key,
-      payload: payload,
+      payload: value,
       fetchedAt: fetchedAt,
     })
       .onConflictDoUpdate({
         target: cache.key,
         set: {
-          payload: payload,
+          payload: value,
           fetchedAt: fetchedAt,
         },
       })
