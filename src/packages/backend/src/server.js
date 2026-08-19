@@ -7,6 +7,7 @@ import { DbClient } from './db/DbClient.js';
 import { JobRepository } from './repositories/JobRepository.js';
 import { JobService } from './services/jobs/JobService.js';
 import { SearchController } from './controllers/SearchController.js';
+import { AuthorController } from './controllers/AuthorController.js';
 import { JobController } from './controllers/JobController.js';
 
 const cors = (req, res, next) => {
@@ -34,6 +35,7 @@ export const buildServer = ({
   providers, jobs,
 }) => {
   const searchController = new SearchController(providers);
+  const authorController = new AuthorController(providers);
   const jobController = new JobController(providers, jobs);
   const app = express();
 
@@ -45,6 +47,9 @@ export const buildServer = ({
   });
   app.get('/search/authors', async (req, res) => {
     res.json(await searchController.searchAuthors(req));
+  });
+  app.get('/authors/:provider/:authorId/papers', async (req, res) => {
+    res.json(await authorController.getAuthorPapers(req));
   });
   app.post('/jobs', (req, res) => {
     res.status(202).json(jobController.submitJob(req));

@@ -53,9 +53,10 @@ const pollJob = async (url) => {
 describe('the HTTP API', () => {
   let server;
   let base;
+  let connector;
 
   beforeEach(async () => {
-    const connector = {
+    connector = {
       id: 'stub',
       searchPublications: jest.fn().mockResolvedValue([createPublication('W1'), createPublication('W2')]),
       searchAuthors: jest.fn().mockResolvedValue([
@@ -70,6 +71,13 @@ describe('the HTTP API', () => {
         createPublication('W1'),
       ),
       getCitations: jest.fn().mockResolvedValue([createPublication('W2')]),
+      getAuthorById: jest.fn().mockResolvedValue({
+        authorId: 'A1',
+        originalName: 'Jane Roe',
+        normalisedName: 'jane roe',
+        organisation: null,
+      }),
+      getAuthorPublications: jest.fn().mockResolvedValue([createPublication('W1'), createPublication('W2')]),
     };
     server = buildServer({
       providers: wire({
@@ -99,6 +107,29 @@ describe('the HTTP API', () => {
 
     it('is 400 without a query', async () => {
       expect((await fetch(`${base}/search/papers`)).status).toBe(400);
+    });
+  });
+
+  describe('GET /authors/:provider/:authorId/papers', () => {
+    it('returns the author papers', async () => {
+      const body = await (await fetch(`${base}/authors/stub/A1/papers`)).json();
+      expect(body).toEqual({
+        papers: [createPublication('W1'), createPublication('W2')],
+      });
+    });
+
+    describe('unknown author', () => {
+      beforeEach(() => {
+        connector.getAuthorById.mockResolvedValue(null);
+      });
+
+      it('is 404', async () => {
+        expect((await fetch(`${base}/authors/stub/nope/papers`)).status).toBe(404);
+      });
+    });
+
+    it('is 404 for an unknown provider', async () => {
+      expect((await fetch(`${base}/authors/nope/A1/papers`)).status).toBe(404);
     });
   });
 
