@@ -1,0 +1,14 @@
+.AuthorMetrics {
+  margin-top: 0.25rem;
+}
+
+.AuthorMetrics button {
+  padding: 0.1rem 0.5rem;
+  font-size: 0.8em;
+}
+
+.AuthorMetrics pre {
+  font-size: 0.75em;
+  max-height: 20rem;
+  overflow: auto;
+}
