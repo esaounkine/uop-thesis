@@ -1,9 +1,14 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { getJob, submitJob } from '../../lib/api.js';
 import styles from './AuthorMetrics.module.css';
 import { Loader } from '../../components/loader/Loader.jsx';
 import { ErrorMessage } from '../../components/error-message/ErrorMessage.jsx';
 import { Metrics } from '../../components/metrics/Metrics.jsx';
+
+const CitationGraph = lazy(() =>
+  import('../../components/citation-graph/CitationGraph.jsx').then((module) => {
+    return { default: module.CitationGraph };
+  }));
 
 const POLL_MS = 500;
 
@@ -110,7 +115,15 @@ export const AuthorMetrics = ({ provider, authorId }) => {
             stats={state.result.stats}
           />
           <details className={styles.DebugDetails}>
-            <summary>Debug details</summary>
+            <summary>Citation graph</summary>
+            <Suspense fallback={<Loader label="Loading graph..." />}>
+              <CitationGraph
+                author={state.result.author}
+                publications={state.result.publications} />
+            </Suspense>
+          </details>
+          <details className={styles.DebugDetails}>
+            <summary>Raw data</summary>
             <pre>{JSON.stringify(state.result, null, 2)}</pre>
           </details>
         </>

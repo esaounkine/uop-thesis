@@ -1,0 +1,45 @@
+.Graph {
+  height: 28rem;
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  overflow: hidden;
+}
+
+.Canvas {
+  height: 100%;
+}
+
+.Legend {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+  font-size: 0.75em;
+  color: var(--pico-muted-color);
+}
+
+.LegendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.Shape {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+}
+
+.Diamond {
+  background-color: #212121;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+.Triangle {
+  background-color: #0172ad;
+  clip-path: polygon(50% 0, 0 100%, 100% 100%);
+}
+
+.Circle {
+  background-color: #9e9e9e;
+  border-radius: 50%;
+}
