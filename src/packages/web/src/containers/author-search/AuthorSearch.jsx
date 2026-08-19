@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { searchAuthors } from '../../lib/api.js';
 import styles from './AuthorSearch.module.css';
 import { TitledSection } from '../../components/titled-section/TitledSection.jsx';
-import { Author } from '../../components/author/Author.jsx';
+import { AuthorCandidate } from '../author-candidate/AuthorCandidate.jsx';
 import { Loader } from '../../components/loader/Loader.jsx';
 import { ErrorMessage } from '../../components/error-message/ErrorMessage.jsx';
 
@@ -79,11 +79,10 @@ export const AuthorSearch = ({ query, onSearch }) => {
                 title={entry.provider}>
                 <ul>
                   {entry.authors.map((author) =>
-                    <Author
+                    <AuthorCandidate
                       key={author.authorId}
-                      authorId={author.authorId}
-                      organisation={author.organisation}
-                      originalName={author.originalName} />,
+                      provider={entry.provider}
+                      author={author} />,
                   )}
                 </ul>
               </TitledSection>

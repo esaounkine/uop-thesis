@@ -12,3 +12,6 @@ const get = async (path) => {
 
 export const searchAuthors = (query) =>
   get(`/search/authors?q=${encodeURIComponent(query)}`);
+
+export const getAuthorPapers = (provider, authorId) =>
+  get(`/authors/${encodeURIComponent(provider)}/${encodeURIComponent(authorId)}/papers`);
