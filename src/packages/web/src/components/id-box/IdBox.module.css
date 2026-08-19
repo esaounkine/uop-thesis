@@ -1,0 +1,7 @@
+.IdBox {
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: 0.25rem;
+  background-color: var(--pico-card-background-color);
+  font-size: 0.85em;
+}
