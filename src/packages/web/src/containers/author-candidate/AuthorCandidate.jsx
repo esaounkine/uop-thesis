@@ -7,34 +7,30 @@ import { ErrorMessage } from '../../components/error-message/ErrorMessage.jsx';
 import { AuthorPapers } from '../author-papers/AuthorPapers.jsx';
 import { AuthorMetrics } from '../author-metrics/AuthorMetrics.jsx';
 
-export const AuthorCandidate = ({ provider, author }) => {
-  const [papers, setPapers] = useState({ status: 'loading' });
+export const AuthorCandidate = ({ provider, author, showPapers }) => {
+  const [papers, setPapers] = useState({ status: 'idle' });
 
   useEffect(() => {
-    let stale = false;
+    if (!showPapers || papers.status !== 'idle') {
+      return undefined;
+    }
+
+    setPapers({ status: 'loading' });
 
     getAuthorPapers(provider, author.authorId)
       .then(({ papers: fetched }) => {
-        if (!stale) {
-          setPapers({
-            status: 'done',
-            papers: fetched,
-          });
-        }
+        setPapers({
+          status: 'done',
+          papers: fetched,
+        });
       })
       .catch((error) => {
-        if (!stale) {
-          setPapers({
-            status: 'error',
-            error: error.message,
-          });
-        }
+        setPapers({
+          status: 'error',
+          error: error.message,
+        });
       });
-
-    return () => {
-      stale = true;
-    };
-  }, [provider, author.authorId]);
+  }, [provider, author.authorId, showPapers, papers.status]);
 
   return (
     <li className={styles.Candidate}>
@@ -42,16 +38,22 @@ export const AuthorCandidate = ({ provider, author }) => {
         authorId={author.authorId}
         organisation={author.organisation}
         originalName={author.originalName} />
-      {papers.status === 'loading' &&
-        <Loader label="Fetching papers..." />
-      }
-      {papers.status === 'error' &&
-        <ErrorMessage title="Fetching papers failed" message={papers.error} />
-      }
-      {papers.status === 'done' &&
-        <AuthorPapers papers={papers.papers} />
-      }
+
       <AuthorMetrics provider={provider} authorId={author.authorId} />
+
+      {showPapers &&
+        <>
+          {papers.status === 'loading' &&
+            <Loader label="Fetching papers..." />
+          }
+          {papers.status === 'error' &&
+            <ErrorMessage title="Fetching papers failed" message={papers.error} />
+          }
+          {papers.status === 'done' &&
+            <AuthorPapers papers={papers.papers} />
+          }
+        </>
+      }
     </li>
   );
 };

@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { searchAuthors } from '../../lib/api.js';
 import styles from './AuthorSearch.module.css';
-import { TitledSection } from '../../components/titled-section/TitledSection.jsx';
-import { AuthorCandidate } from '../author-candidate/AuthorCandidate.jsx';
+import { ProviderResults } from '../provider-results/ProviderResults.jsx';
 import { Loader } from '../../components/loader/Loader.jsx';
 import { ErrorMessage } from '../../components/error-message/ErrorMessage.jsx';
 
@@ -67,27 +66,7 @@ export const AuthorSearch = ({ query, onSearch }) => {
         <ErrorMessage title="Search failed" message={state.error} />
       }
       {state.status === 'done' &&
-        state.results.map((entry) => {
-          return (
-            entry.error != null
-              ? <ErrorMessage
-                key={entry.provider}
-                title={`${entry.provider} failed`}
-                message={entry.error} />
-              : <TitledSection
-                key={entry.provider}
-                title={entry.provider}>
-                <ul>
-                  {entry.authors.map((author) =>
-                    <AuthorCandidate
-                      key={author.authorId}
-                      provider={entry.provider}
-                      author={author} />,
-                  )}
-                </ul>
-              </TitledSection>
-          );
-        })
+        <ProviderResults results={state.results} />
       }
     </section>
   );

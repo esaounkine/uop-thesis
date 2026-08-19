@@ -97,15 +97,19 @@ export const AuthorMetrics = ({ provider, authorId }) => {
         </button>
       }
       {state.status === 'running' &&
-        <Loader label={`Fetching metrics... (${state.progress?.done ?? 0} done / ${state.progress?.queued ?? 0} queued / ${state.progress?.failed ?? 0} failed)`} />
+        <Loader
+          label={`Fetching metrics... (${state.progress?.done ?? 0} done / ${state.progress?.queued ?? 0} queued / ${state.progress?.failed ?? 0} failed)`} />
       }
       {state.status === 'error' &&
         <ErrorMessage title="Fetching metrics failed" message={state.error} />
       }
       {state.status === 'done' &&
         <>
-          <Metrics metrics={state.result.metrics} stats={state.result.stats} />
-          <details>
+          <Metrics
+            metrics={state.result.metrics}
+            stats={state.result.stats}
+          />
+          <details className={styles.DebugDetails}>
             <summary>Debug details</summary>
             <pre>{JSON.stringify(state.result, null, 2)}</pre>
           </details>

@@ -1,0 +1,30 @@
+.Tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--pico-muted-border-color);
+}
+
+.Tab {
+  margin-bottom: -1px;
+  padding: 0.25rem 0.75rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--pico-muted-color);
+}
+
+.TabLabel {
+  text-transform: capitalize;
+}
+
+.Tab:hover {
+  background: none;
+  box-shadow: none;
+}
+
+.Active {
+  color: var(--pico-primary);
+  border-bottom-color: var(--pico-primary);
+}

@@ -7,7 +7,7 @@ export const Metrics = ({ metrics, stats }) => {
       <span>{`Self: ${metrics.self.total} (direct ${metrics.self.direct}, co-author ${metrics.self.coauthor})`}</span>
       <span>{`External: ${metrics.external}`}</span>
       {stats &&
-        <span>{`Papers fetched: ${stats.fetched} of ${stats.total}${stats.failed
+        <span>{`Publications fetched: ${stats.fetched} of ${stats.total}${stats.failed
           ? ` (${stats.failed} failed)`
           : ''}`}</span>
       }
