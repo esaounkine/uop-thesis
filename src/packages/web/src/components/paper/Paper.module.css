@@ -1,9 +1,19 @@
 .Paper {
   display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-start;
+  margin: 10pt 0;
+}
+
+.Attributes {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
   gap: 0.4rem;
 }
 
-.Year {
+.Meta {
   color: var(--pico-muted-color);
   white-space: nowrap;
 }

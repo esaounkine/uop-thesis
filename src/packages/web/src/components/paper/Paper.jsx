@@ -1,12 +1,18 @@
 import styles from './Paper.module.css';
+import { Chip } from '../chip/Chip.jsx';
 
-export const Paper = ({ title, year }) => {
+export const Paper = ({ title, year, citations }) => {
   return (
-    <li className={styles.Paper}>
-      {year != null &&
-        <span className={styles.Year}>{year}</span>
-      }
+    <div className={styles.Paper}>
       <span>{title}</span>
-    </li>
+      <div className={styles.Attributes}>
+        {year != null &&
+          <Chip label={`${year}`} />
+        }
+        {citations != null &&
+          <span className={styles.Meta}>{`cited by ${citations}`}</span>
+        }
+      </div>
+    </div>
   );
 };

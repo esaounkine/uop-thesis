@@ -4,16 +4,7 @@ import styles from './AuthorCandidate.module.css';
 import { Author } from '../../components/author/Author.jsx';
 import { Loader } from '../../components/loader/Loader.jsx';
 import { ErrorMessage } from '../../components/error-message/ErrorMessage.jsx';
-import { Paper } from '../../components/paper/Paper.jsx';
-
-const PREVIEW_LIMIT = 3;
-
-const getSamplePapers = (papers) => {
-  return [...papers]
-    .sort((left, right) =>
-      (right.year ?? 0) - (left.year ?? 0))
-    .slice(0, PREVIEW_LIMIT);
-};
+import { AuthorPapers } from '../author-papers/AuthorPapers.jsx';
 
 export const AuthorCandidate = ({ provider, author }) => {
   const [papers, setPapers] = useState({ status: 'loading' });
@@ -57,14 +48,7 @@ export const AuthorCandidate = ({ provider, author }) => {
         <ErrorMessage title="Fetching papers failed" message={papers.error} />
       }
       {papers.status === 'done' &&
-        <ul className={styles.Papers}>
-          {getSamplePapers(papers.papers).map((paper) =>
-            <Paper
-              key={paper.pubId}
-              title={paper.title}
-              year={paper.year} />,
-          )}
-        </ul>
+        <AuthorPapers papers={papers.papers} />
       }
     </li>
   );

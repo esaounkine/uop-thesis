@@ -1,0 +1,15 @@
+.Controls {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.25rem 0;
+}
+
+.Controls button {
+  padding: 0.1rem 0.5rem;
+  font-size: 0.8em;
+}
+
+.Papers {
+  margin-top: 0.25rem;
+  font-size: 0.9em;
+}
