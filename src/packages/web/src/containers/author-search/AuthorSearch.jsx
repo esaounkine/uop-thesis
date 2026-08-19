@@ -3,6 +3,8 @@ import { searchAuthors } from '../../lib/api.js';
 import styles from './AuthorSearch.module.css';
 import { TitledSection } from '../../components/titled-section/TitledSection.jsx';
 import { Author } from '../../components/author/Author.jsx';
+import { Loader } from '../../components/loader/Loader.jsx';
+import { ErrorMessage } from '../../components/error-message/ErrorMessage.jsx';
 
 export const AuthorSearch = ({ query, onSearch }) => {
   const [input, setInput] = useState(query);
@@ -59,18 +61,19 @@ export const AuthorSearch = ({ query, onSearch }) => {
         <button type="submit">Search</button>
       </form>
       {state.status === 'loading' &&
-        /*TODO replace with a progress loader*/
-        <p>Searching…</p>
+        <Loader label="Searching..." />
       }
       {state.status === 'error' &&
-        /*TODO replace with an error component*/
-        <p>Search failed: {state.error}</p>
+        <ErrorMessage title="Search failed" message={state.error} />
       }
       {state.status === 'done' &&
         state.results.map((entry) => {
           return (
             entry.error != null
-              ? <p>Provider failed: {entry.error}</p> /*TODO replace with the error component*/
+              ? <ErrorMessage
+                key={entry.provider}
+                title={`${entry.provider} failed`}
+                message={entry.error} />
               : <TitledSection
                 key={entry.provider}
                 title={entry.provider}>
