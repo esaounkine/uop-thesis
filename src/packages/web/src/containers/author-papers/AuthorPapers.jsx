@@ -1,13 +1,25 @@
 import { useState } from 'react';
 import styles from './AuthorPapers.module.css';
 import { Paper } from '../../components/paper/Paper.jsx';
+import { Toggle } from '../../components/toggle/Toggle.jsx';
 
-const PREVIEW_LIMIT = 3;
+const PREVIEW_LIMIT = 5;
 
 const SORT_BY = {
   YEAR: 'year',
   CITATIONS: 'citations',
 };
+
+const SORT_OPTIONS = [
+  {
+    value: SORT_BY.YEAR,
+    label: 'Recent',
+  },
+  {
+    value: SORT_BY.CITATIONS,
+    label: 'Most cited',
+  },
+];
 
 const SORTERS = {
   [SORT_BY.YEAR]: (left, right) =>
@@ -32,24 +44,10 @@ export const AuthorPapers = ({ papers }) => {
     <div>
       <div className={styles.Controls}>
         {hasCitations &&
-          <>
-            <button
-              type="button"
-              disabled={sortBy === SORT_BY.YEAR}
-              onClick={() =>
-                setSortBy(SORT_BY.YEAR)}
-            >
-              Most recent
-            </button>
-            <button
-              type="button"
-              disabled={sortBy === SORT_BY.CITATIONS}
-              onClick={() =>
-                setSortBy(SORT_BY.CITATIONS)}
-            >
-              Most cited
-            </button>
-          </>
+          <Toggle
+            options={SORT_OPTIONS}
+            value={sortBy}
+            onChange={setSortBy} />
         }
         {papers.length > PREVIEW_LIMIT &&
           <button
