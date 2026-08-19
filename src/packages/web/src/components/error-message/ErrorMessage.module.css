@@ -1,0 +1,13 @@
+.ErrorMessage {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--pico-color-red-500);
+  border-radius: var(--pico-border-radius);
+  background-color: var(--pico-color-red-100);
+  color: var(--pico-color-red-600);
+}
+
+.Title {
+  font-weight: 600;
+}
