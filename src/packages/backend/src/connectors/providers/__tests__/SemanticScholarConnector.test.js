@@ -26,6 +26,7 @@ describe('SemanticScholarConnector', () => {
           paperId: 'p1',
           title: 'A Paper',
           year: 2020,
+          citationCount: 7,
           externalIds: { DOI: '10.1/x' },
           authors: [
             {
@@ -48,6 +49,10 @@ describe('SemanticScholarConnector', () => {
           externalId: '10.1/x',
           year: 2020,
         });
+      });
+
+      it('keeps the citation count', () => {
+        expect(publication.citationCount).toBe(7);
       });
 
       it('carries the contributions with author name, no organisation', () => {

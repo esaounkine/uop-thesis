@@ -11,6 +11,7 @@ export const publications = sqliteTable(
     normalisedTitle: text('normalised_title'),
     externalId: text('external_id'),
     year: integer('year'),
+    citationCount: integer('citation_count'),
   },
   (t) =>
     [

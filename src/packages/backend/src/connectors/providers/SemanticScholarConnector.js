@@ -14,7 +14,7 @@ export class SemanticScholarConnector extends ProviderConnector {
 
   static SEARCH_LIMIT = 100; // max for search endpoints
 
-  static PAPER_FIELDS = 'title,year,externalIds,authors';
+  static PAPER_FIELDS = 'title,year,externalIds,authors,citationCount';
 
   static AUTHOR_FIELDS = 'name,externalIds,homepage,paperCount,affiliations,papers';
 
@@ -189,6 +189,7 @@ export class SemanticScholarConnector extends ProviderConnector {
       normalisedTitle: normalise(title),
       externalId: paper.externalIds?.DOI ?? null,
       year: paper.year ?? null,
+      citationCount: paper.citationCount ?? null,
       contributions: SemanticScholarConnector.toContributions(paper),
     };
   }

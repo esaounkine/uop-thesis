@@ -21,6 +21,7 @@ const createPublication = (pubId) => {
     normalisedTitle: pubId.toLowerCase(),
     externalId: null,
     year: null,
+    citationCount: null,
   };
 };
 

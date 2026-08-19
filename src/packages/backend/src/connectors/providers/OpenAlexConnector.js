@@ -173,6 +173,7 @@ export class OpenAlexConnector extends ProviderConnector {
       normalisedTitle: normalise(title),
       externalId: work.doi ?? null,
       year: work.publication_year ?? null,
+      citationCount: work.cited_by_count ?? null,
       contributions: OpenAlexConnector.toContributions(work),
     };
   }

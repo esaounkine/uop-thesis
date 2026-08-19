@@ -27,6 +27,7 @@ describe('OpenAlexConnector', () => {
           title: 'A Paper',
           doi: 'https://doi.org/10.1/x',
           publication_year: 2020,
+          cited_by_count: 7,
         }).getPublication('W1');
       });
 
@@ -45,6 +46,10 @@ describe('OpenAlexConnector', () => {
 
       it('keeps the publication year', () => {
         expect(publication.year).toBe(2020);
+      });
+
+      it('maps the citation count', () => {
+        expect(publication.citationCount).toBe(7);
       });
     });
 
