@@ -40,6 +40,11 @@ make docker-restart
 
 The SQLite database file is stored in `./db-data` (it's mounted into the container) to be reused or inspected after the containers stop. Delete the directory or the .sqlite file in it to reset data.
 
+The two components making up this project are:
+
+- [Backend](src/packages/backend/README.md) - the API, CLI and data pipeline.
+- [Web](src/packages/web/README.md) - the UI.
+
 ### CI/CD Build
 
 The documentation is built automatically on every push to the `master` branch and the resulting PDF is uploaded as an artifact of the GitHub Actions workflow.

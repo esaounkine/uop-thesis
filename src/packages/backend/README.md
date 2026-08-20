@@ -20,3 +20,33 @@ The Backend uses SQLite for all DB/cache needs.
   2. `yarn db:generate` - writes a new migration to `src/db/migrations/`.
   3. `yarn db:migrate` - applies pending migrations to the DB file.
 - Migrations are append-only. Commit them. Do not edit an applied migration.
+
+## Run
+
+Needs Node.js 25.7.0. 
+
+Run `yarn install`.
+
+Copy `env.example` to `.env`.
+
+- `yarn start` - serve the API (and the built web, if present) on `PORT` (default 3000).
+- `yarn cli` - run the pipeline from the terminal. Pass `--help` for the flags.
+- `yarn test` - Jest unit and integration tests.
+- `yarn lint` / `yarn lint:fix` - ESLint.
+
+## Structure
+
+Structurally composed after Spring MVC.
+
+- `server.js` - HTTP entry (Express). `cli.js` - terminal entry.
+- `app.js` - wiring. `wire()` builds one provider bundle per data source.
+- `controllers/` - HTTP layer, one class per resource.
+- `services/` - the logic: classification, author, publication, jobs, tree.
+- `connectors/` - one per provider (OpenAlex, Semantic Scholar) behind a shared interface.
+- `repositories/` - data access over the DB.
+- `db/` - schema, client, migrations.
+- `config/` env, `constants/` shared enums, `lib/` helpers.
+
+Providers run side by side. Their data are stored tagged per provider and never merge.
+
+Fast calls (search) answer inline. Slow calls (fetching citation metrics) run as a async jobs: `POST /jobs` returns a `requestId`, `GET /jobs/:id` reports progress and the result (can be polled regularly).
