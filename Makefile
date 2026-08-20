@@ -55,3 +55,15 @@ diff:
 		diff.tex
 
 	cd $(TEX_DIR) && rm -f diff.tex base.tex
+
+docker-up-build:
+	docker compose up --build
+
+docker-up:
+	docker compose up -d
+
+docker-down:
+	docker compose down
+
+docker-restart:
+	docker compose restart

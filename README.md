@@ -16,14 +16,29 @@ NOTE: this project is set up for Mac - it relies on Homebrew and MacTeX. For oth
 
 The application (backend API + web) runs with docker compose (both run on the same server):
 
+1. Copy the .env file and populate it:
+
 ```sh
-cp src/packages/backend/env.example .env # update the values
-docker compose up --build
+cp src/packages/backend/env.example .env
 ```
 
-The app should be available at http://localhost:3000
+2. Build and start the dockerised server
 
-The SQLite database remains in `./db-data` (it's mounted into the container) to be inspected after the containers stop. Delete the directory to reset the data.
+```sh
+make docker-up-build
+```
+
+The app should be available at http://localhost:3000/
+
+3. Use make targets to control the server (in daemon mode)
+
+```sh
+make docker-up
+make docker-down
+make docker-restart
+```
+
+The SQLite database file is stored in `./db-data` (it's mounted into the container) to be reused or inspected after the containers stop. Delete the directory or the .sqlite file in it to reset data.
 
 ### CI/CD Build
 
