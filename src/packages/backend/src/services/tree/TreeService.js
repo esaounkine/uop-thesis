@@ -112,7 +112,9 @@ export class TreeService {
    * @returns {ClassifiedTree | null} null when the tree was never saved
    */
   restore(pubId) {
-    const [publication] = this.publicationRepository.findByIds(this.provider, [pubId]);
+    const [publication] = this.publicationRepository.findByIds(
+      this.provider, [pubId],
+    );
 
     if (!publication) {
       return null;
@@ -127,7 +129,9 @@ export class TreeService {
         .map((row) =>
           [row.pubId, row]));
     const contributionsByPub = Map.groupBy(
-      this.contributionRepository.findByPubIds(this.provider, [pubId, ...citingIds]),
+      this.contributionRepository.findByPubIds(
+        this.provider, [pubId, ...citingIds],
+      ),
       (contribution) =>
         contribution.pubId,
     );

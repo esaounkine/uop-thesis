@@ -67,7 +67,9 @@ describe('HttpClient', () => {
         let fetchImplMock;
 
         beforeEach(async () => {
-          fetchImplMock = jest.fn().mockResolvedValue(createOkResponse({ ok: true }));
+          fetchImplMock = jest.fn().mockResolvedValue(createOkResponse({
+            ok: true,
+          }));
           await new HttpClient({
             fetchImpl: fetchImplMock,
           }).getJson('https://x/', undefined, {
