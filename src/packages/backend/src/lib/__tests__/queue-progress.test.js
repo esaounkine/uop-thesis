@@ -8,9 +8,9 @@ const createMockQueue = () => {
   const queue = new EventEmitter();
   queue.pending = 2;
   queue.size = 3;
-  queue.onCompleted = (listener) =>
+  queue.onTaskCompleted = (listener) =>
     queue.on('completed', listener);
-  queue.offCompleted = (listener) =>
+  queue.offTaskCompleted = (listener) =>
     queue.off('completed', listener);
   return queue;
 };

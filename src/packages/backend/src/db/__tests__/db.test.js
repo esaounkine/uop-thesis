@@ -1,4 +1,6 @@
-import { describe, expect, test } from '@jest/globals';
+import {
+  beforeEach, describe, expect, it,
+} from '@jest/globals';
 import { eq } from 'drizzle-orm';
 import { migrate } from 'drizzle-orm/node-sqlite/migrator';
 import * as schema from '../schema.js';
@@ -10,39 +12,55 @@ const { db } = new DbClient();
 migrate(db, { migrationsFolder: migrationsDir });
 
 describe('db layer', () => {
-  test('cache stores and reads back a payload', () => {
+  describe('cache table', () => {
     const key = 'openalex:W123';
     const payload = {
       results: [{ id: 'W1' }, { id: 'W2' }],
       page: 1,
     };
-    db.insert(schema.cache).values({
-      key: key,
-      payload: payload,
-      fetchedAt: new Date().toISOString(),
-    })
-      .run();
+    let row;
 
-    const row = db.select().from(schema.cache)
-      .where(eq(schema.cache.key, key))
-      .get();
-    expect(row.payload).toEqual(payload);
+    beforeEach(() => {
+      db.insert(schema.cache).values({
+        key: key,
+        payload: payload,
+        fetchedAt: new Date().toISOString(),
+      })
+        .run();
+      row = db.select().from(schema.cache)
+        .where(eq(schema.cache.key, key))
+        .get();
+    });
+
+    it('reads back the stored payload', () => {
+      expect(row.payload).toEqual(payload);
+    });
   });
 
-  test('publication round-trips through the normalised tables', () => {
-    db.insert(schema.publications).values({
-      provider: 'openalex',
-      pubId: 'P1',
-      title: 'A Paper',
-      normalisedTitle: 'a paper',
-      externalId: '10.1/x',
-    })
-      .run();
+  describe('publications table', () => {
+    let row;
 
-    const row = db.select().from(schema.publications)
-      .where(eq(schema.publications.pubId, 'P1'))
-      .get();
-    expect(row.title).toBe('A Paper');
-    expect(row.externalId).toBe('10.1/x');
+    beforeEach(() => {
+      db.insert(schema.publications).values({
+        provider: 'openalex',
+        pubId: 'P1',
+        title: 'A Paper',
+        normalisedTitle: 'a paper',
+        externalId: '10.1/x',
+      })
+        .onConflictDoNothing()
+        .run();
+      row = db.select().from(schema.publications)
+        .where(eq(schema.publications.pubId, 'P1'))
+        .get();
+    });
+
+    it('keeps the title', () => {
+      expect(row.title).toBe('A Paper');
+    });
+
+    it('keeps the external id', () => {
+      expect(row.externalId).toBe('10.1/x');
+    });
   });
 });

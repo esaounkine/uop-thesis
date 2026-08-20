@@ -96,9 +96,9 @@ describe('JobService', () => {
         pending: 2,
         size: 5,
       });
-      queue.onCompleted = (listener) =>
+      queue.onTaskCompleted = (listener) =>
         queue.on('completed', listener);
-      queue.offCompleted = (listener) =>
+      queue.offTaskCompleted = (listener) =>
         queue.off('completed', listener);
       const id = jobs.submitJob(async () => {
         queue.emit('completed');
