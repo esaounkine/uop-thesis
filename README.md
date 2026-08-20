@@ -12,6 +12,19 @@ The output is generated in the `out/tex` (gitignored) directory.
 
 NOTE: this project is set up for Mac - it relies on Homebrew and MacTeX. For other systems adjust the `Makefile` and install the required dependencies manually.
 
+## Application
+
+The application (backend API + web) runs with docker compose (both run on the same server):
+
+```sh
+cp src/packages/backend/env.example .env # update the values
+docker compose up --build
+```
+
+The app should be available at http://localhost:3000
+
+The SQLite database remains in `./db-data` (it's mounted into the container) to be inspected after the containers stop. Delete the directory to reset the data.
+
 ### CI/CD Build
 
 The documentation is built automatically on every push to the `master` branch and the resulting PDF is uploaded as an artifact of the GitHub Actions workflow.

@@ -1,0 +1,27 @@
+services:
+  web-build:
+    build:
+      context: src/packages/web
+    command: ["sh", "-c", "rm -rf /out/* && cp -r /app/dist/. /out/"]
+    volumes:
+      - web-dist:/out
+
+  app:
+    build:
+      context: src/packages/backend
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PORT: ${PORT:-3000}
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    volumes:
+      - ./db-data:/app/db-data
+      - web-dist:/app/public:ro
+    depends_on:
+      web-build:
+        condition: service_completed_successfully
+
+volumes:
+  web-dist:

@@ -1,6 +1,5 @@
-import {
-  afterEach, beforeEach, describe, expect, it, jest,
-} from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { fileURLToPath } from 'node:url';
 import { migrate } from 'drizzle-orm/node-sqlite/migrator';
 import { buildServer } from '../server.js';
 import { wire } from '../app.js';
@@ -84,6 +83,7 @@ describe('the HTTP API', () => {
         connector: connector,
       }),
       jobs: createJobService(),
+      publicDir: fileURLToPath(new URL('./fixtures/public', import.meta.url)),
     });
     await new Promise((resolve) =>
       server.listen(0, resolve));
@@ -165,6 +165,74 @@ describe('the HTTP API', () => {
         kind: 'paper',
         provider: 'stub',
         subjectId: 'W1',
+      });
+    });
+  });
+
+  describe('with public assets', () => {
+    describe('when accept text/html is requested', () => {
+      let headers;
+
+      beforeEach(() => {
+        headers = { accept: 'text/html' };
+      });
+
+      it('serves index.html for a client route when the browser asks for html', async () => {
+        const response = await fetch(`${base}/any-path`, {
+          headers: headers,
+        });
+
+        expect(response.status).toBe(200);
+        expect(await response.text()).toContain('test-body');
+      });
+    });
+
+    describe('when the html file is requested directly', () => {
+      it('serves the static assets', async () => {
+        const response = await fetch(`${base}/index.html`);
+
+        expect(response.status).toBe(200);
+      });
+    });
+  });
+
+  describe('with no public assets', () => {
+    let bareServer;
+    let bareBase;
+
+    beforeEach(async () => {
+      bareServer = buildServer({
+        providers: wire({
+          connector: connector,
+        }),
+        jobs: createJobService(),
+        publicDir: '/nonexistent',
+      });
+      await new Promise((resolve) =>
+        bareServer.listen(0, resolve));
+      bareBase = `http://localhost:${bareServer.address().port}`;
+    });
+
+    afterEach(() =>
+      new Promise((resolve) =>
+        bareServer.close(resolve)));
+
+    it('should answers API requests', async () => {
+      expect((await fetch(`${bareBase}/search/papers?q=cardinal`)).status).toBe(200);
+    });
+
+    describe('when accept text/html is requested', () => {
+      let headers;
+
+      beforeEach(() => {
+        headers = { accept: 'text/html' };
+      });
+
+      it('should respond 404 for a browser navigation', async () => {
+        const response = await fetch(`${bareBase}/authors`, {
+          headers: headers,
+        });
+        expect(response.status).toBe(404);
       });
     });
   });

@@ -19,6 +19,10 @@ out/
 *.swo
 tmp/
 
+# local database
+db-data/
+*.sqlite
+
 # test
 coverage/
 

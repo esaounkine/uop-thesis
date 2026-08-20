@@ -1,8 +1,10 @@
 import { createServer } from 'node:http';
 import { fileURLToPath } from 'node:url';
+import fs from 'node:fs';
+import path from 'node:path';
 import express from 'express';
 import { wire } from './app.js';
-import { corsOrigin, dbFile, port } from './config/env.js';
+import { corsOrigin, dbFile, port, publicDir } from './config/env.js';
 import { DbClient } from './db/DbClient.js';
 import { JobRepository } from './repositories/JobRepository.js';
 import { JobService } from './services/jobs/JobService.js';
@@ -29,18 +31,26 @@ const cors = (req, res, next) => {
  * @param {Object} args
  * @param {ReturnType<import('./app.js').wire>} args.providers
  * @param {JobService} args.jobs
+ * @param {string} [args.publicDir] - static files to serve, when the directory
+ *   exists; browser navigations (GET accepting text/html) fall back to
+ *   index.html. Without the directory the server answers the API only.
  * @returns {import('node:http').Server}
  */
 export const buildServer = ({
-  providers, jobs,
+  providers, jobs, publicDir: dist = publicDir,
 }) => {
   const searchController = new SearchController(providers);
   const authorController = new AuthorController(providers);
   const jobController = new JobController(providers, jobs);
   const app = express();
+  const hasPublic = fs.existsSync(dist);
 
   app.use(cors);
   app.use(express.json());
+
+  if (hasPublic) {
+    app.use(express.static(dist));
+  }
 
   app.get('/search/papers', async (req, res) => {
     res.json(await searchController.searchPapers(req));
@@ -59,6 +69,15 @@ export const buildServer = ({
   });
   app.get('/jobs/:id', (req, res) => {
     res.json(jobController.getJob(req));
+  });
+
+  app.use((req, res, next) => {
+    if (hasPublic && req.method === 'GET' && req.headers.accept?.includes('text/html')) {
+      res.sendFile(path.join(dist, 'index.html'));
+      return;
+    }
+
+    next();
   });
 
   app.use((req, res) => {
