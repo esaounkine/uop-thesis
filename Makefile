@@ -8,7 +8,7 @@ LATEXMK_FLAGS := -pdf -interaction=nonstopmode -file-line-error -synctex=1
 LATEXMK_EXTRA_FLAGS ?=
 BASE_BRANCH ?= master
 
-.PHONY: install-deps setup tex-cmd build watch clean distclean
+.PHONY: install-deps setup tex-cmd build watch clean distclean deploy install-cron
 
 install-deps:
 	brew install --cask mactex-no-gui
@@ -67,3 +67,6 @@ docker-down:
 
 docker-restart:
 	docker compose restart
+
+install-cicd:
+	echo "*/5 * * * * $(CURDIR)/src/infra/deploy.sh >> /tmp/deploy.log 2>&1" | crontab -
