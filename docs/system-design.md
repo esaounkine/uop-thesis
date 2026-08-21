@@ -397,7 +397,7 @@ A publication is returned together with its contributions. Where a Provider embe
 | getAuthorPublications       | Scrape only    | Yes      | Partial (by name) | Yes              | By ORCID        | Yes       | Yes            | Yes (sub) | Unreliable  |
 | getPublication              | Scrape only    | Yes      | Yes               | Yes              | Yes             | By search | Yes            | Yes (sub) | Unreliable  |
 | getCitations list           | Scrape only    | Yes      | No (count only)   | Yes              | Yes             | Yes       | No (external)  | Yes (sub) | Unreliable  |
-| contributions (author list) | Scrape only    | Yes      | Yes               | Yes (by order)   | Yes (by order)   | Partial   | Yes (by order) | Yes (sub)  | Unreliable  |
+| contributions (author list) | Scrape only    | Yes      | Yes               | Yes (by order)   | Yes (by order)  | Partial   | Yes (by order) | Yes (sub) | Unreliable  |
 
 `(sub)` = supported, but only with a paid subscription.
 
@@ -426,7 +426,7 @@ Each Provider below lists a **Client policy** aspect (agent against human traffi
 #### [OpenAlex](https://openalex.org/)
 
 - **Interface** - Free REST API. Base URL `https://api.openalex.org`. The main entities are `works` and `authors`.
-- **Rate limit** - The API needs a free API key. The limit is 100k credits per day, 10 requests per second. A single record costs 1 credit. A list request costs 10 credits.
+- **Rate limit** - The API needs a free API key. The limit is 100k credits per day, 10 requests per second. Viewing a single record (a work, author or source) is free. A search (the `search` parameter) costs 10 credits. Each filtered list or facet costs 1 credit.
 - **Response format** - JSON.
 - **Request examples**
   - searchAuthors - `GET /authors?search=<name>`
@@ -557,7 +557,7 @@ OpenCitations is a citation index. It has two collections: Index (the citation l
 
 #### [SerpApi](https://serpapi.com/)
 
-SerpApi is a paid service. It scrapes Google Scholar and returns the results as structured data. It is a way to use the Google Scholar coverage through an API.
+SerpApi is a paid service. It scrapes Google Scholar and returns the results as structured data. It is a way to use the Google Scholar coverage through an API, not directly violating the terms of use.
 
 - **Interface** - Paid REST API. Base endpoint `https://serpapi.com/search`. The engines include `google_scholar` (results), `google_scholar_profiles` (author search), `google_scholar_author` (author details and articles), and `google_scholar_cite` (citation format).
 - **Rate limit** - The limit depends on the paid plan. The Free plan gives about 100 searches each month. The Developer plan gives 5000 searches each month for 75 USD. Each plan caps the rate at 20 percent of the monthly volume each hour. It counts only successful searches.
