@@ -1,3 +1,11 @@
+:root {
+    --status-bar-height: 3rem;
+}
+
 button, input {
     margin: 0 !important;
+}
+
+body {
+    padding-bottom: var(--status-bar-height);
 }

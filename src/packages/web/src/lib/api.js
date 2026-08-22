@@ -35,3 +35,6 @@ export const submitJob = (job) =>
 
 export const getJob = (requestId) =>
   get(`/jobs/${requestId}`);
+
+export const getStatus = () =>
+  get('/status');
