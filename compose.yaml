@@ -1,14 +1,6 @@
 services:
-  web-build:
-    build:
-      context: src/packages/web
-    command: ["sh", "-c", "rm -rf /out/* && cp -r /app/dist/. /out/"]
-    volumes:
-      - web-dist:/out
-
   app:
-    build:
-      context: src/packages/backend
+    image: ghcr.io/esaounkine/uop-thesis:latest
     env_file:
       - path: .env
         required: false
@@ -18,10 +10,4 @@ services:
       - "${PORT:-3000}:${PORT:-3000}"
     volumes:
       - ./db-data:/app/db-data
-      - web-dist:/app/public:ro
-    depends_on:
-      web-build:
-        condition: service_completed_successfully
-
-volumes:
-  web-dist:
+    restart: unless-stopped

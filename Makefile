@@ -8,7 +8,7 @@ LATEXMK_FLAGS := -pdf -interaction=nonstopmode -file-line-error -synctex=1
 LATEXMK_EXTRA_FLAGS ?=
 BASE_BRANCH ?= master
 
-.PHONY: install-deps setup tex-cmd build watch clean distclean deploy install-cron
+.PHONY: install-deps setup tex-cmd build watch clean distclean docker-build docker-push docker-up docker-down deploy install-cicd
 
 install-deps:
 	brew install --cask mactex-no-gui
@@ -56,8 +56,13 @@ diff:
 
 	cd $(TEX_DIR) && rm -f diff.tex base.tex
 
-docker-up-build:
-	docker compose up --build
+IMAGE ?= ghcr.io/esaounkine/uop-thesis:latest
+
+docker-build:
+	docker build -t $(IMAGE) -f src/Dockerfile src
+
+docker-push:
+	docker push $(IMAGE)
 
 docker-up:
 	docker compose up -d
@@ -65,8 +70,10 @@ docker-up:
 docker-down:
 	docker compose down
 
-docker-restart:
-	docker compose restart
+deploy:
+	docker compose pull
+	docker compose up -d
+	docker image prune -f
 
 install-cicd:
 	echo "*/5 * * * * $(CURDIR)/src/infra/deploy.sh >> /tmp/deploy.log 2>&1" | crontab -
