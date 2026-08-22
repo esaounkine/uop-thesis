@@ -34,21 +34,32 @@ export class StatusController {
     this.stats = stats;
   }
 
-  getStatus() {
+  async getStatus() {
     return {
       version: version,
-      providers: this.providers.map((provider) => {
+      providers: await Promise.all(this.providers.map(async (provider) => {
         const spec = selectProvider(provider.id);
 
         return {
           id: provider.id,
           apiKey: maskValue(spec.apiKey),
           requestsPerSecond: spec.requestsPerSecond,
-          quota: null, // TODO fetch the remaining quota where available
+          quota: await this.fetchQuota(provider),
           records: this.stats.countByProvider(provider.id),
         };
-      }),
+      })),
       system: getSystemStats(),
     };
+  }
+
+  // Best effort: a provider without a quota, or a failed lookup, reports null.
+  async fetchQuota(provider) {
+    try {
+      const quota = await provider.connector?.getQuota?.();
+
+      return quota ?? null;
+    } catch {
+      return null;
+    }
   }
 }

@@ -117,9 +117,34 @@ export class OpenAlexConnector extends ProviderConnector {
   }
 
   /**
+   * Quota for the current API key.
+   * Never cached.
+   *
+   * This request documentation is missing.
+   * The request was reverse engineered.
+   *
+   * @returns {Promise<Object | null>} null when no API key provided
+   */
+  async getQuota() {
+    if (!this.apiKey) {
+      return null;
+    }
+
+    const data = await this.fetchJson('/rate-limit', {}, null);
+    const limit = data.rate_limit ?? {};
+
+    return {
+      creditsLimit: limit.credits_limit ?? null,
+      creditsUsed: limit.credits_used ?? null,
+      creditsRemaining: limit.credits_remaining ?? null,
+      resetsAt: limit.resets_at ?? null,
+    };
+  }
+
+  /**
    * @param {string} path
    * @param {Object} params
-   * @param {number} ttl - cache lifetime in ms
+   * @param {number|null} ttl - transient param for HttpClient.getJson
    * @returns {Promise<any>} the response body
    */
   async fetchJson(path, params, ttl) {

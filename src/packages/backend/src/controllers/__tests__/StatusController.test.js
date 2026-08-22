@@ -7,7 +7,7 @@ describe('StatusController', () => {
   describe('getStatus', () => {
     let status;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       const stats = {
         countByProvider: () => {
           return {
@@ -19,9 +19,17 @@ describe('StatusController', () => {
           };
         },
       };
-      const providers = [{ id: 'openalex' }];
+      const providers = [
+        {
+          id: 'openalex',
+          connector: {
+            getQuota: () =>
+              Promise.resolve({ creditsRemaining: 9000 }),
+          },
+        },
+      ];
 
-      status = new StatusController(providers, stats).getStatus();
+      status = await new StatusController(providers, stats).getStatus();
     });
 
     it('reports a build version', () => {
@@ -42,6 +50,10 @@ describe('StatusController', () => {
       const { apiKey } = status.providers[0];
 
       expect(apiKey === null || apiKey.startsWith('****')).toBe(true);
+    });
+
+    it('includes the provider quota', () => {
+      expect(status.providers[0].quota).toEqual({ creditsRemaining: 9000 });
     });
 
     it('reports host memory and disk', () => {

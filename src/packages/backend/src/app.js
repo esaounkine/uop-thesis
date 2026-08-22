@@ -29,6 +29,7 @@ const createProvider = ({
   return {
     id: id,
     queue: queue,
+    connector: connector,
     publications: publications,
     authors: authors,
     classification: new ClassificationService({

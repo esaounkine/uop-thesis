@@ -254,4 +254,50 @@ describe('OpenAlexConnector', () => {
       });
     });
   });
+
+  describe('getQuota', () => {
+    describe('with an api key', () => {
+      let quota;
+
+      beforeEach(async () => {
+        const getJsonMock = jest.fn().mockResolvedValue({
+          data: {
+            rate_limit: {
+              credits_limit: 10000,
+              credits_used: 250,
+              credits_remaining: 9750,
+              resets_at: '2026-08-23T00:00:00.000Z',
+            },
+          },
+          fetchedAt: new Date(),
+        });
+
+        quota = await new OpenAlexConnector({
+          httpClient: { getJson: getJsonMock },
+          baseUrl: 'https://api.openalex.org',
+          apiKey: 'secret',
+        }).getQuota();
+      });
+
+      it('maps the remaining credits', () => {
+        expect(quota).toEqual({
+          creditsLimit: 10000,
+          creditsUsed: 250,
+          creditsRemaining: 9750,
+          resetsAt: '2026-08-23T00:00:00.000Z',
+        });
+      });
+    });
+
+    describe('without an api key', () => {
+      it('returns null', async () => {
+        const connector = new OpenAlexConnector({
+          httpClient: { getJson: jest.fn() },
+          apiKey: null,
+        });
+
+        expect(await connector.getQuota()).toBeNull();
+      });
+    });
+  });
 });

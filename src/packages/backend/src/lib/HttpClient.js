@@ -63,20 +63,23 @@ export class HttpClient {
 
   /**
    * @param {string|URL} url
-   * @param {number} [ttl] - cache lifetime in ms; undefined = forever
+   * @param {number|null} [ttl] - cache lifetime in ms; `null` means no cache is needed
    * @param {Object} [headers] - additional headers to inject into the request
    * @returns {Promise<{ data: any, fetchedAt: Date }>}
    * @throws Error
    */
   async getJson(url, ttl, headers) {
     const key = createCacheKeyFromUrl(url);
-    const hit = this.cache?.get(key, ttl);
 
-    if (hit) {
-      return {
-        data: hit.value,
-        fetchedAt: hit.fetchedAt,
-      };
+    if (ttl) {
+      const hit = this.cache?.get(key, ttl);
+
+      if (hit) {
+        return {
+          data: hit.value,
+          fetchedAt: hit.fetchedAt,
+        };
+      }
     }
 
     const response = await this.retryStrategy.run(() =>

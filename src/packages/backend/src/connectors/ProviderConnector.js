@@ -54,4 +54,13 @@ export class ProviderConnector {
   getCitations(pubId) {
     throw new Error('not implemented');
   }
+
+  /**
+   * API quota of the provider.
+   *
+   * @returns {Promise<Object | null>} null when the provider doesn't exposes it
+   */
+  getQuota() {
+    return Promise.resolve(null);
+  }
 }

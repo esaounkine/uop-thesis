@@ -219,6 +219,28 @@ describe('HttpClient', () => {
           expect(fetchImplMock).toHaveBeenCalledTimes(1);
         });
       });
+
+      describe('and the ttl is null', () => {
+        let result;
+
+        beforeEach(async () => {
+          const client = new HttpClient({
+            fetchImpl: fetchImplMock,
+            cache: cache,
+          });
+          // Seed a fresh entry, then request the same url live.
+          await client.getJson('https://api.test/works?a=1', 60_000);
+          result = await client.getJson('https://api.test/works?a=1', null);
+        });
+
+        it('fetches live instead of serving the cache', () => {
+          expect(result.data).toEqual({ n: 2 });
+        });
+
+        it('still calls the network', () => {
+          expect(fetchImplMock).toHaveBeenCalledTimes(2);
+        });
+      });
     });
   });
 });

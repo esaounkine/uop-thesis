@@ -74,8 +74,8 @@ export const buildServer = ({
   app.get('/jobs/:id', (req, res) => {
     res.json(jobController.getJob(req));
   });
-  app.get('/status', (req, res) => {
-    res.json(statusController.getStatus());
+  app.get('/status', async (req, res) => {
+    res.json(await statusController.getStatus());
   });
 
   app.use((req, res, next) => {
