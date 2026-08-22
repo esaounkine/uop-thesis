@@ -12,6 +12,18 @@ const formatBytes = (bytes) => {
     : `${Math.round(bytes / 1e6)} MB`;
 };
 
+const formatQuota = (quota) => {
+  if (!quota) {
+    return '-';
+  }
+
+  return `${quota.creditsRemaining?.toLocaleString()} / ${quota.creditsLimit?.toLocaleString() ?? '-'}`;
+};
+
+const formatApiKey = (apiKey) => {
+  return apiKey ?? '-';
+}
+
 const StatusPanel = ({ data }) => {
   const columns = Object.keys(data.providers[0]?.records ?? {});
 
@@ -23,6 +35,7 @@ const StatusPanel = ({ data }) => {
           <th>Provider</th>
           <th>Key</th>
           <th>Req/s</th>
+          <th>Quota</th>
           {columns.map((column) =>
             <th key={column}>{column}</th>)}
         </tr>
@@ -31,8 +44,9 @@ const StatusPanel = ({ data }) => {
         {data.providers.map((provider) =>
           <tr key={provider.id}>
             <td>{provider.id}</td>
-            <td>{provider.apiKey ?? '-'}</td>
+            <td>{formatApiKey(provider.apiKey)}</td>
             <td>{provider.requestsPerSecond}</td>
+            <td>{formatQuota(provider.quota)}</td>
             {columns.map((column) =>
               <td key={column}>{provider.records[column]}</td>)}
           </tr>)}
