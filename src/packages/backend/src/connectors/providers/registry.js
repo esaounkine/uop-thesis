@@ -1,10 +1,16 @@
-import { openAlexMaxPerSecond, semanticScholarMaxPerSecond } from '../../config/env.js';
+import {
+  openAlexApiKey,
+  openAlexMaxPerSecond,
+  semanticScholarApiKey,
+  semanticScholarMaxPerSecond,
+} from '../../config/env.js';
 import { OpenAlexConnector } from './OpenAlexConnector.js';
 import { SemanticScholarConnector } from './SemanticScholarConnector.js';
 
 const REGISTRY = {
   openalex: {
     requestsPerSecond: openAlexMaxPerSecond,
+    apiKey: openAlexApiKey,
     create: (httpClient) =>
       new OpenAlexConnector({
         httpClient: httpClient,
@@ -12,6 +18,7 @@ const REGISTRY = {
   },
   semanticscholar: {
     requestsPerSecond: semanticScholarMaxPerSecond,
+    apiKey: semanticScholarApiKey,
     create: (httpClient) =>
       new SemanticScholarConnector({
         httpClient: httpClient,
@@ -29,7 +36,7 @@ export const listProviders = () =>
  * Looks provider up by id.
  *
  * @param {string} id
- * @returns {{ requestsPerSecond: number, create: (httpClient: import('../../lib/HttpClient.js').HttpClient) => import('../ProviderConnector.js').ProviderConnector }}
+ * @returns {{ requestsPerSecond: number, apiKey: string | undefined, create: (httpClient: import('../../lib/HttpClient.js').HttpClient) => import('../ProviderConnector.js').ProviderConnector }}
  */
 export const selectProvider = (id) => {
   const spec = REGISTRY[id];

@@ -7,10 +7,12 @@ import { wire } from './app.js';
 import { corsOrigin, dbFile, port, publicDir } from './config/env.js';
 import { DbClient } from './db/DbClient.js';
 import { JobRepository } from './repositories/JobRepository.js';
+import { StatsRepository } from './repositories/StatsRepository.js';
 import { JobService } from './services/jobs/JobService.js';
 import { SearchController } from './controllers/SearchController.js';
 import { AuthorController } from './controllers/AuthorController.js';
 import { JobController } from './controllers/JobController.js';
+import { StatusController } from './controllers/StatusController.js';
 
 const cors = (req, res, next) => {
   res.set('Access-Control-Allow-Origin', corsOrigin);
@@ -31,17 +33,19 @@ const cors = (req, res, next) => {
  * @param {Object} args
  * @param {ReturnType<import('./app.js').wire>} args.providers
  * @param {JobService} args.jobs
+ * @param {StatsRepository} [args.stats] - repo to get DB counts
  * @param {string} [args.publicDir] - static files to serve, when the directory
  *   exists; browser navigations (GET accepting text/html) fall back to
  *   index.html. Without the directory the server answers the API only.
  * @returns {import('node:http').Server}
  */
 export const buildServer = ({
-  providers, jobs, publicDir: dist = publicDir,
+  providers, jobs, stats, publicDir: dist = publicDir,
 }) => {
   const searchController = new SearchController(providers);
   const authorController = new AuthorController(providers);
   const jobController = new JobController(providers, jobs);
+  const statusController = new StatusController(providers, stats);
   const app = express();
   const hasPublic = fs.existsSync(dist);
 
@@ -69,6 +73,9 @@ export const buildServer = ({
   });
   app.get('/jobs/:id', (req, res) => {
     res.json(jobController.getJob(req));
+  });
+  app.get('/status', (req, res) => {
+    res.json(statusController.getStatus());
   });
 
   app.use((req, res, next) => {
@@ -101,6 +108,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   buildServer({
     providers: wire(),
     jobs: new JobService(new JobRepository(db)),
+    stats: new StatsRepository(db),
   }).listen(port, () => {
     process.stdout.write(`listening on ${port}\n`);
   });
