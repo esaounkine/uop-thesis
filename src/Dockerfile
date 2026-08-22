@@ -6,11 +6,16 @@ RUN yarn install
 COPY packages/web .
 RUN yarn build
 
-# Stage 2 - build API
-FROM node:25.7.0-alpine
+# Stage 2 - install backend production dependencies
+FROM node:25.7.0-alpine AS api
 WORKDIR /app
 COPY packages/backend/package.json .
 RUN yarn install --production
+
+# Stage 3 - runtime (backend + web - yarn cache)
+FROM node:25.7.0-alpine
+WORKDIR /app
+COPY --from=api /app/node_modules ./node_modules
 COPY packages/backend .
 COPY --from=web /web/dist ./public
 EXPOSE 3000
