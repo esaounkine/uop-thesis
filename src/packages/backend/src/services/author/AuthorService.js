@@ -3,7 +3,7 @@
 /** @typedef {import('../../db/schema.js').Publication} Publication */
 
 /**
- * Searches authors and collects their publications.
+ * Operations per author.
  */
 export class AuthorService {
   /**

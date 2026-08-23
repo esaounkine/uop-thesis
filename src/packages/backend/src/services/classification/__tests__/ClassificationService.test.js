@@ -116,92 +116,66 @@ describe('ClassificationService', () => {
     });
   });
 
-  describe('getPaperMetrics', () => {
-    const citing = (pubId, contributions) => {
-      return {
-        publication: { pubId: pubId },
-        contributions: contributions,
+  describe('getPublicationMetrics', () => {
+    let result;
+
+    beforeEach(async () => {
+      const publication = {
+        pubId: 'W1',
+        contributions: [contribution('A1', 1), contribution('A2', 2)],
       };
-    };
-
-    describe('when the paper exists', () => {
-      let result;
-
-      beforeEach(async () => {
-        const tree = {
-          publication: { pubId: 'W1' },
-          citedContributions: [contribution('A1', 1), contribution('A2', 2)],
-          citing: [
-            citing('W2', [contribution('A1', 1)]), // direct
-            citing('W3', [contribution('C1', 1), contribution('A1', 2)]), // co-author
-            citing('W4', [contribution('Z1', 1)]), // external
-          ],
-        };
-        const publicationServiceMock = {
-          getCitationTree: jest.fn().mockResolvedValue(tree),
-        };
-        result = await new ClassificationService({
-          publicationService: publicationServiceMock,
-        }).getPaperMetrics('W1');
-      });
-
-      it('returns the paper', () => {
-        expect(result.publication.pubId).toBe('W1');
-      });
-
-      it('aggregates the metrics', () => {
-        expect(result.metrics).toEqual({
-          total: 3,
-          external: 1,
-          self: {
-            total: 2,
-            direct: 1,
-            coauthor: 1,
-          },
-        });
-      });
-
-      it('labels each citation for the debug details', () => {
-        expect(result.citations).toEqual([
+      const publicationServiceMock = {
+        getCitations: jest.fn().mockResolvedValue([
           {
-            publication: { pubId: 'W2' },
-            classification: 'self-direct',
+            pubId: 'W2',
+            contributions: [contribution('A1', 1)], // direct
           },
           {
-            publication: { pubId: 'W3' },
-            classification: 'self-coauthor',
+            pubId: 'W3',
+            contributions: [contribution('C1', 1), contribution('A1', 2)], // co-author
           },
           {
-            publication: { pubId: 'W4' },
-            classification: 'external',
+            pubId: 'W4',
+            contributions: [contribution('Z1', 1)], // external
           },
-        ]);
+        ]),
+      };
+      result = await new ClassificationService({
+        publicationService: publicationServiceMock,
+      }).getPublicationMetrics(publication);
+    });
+
+    it('returns the publication', () => {
+      expect(result.publication.pubId).toBe('W1');
+    });
+
+    it('aggregates the metrics', () => {
+      expect(result.metrics).toEqual({
+        total: 3,
+        external: 1,
+        self: {
+          total: 2,
+          direct: 1,
+          coauthor: 1,
+        },
       });
     });
 
-    describe('when the paper is not found', () => {
-      let result;
-
-      beforeEach(async () => {
-        const publicationServiceMock = {
-          getCitationTree: jest.fn().mockResolvedValue(null),
-        };
-        result = await new ClassificationService({
-          publicationService: publicationServiceMock,
-        }).getPaperMetrics('missing');
-      });
-
-      it('returns null', () => {
-        expect(result).toBeNull();
-      });
+    it('labels each citation for the debug details', () => {
+      expect(result.citations.map((entry) =>
+        [entry.publication.pubId, entry.classification])).toEqual([
+        ['W2', 'self-direct'],
+        ['W3', 'self-coauthor'],
+        ['W4', 'external'],
+      ]);
     });
   });
 
   describe('getAuthorMetrics', () => {
-    const citing = (pubId, contributions) => {
+    const publication = (pubId) => {
       return {
-        publication: { pubId: pubId },
-        contributions: contributions,
+        pubId: pubId,
+        contributions: [contribution('A1', 1)],
       };
     };
 
@@ -209,28 +183,32 @@ describe('ClassificationService', () => {
       let result;
 
       beforeEach(async () => {
-        const trees = {
-          W1: {
-            publication: { pubId: 'W1' },
-            citedContributions: [contribution('A1', 1)],
-            // direct, external
-            citing: [citing('W10', [contribution('A1', 1)]), citing('W11', [contribution('Z1', 1)])],
-          },
-          W2: {
-            publication: { pubId: 'W2' },
-            citedContributions: [contribution('A1', 1)],
-            // co-author
-            citing: [citing('W20', [contribution('C1', 1), contribution('A1', 2)])],
-          },
+        const citationsByPub = {
+          W1: [
+            {
+              pubId: 'W10',
+              contributions: [contribution('A1', 1)], // direct
+            },
+            {
+              pubId: 'W11',
+              contributions: [contribution('Z1', 1)], // external
+            },
+          ],
+          W2: [
+            {
+              pubId: 'W20',
+              contributions: [contribution('C1', 1), contribution('A1', 2)], // co-author
+            },
+          ],
         };
         const publicationServiceMock = {
-          getCitationTree: jest.fn(async (pubId) =>
-            trees[pubId]),
+          getCitations: jest.fn(async (pubId) =>
+            citationsByPub[pubId]),
         };
         const authorServiceMock = {
           getPublications: jest.fn().mockResolvedValue({
             author: { authorId: 'A1' },
-            publications: [{ pubId: 'W1' }, { pubId: 'W2' }],
+            publications: [publication('W1'), publication('W2')],
           }),
         };
         result = await new ClassificationService({
@@ -274,22 +252,23 @@ describe('ClassificationService', () => {
 
       beforeEach(async () => {
         const publicationServiceMock = {
-          getCitationTree: jest.fn(async (pubId) => {
+          getCitations: jest.fn(async (pubId) => {
             if (pubId === 'W2') {
               throw new Error('rate limited');
             }
 
-            return {
-              publication: { pubId: 'W1' },
-              citedContributions: [contribution('A1', 1)],
-              citing: [citing('W10', [contribution('A1', 1)])], // direct
-            };
+            return [
+              {
+                pubId: 'W10',
+                contributions: [contribution('A1', 1)], // direct
+              },
+            ];
           }),
         };
         const authorServiceMock = {
           getPublications: jest.fn().mockResolvedValue({
             author: { authorId: 'A1' },
-            publications: [{ pubId: 'W1' }, { pubId: 'W2' }],
+            publications: [publication('W1'), publication('W2')],
           }),
         };
         result = await new ClassificationService({

@@ -13,32 +13,19 @@ export class JobController {
 
   submitJob({ body }) {
     const {
-      kind, provider: providerId, id,
+      provider: providerId, id,
     } = body ?? {};
     const provider = this.providers.find((each) =>
       each.id === providerId);
 
     if (!provider || !id) {
-      throw new ApiError(400, 'body must be { kind, provider, id }');
+      throw new ApiError(400, 'body must contain `provider` and `id`');
     }
 
-    let run;
-    switch (kind) {
-      case 'paper':
-        run = () =>
-          provider.classification.getPaperMetrics(id);
-        break;
-      case 'author':
-        run = () =>
-          provider.classification.getAuthorMetrics(id);
-        break;
-      default:
-        throw new ApiError(400, `unknown kind "${kind}"`);
-    }
-
-    const requestId = this.jobs.submitJob(run, {
+    const requestId = this.jobs.submitJob(() =>
+      provider.classification.getAuthorMetrics(id), {
       queue: provider.queue,
-      kind: kind,
+      kind: 'author',
       provider: provider.id,
       subjectId: id,
     });

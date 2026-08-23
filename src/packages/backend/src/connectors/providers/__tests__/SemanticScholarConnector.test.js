@@ -16,87 +16,13 @@ const createConnector = (...pages) => {
   });
 };
 
+const createSingleCitationPage = (paper) => {
+  return {
+    data: [{ citingPaper: paper }],
+  };
+};
+
 describe('SemanticScholarConnector', () => {
-  describe('getPublication', () => {
-    describe('when the paper exists', () => {
-      let publication;
-
-      beforeEach(async () => {
-        publication = await createConnector({
-          paperId: 'p1',
-          title: 'A Paper',
-          year: 2020,
-          citationCount: 7,
-          externalIds: { DOI: '10.1/x' },
-          authors: [
-            {
-              authorId: 'a1',
-              name: 'Jane Roe',
-            },
-            {
-              authorId: 'a2',
-              name: 'John Doe',
-            },
-          ],
-        }).getPublication('p1');
-      });
-
-      it('keeps the id, title and year', () => {
-        expect(publication).toMatchObject({
-          pubId: 'p1',
-          title: 'A Paper',
-          normalisedTitle: 'a paper',
-          externalId: '10.1/x',
-          year: 2020,
-        });
-      });
-
-      it('keeps the citation count', () => {
-        expect(publication.citationCount).toBe(7);
-      });
-
-      it('carries the contributions with author name, no organisation', () => {
-        expect(publication.contributions[0]).toEqual({
-          pubId: 'p1',
-          authorId: 'a1',
-          authorName: 'Jane Roe',
-          position: 1,
-        });
-      });
-    });
-
-    describe('when an author has no id', () => {
-      let publication;
-
-      beforeEach(async () => {
-        publication = await createConnector({
-          paperId: 'p1',
-          authors: [
-            {
-              authorId: null,
-              name: 'Anon',
-            },
-            {
-              authorId: 'a2',
-              name: 'John Doe',
-            },
-          ],
-        }).getPublication('p1');
-      });
-
-      it('drops it but keeps the original position of the rest', () => {
-        expect(publication.contributions).toEqual([
-          {
-            pubId: 'p1',
-            authorId: 'a2',
-            authorName: 'John Doe',
-            position: 2,
-          },
-        ]);
-      });
-    });
-  });
-
   describe('getCitations', () => {
     describe('when the results span multiple pages', () => {
       let citations;
@@ -133,7 +59,7 @@ describe('SemanticScholarConnector', () => {
       });
     });
 
-    describe('when a citing paper is outside the corpus (null id)', () => {
+    describe('when a citing paper has null id', () => {
       let citations;
 
       beforeEach(async () => {
@@ -158,6 +84,84 @@ describe('SemanticScholarConnector', () => {
       it('drops the unidentified citing paper', () => {
         expect(citations.map((publication) =>
           publication.pubId)).toEqual(['p2']);
+      });
+    });
+
+    describe('when a citing paper has the full fields', () => {
+      let publication;
+
+      beforeEach(async () => {
+        [publication] = await createConnector(createSingleCitationPage({
+          paperId: 'p1',
+          title: 'A Paper',
+          year: 2020,
+          citationCount: 7,
+          externalIds: { DOI: '10.1/x' },
+          authors: [
+            {
+              authorId: 'a1',
+              name: 'Jane Roe',
+            },
+            {
+              authorId: 'a2',
+              name: 'John Doe',
+            },
+          ],
+        })).getCitations('p0');
+      });
+
+      it('keeps the id, title, year and doi', () => {
+        expect(publication).toMatchObject({
+          pubId: 'p1',
+          title: 'A Paper',
+          normalisedTitle: 'a paper',
+          externalId: '10.1/x',
+          year: 2020,
+        });
+      });
+
+      it('keeps the citation count', () => {
+        expect(publication.citationCount).toBe(7);
+      });
+
+      it('carries the contributions with author name, no organisation', () => {
+        expect(publication.contributions[0]).toEqual({
+          pubId: 'p1',
+          authorId: 'a1',
+          authorName: 'Jane Roe',
+          position: 1,
+        });
+      });
+    });
+
+    describe('when a citing author has no id', () => {
+      let publication;
+
+      beforeEach(async () => {
+        [publication] = await createConnector(createSingleCitationPage({
+          paperId: 'p1',
+          authors: [
+            {
+              authorId: null,
+              name: 'Anon',
+            },
+            {
+              authorId: 'a2',
+              name: 'John Doe',
+            },
+          ],
+        })).getCitations('p0');
+      });
+
+      it('drops it but keeps the original position of the rest', () => {
+        expect(publication.contributions).toEqual([
+          {
+            pubId: 'p1',
+            authorId: 'a2',
+            authorName: 'John Doe',
+            position: 2,
+          },
+        ]);
       });
     });
   });
@@ -185,48 +189,6 @@ describe('SemanticScholarConnector', () => {
             originalName: 'Jane Roe',
             normalisedName: 'jane roe',
             organisation: 'University 1',
-          },
-        ]);
-      });
-    });
-  });
-
-  describe('searchPublications', () => {
-    describe('when papers match', () => {
-      let publications;
-
-      beforeEach(async () => {
-        publications = await createConnector({
-          data: [
-            {
-              paperId: 'p1',
-              title: 'A Paper',
-              authors: [
-                {
-                  authorId: 'a1',
-                  name: 'Jane Roe',
-                },
-              ],
-            },
-          ],
-        }).searchPublications('paper');
-      });
-
-      it('maps the results to publications', () => {
-        expect(publications[0]).toMatchObject({
-          pubId: 'p1',
-          title: 'A Paper',
-          normalisedTitle: 'a paper',
-        });
-      });
-
-      it('carries the contributions', () => {
-        expect(publications[0].contributions).toEqual([
-          {
-            pubId: 'p1',
-            authorId: 'a1',
-            authorName: 'Jane Roe',
-            position: 1,
           },
         ]);
       });

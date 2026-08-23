@@ -70,17 +70,6 @@ export class OpenAlexConnector extends ProviderConnector {
   }
 
   /**
-   * @see https://github.com/ourresearch/openalex-docs/blob/main/api-entities/works/search-works.md
-   */
-  async searchPublications(name) {
-    const data = await this.fetchJson('/works', {
-      search: name,
-    }, searchTtlMs);
-    return data.results.map((work) =>
-      this.toPublication(work));
-  }
-
-  /**
    * @see https://github.com/ourresearch/openalex-docs/blob/main/api-entities/authors/get-a-single-author.md
    */
   async getAuthorById(id) {
@@ -96,14 +85,6 @@ export class OpenAlexConnector extends ProviderConnector {
       filter: `author.id:${authorId}`,
     }, searchTtlMs, (work) =>
       this.toPublication(work));
-  }
-
-  /**
-   * @see https://github.com/ourresearch/openalex-docs/blob/main/api-entities/works/get-a-single-work.md
-   */
-  async getPublication(id) {
-    const work = await this.fetchJson(`/works/${id}`, {}, directFetchTtlMs);
-    return this.toPublication(work);
   }
 
   /**

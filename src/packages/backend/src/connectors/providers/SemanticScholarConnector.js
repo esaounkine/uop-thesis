@@ -71,19 +71,6 @@ export class SemanticScholarConnector extends ProviderConnector {
   }
 
   /**
-   * @see https://api.semanticscholar.org/api-docs/#tag/Paper-Data/operation/get_graph_paper_relevance_search
-   */
-  async searchPublications(name) {
-    const data = await this.fetchJson('/paper/search', {
-      query: name,
-      fields: SemanticScholarConnector.PAPER_FIELDS,
-      limit: SemanticScholarConnector.SEARCH_LIMIT,
-    }, searchTtlMs);
-    return (data.data ?? []).map((paper) =>
-      this.toPublication(paper));
-  }
-
-  /**
    * @see https://api.semanticscholar.org/api-docs/#tag/Author-Data/operation/get_graph_get_author
    */
   async getAuthorById(id) {
@@ -101,16 +88,6 @@ export class SemanticScholarConnector extends ProviderConnector {
       fields: SemanticScholarConnector.PAPER_FIELDS,
     }, searchTtlMs, (paper) =>
       this.toPublication(paper));
-  }
-
-  /**
-   * @see https://api.semanticscholar.org/api-docs/#tag/Paper-Data/operation/get_graph_get_paper
-   */
-  async getPublication(id) {
-    const paper = await this.fetchJson(`/paper/${id}`, {
-      fields: SemanticScholarConnector.PAPER_FIELDS,
-    }, directFetchTtlMs);
-    return this.toPublication(paper);
   }
 
   /**

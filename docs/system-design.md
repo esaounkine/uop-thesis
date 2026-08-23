@@ -129,66 +129,7 @@ sequenceDiagram
 
 ### Domain Specific
 
-#### 1. Getting citation metrics for a publication
-
-```mermaid
-sequenceDiagram
-  autonumber
-  actor User
-  participant PS as Publication Service
-  participant CS as Classification Service
-  participant P as Provider APIs
-
-  User ->> CS: Paper unique ID
-  CS ->> PS: Fetch data tree starting from the paper unique ID
-  
-  PS ->> P: Fetch paper by ID
-  alt Paper found
-    P -->> PS: Paper
-  else No Provider match
-    PS -->> User: Paper not found
-  end
-
-  Note over PS, P: Global Cache flow (key provider-id:paper-id, TTL 1 week)
-
-  loop Per supporting Provider, until all pages retrieved
-    PS ->> P: Fetch citation page
-    P -->> PS: Citing publications page
-  end
-  PS ->> PS: Merge and deduplicate across Providers
-  PS ->> P: Fetch author list per citing publication
-  P -->> PS: Author lists
-
-  PS -->> CS: Data tree
-  
-  CS ->> CS: Classify citations
-
-  CS -->> User: Citation metrics (total, self/external, direct/co-author)<br/>+ cache cut-off date (when cached)<br/>+ debug details
-```
-
-- The User provides a paper unique ID
-- The Publication Service uses the *Provider* API connectors to fetch the publication that matches the ID
-  - If no Provider returns a match, the Service tells the User that the publication was not found
-- The Publication Service collects the publications that cite the selected publication (*citations*)
-  - The Service collects citations only from the Providers that support a "cited-by" API
-  - The Service queries each supporting Provider per the [Global Cache flow](#global-cache-flow) (key `provider-id:paper-id`, TTL 1 week)
-    - Citations are paginated. The Service fetches pages until it has all citations
-  - The Service merges the results from all Providers. It deduplicates them by matching normalised titles or external identifiers (e.g. DOI)
-    - The Service keeps the internal identifier of each Provider
-  - For every citing publication, the Service fetches the full author list (the classification below needs it)
-    - The Service normalises each author name
-- The Classification Service classifies each citation. It compares the author names of the citing and the cited publication
-  - No common authors - the citation is *external*
-  - Common authors found - the citation is a *self citation*
-    - The lead author of the citing publication is the same as the cited lead author - *direct* self citation
-    - The cited lead author appears in the citing publication's author list at a position > 1 - *co-author* self citation
-- The Classification Service aggregates the citation metrics and shows them to the User
-  - Total citations, broken down into *self* and *external*
-  - *Self* citations further broken down into *direct* and *co-author*
-  - When the system uses cached data, it shows the cut-off date with the metrics
-  - The output includes the debug details - the data that led to the metrics
-
-#### 2. Getting citation metrics for an author
+#### Getting citation metrics for an author
 
 ```mermaid
 sequenceDiagram
@@ -241,7 +182,9 @@ sequenceDiagram
     - Publications are paginated. The Service fetches pages until it has all publications
   - The Service merges the results from all Providers. It deduplicates them by matching normalised titles or external identifiers (e.g. DOI)
     - The Service keeps the internal identifier of each Provider
-- For each collected publication, the Service collects the citation metrics per the citation collection and classification steps of [scenario 1](#1-getting-citation-metrics-for-a-publication)
+- For each collected publication, the Service classifies its citations
+  - The Publication Service fetches the publications that cite it (*cited-by*) per the [Global Cache flow](#global-cache-flow) (key `provider-id:paper-id`, TTL 1 week), paginating until it has them all
+  - The Classification Service evaluates the author lists of each citing publication and the cited publication
 - The Classification Service aggregates the citation metrics across all publications of the author and shows them to the User
   - Total citations, broken down into *self* and *external*
   - *Self* citations further broken down into *direct* and *co-author*
@@ -380,10 +323,8 @@ flowchart TD
 To interact with the Providers, the Backend defines an interface that each Provider is expected to implement:
 
 - **searchAuthors(name: string)** - Search authors by name.
-- **searchPublications(name: string)** - Search publications by name.
-- **getAuthorById(id: string)** - Get an author by unique ID
-- **getAuthorPublications(authorId: string)** - Get the publications of an author.
-- **getPublication(id: string)** - Get a publication by unique ID or DOI, with its contributions (the author list with positions).
+- **getAuthorById(id: string)** - Get an author by unique ID.
+- **getAuthorPublications(authorId: string)** - Get the publications of an author, each with its contributions (the author list with positions).
 - **getCitations(pubId: string)** - Get the publications that cite a publication (*cited-by*), each with its contributions.
 
 A publication is returned together with its contributions. Where a Provider embeds the author list in the work record (e.g. OpenAlex's `authorships`), this costs no extra request; a Provider that exposes the author list separately fetches it internally.
@@ -395,7 +336,6 @@ A publication is returned together with its contributions. Where a Provider embe
 | searchAuthors               | Scrape only    | Yes      | No                | Yes              | No              | Yes       | Yes            | Yes (sub) | Unreliable  |
 | getAuthorById               | Scrape only    | Yes      | No                | Yes              | Partial (ORCID) | Yes       | Yes            | Yes (sub) | No (no IDs) |
 | getAuthorPublications       | Scrape only    | Yes      | Partial (by name) | Yes              | By ORCID        | Yes       | Yes            | Yes (sub) | Unreliable  |
-| getPublication              | Scrape only    | Yes      | Yes               | Yes              | Yes             | By search | Yes            | Yes (sub) | Unreliable  |
 | getCitations list           | Scrape only    | Yes      | No (count only)   | Yes              | Yes             | Yes       | No (external)  | Yes (sub) | Unreliable  |
 | contributions (author list) | Scrape only    | Yes      | Yes               | Yes (by order)   | Yes (by order)  | Partial   | Yes (by order) | Yes (sub) | Unreliable  |
 

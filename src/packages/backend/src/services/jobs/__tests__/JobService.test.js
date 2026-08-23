@@ -34,7 +34,7 @@ describe('JobService', () => {
     beforeEach(async () => {
       id = jobs.submitJob(async () =>
         'metrics', {
-        kind: 'paper',
+        kind: 'author',
         provider: 'openalex',
         subjectId: 'W1',
       });
@@ -45,7 +45,7 @@ describe('JobService', () => {
       expect(jobs.getJob(id)).toMatchObject({
         status: JOB_STATUS.DONE,
         result: 'metrics',
-        kind: 'paper',
+        kind: 'author',
         provider: 'openalex',
       });
     });
@@ -67,7 +67,7 @@ describe('JobService', () => {
       id = jobs.submitJob(async () => {
         throw new Error('boom');
       }, {
-        kind: 'paper',
+        kind: 'author',
         provider: 'openalex',
         subjectId: 'W1',
       });
@@ -105,7 +105,7 @@ describe('JobService', () => {
         queue.emit('completed');
       }, {
         queue: queue,
-        kind: 'paper',
+        kind: 'author',
         provider: 'openalex',
         subjectId: 'W1',
       });
@@ -123,7 +123,7 @@ describe('JobService', () => {
     beforeEach(async () => {
       jobs.submitJob(async () =>
         'first', {
-        kind: 'paper',
+        kind: 'author',
         provider: 'openalex',
         subjectId: 'W1',
       });
@@ -154,7 +154,7 @@ describe('JobService', () => {
       const first = new JobService(repo2);
       first.submitJob(() =>
         new Promise(() => {}), {
-        kind: 'paper',
+        kind: 'author',
         provider: 'openalex',
         subjectId: 'W1',
       });

@@ -57,7 +57,6 @@ describe('the HTTP API', () => {
   beforeEach(async () => {
     connector = {
       id: 'stub',
-      searchPublications: jest.fn().mockResolvedValue([createPublication('W1'), createPublication('W2')]),
       searchAuthors: jest.fn().mockResolvedValue([
         {
           authorId: 'A1',
@@ -66,9 +65,6 @@ describe('the HTTP API', () => {
           organisation: null,
         },
       ]),
-      getPublication: jest.fn().mockResolvedValue(
-        createPublication('W1'),
-      ),
       getCitations: jest.fn().mockResolvedValue([createPublication('W2')]),
       getAuthorById: jest.fn().mockResolvedValue({
         authorId: 'A1',
@@ -94,19 +90,26 @@ describe('the HTTP API', () => {
     new Promise((resolve) =>
       server.close(resolve)));
 
-  describe('GET /search/papers', () => {
+  describe('GET /search/authors', () => {
     it('tags each provider with its candidates', async () => {
-      const body = await (await fetch(`${base}/search/papers?q=cardinal`)).json();
+      const body = await (await fetch(`${base}/search/authors?q=roe`)).json();
       expect(body).toEqual([
         {
           provider: 'stub',
-          papers: [createPublication('W1'), createPublication('W2')],
+          authors: [
+            {
+              authorId: 'A1',
+              originalName: 'Jane Roe',
+              normalisedName: 'jane roe',
+              organisation: null,
+            },
+          ],
         },
       ]);
     });
 
     it('is 400 without a query', async () => {
-      expect((await fetch(`${base}/search/papers`)).status).toBe(400);
+      expect((await fetch(`${base}/search/authors`)).status).toBe(400);
     });
   });
 
@@ -133,7 +136,7 @@ describe('the HTTP API', () => {
     });
   });
 
-  describe('a paper metrics job', () => {
+  describe('an author metrics job', () => {
     let job;
 
     beforeEach(async () => {
@@ -141,9 +144,8 @@ describe('the HTTP API', () => {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          kind: 'paper',
           provider: 'stub',
-          id: 'W1',
+          id: 'A1',
         }),
       });
       const { requestId } = await submitted.json();
@@ -153,7 +155,7 @@ describe('the HTTP API', () => {
     it('finishes with the computed metrics', () => {
       expect(job).toMatchObject({
         status: JOB_STATUS.DONE,
-        result: { metrics: { total: 1 } },
+        result: { metrics: { total: 2 } },
       });
     });
 
@@ -162,9 +164,9 @@ describe('the HTTP API', () => {
       expect(body).toHaveLength(1);
       expect(body[0]).toMatchObject({
         status: JOB_STATUS.DONE,
-        kind: 'paper',
+        kind: 'author',
         provider: 'stub',
-        subjectId: 'W1',
+        subjectId: 'A1',
       });
     });
   });
@@ -218,7 +220,7 @@ describe('the HTTP API', () => {
         bareServer.close(resolve)));
 
     it('should answers API requests', async () => {
-      expect((await fetch(`${bareBase}/search/papers?q=cardinal`)).status).toBe(200);
+      expect((await fetch(`${bareBase}/search/authors?q=roe`)).status).toBe(200);
     });
 
     describe('when accept text/html is requested', () => {
@@ -241,10 +243,10 @@ describe('the HTTP API', () => {
     it('is 400 for an unknown provider', async () => {
       const response = await fetch(`${base}/jobs`, {
         method: 'POST',
+        headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          kind: 'paper',
           provider: 'nope',
-          id: 'W1',
+          id: 'A1',
         }),
       });
       expect(response.status).toBe(400);
@@ -261,7 +263,7 @@ describe('the HTTP API', () => {
 
   describe('CORS preflight', () => {
     it('answers OPTIONS with the allow-origin header', async () => {
-      const response = await fetch(`${base}/search/papers`, { method: 'OPTIONS' });
+      const response = await fetch(`${base}/search/authors`, { method: 'OPTIONS' });
       expect(response.headers.get('access-control-allow-origin')).toBe('*');
     });
   });

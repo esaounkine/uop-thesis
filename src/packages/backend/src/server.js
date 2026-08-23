@@ -56,9 +56,6 @@ export const buildServer = ({
     app.use(express.static(dist));
   }
 
-  app.get('/search/papers', async (req, res) => {
-    res.json(await searchController.searchPapers(req));
-  });
   app.get('/search/authors', async (req, res) => {
     res.json(await searchController.searchAuthors(req));
   });

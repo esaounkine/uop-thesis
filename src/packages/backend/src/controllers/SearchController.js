@@ -7,14 +7,6 @@ export class SearchController {
     this.providers = providers;
   }
 
-  searchPapers({ query }) {
-    return this.collect(
-      query,
-      'papers',
-      (provider, term) =>
-        provider.publications.searchByName(term));
-  }
-
   searchAuthors({ query }) {
     return this.collect(
       query,

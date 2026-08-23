@@ -9,7 +9,7 @@ const createJob = (id, patch = {}) => {
   return {
     id: id,
     provider: 'openalex',
-    kind: 'paper',
+    kind: 'author',
     subjectId: 'W1',
     status: JOB_STATUS.RUNNING,
     progress: null,

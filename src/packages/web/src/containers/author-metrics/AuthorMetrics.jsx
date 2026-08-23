@@ -26,7 +26,6 @@ export const AuthorMetrics = ({ provider, authorId }) => {
 
     try {
       const submitted = await submitJob({
-        kind: 'author',
         provider: provider,
         id: authorId,
       });

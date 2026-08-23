@@ -16,14 +16,6 @@ export class ProviderConnector {
   }
 
   /**
-   * @param {string} name
-   * @returns {Promise<Publication[]>}
-   */
-  searchPublications(name) {
-    throw new Error('not implemented');
-  }
-
-  /**
    * @param {string} id
    * @returns {Promise<Author>}
    */
@@ -36,14 +28,6 @@ export class ProviderConnector {
    * @returns {Promise<Publication[]>}
    */
   getAuthorPublications(authorId) {
-    throw new Error('not implemented');
-  }
-
-  /**
-   * @param {string} id - provider id or DOI
-   * @returns {Promise<Publication>}
-   */
-  getPublication(id) {
     throw new Error('not implemented');
   }
 

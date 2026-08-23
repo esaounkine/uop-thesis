@@ -92,67 +92,50 @@ export class ClassificationService {
   }
 
   /**
-   * Scenario 1: citation metrics for a paper, with per-citation debug details.
+   * Get publication citation metrics.
    *
-   * @param {string} pubId
-   * @returns {Promise<null | {
+   * @param {import('../../db/schema.js').Publication} publication
+   * @returns {Promise<{
    *   publication: import('../../db/schema.js').Publication,
    *   metrics: ReturnType<ClassificationService['aggregate']>,
    *   citations: {
    *     publication: import('../../db/schema.js').Publication,
    *     classification: string,
    *   }[],
-   * }>} null when the paper is not found
+   * }>}
    */
-  async getPaperMetrics(pubId) {
-    const tree = await this.publicationService.getCitationTree(pubId);
+  async getPublicationMetrics(publication) {
+    const citations = await this.publicationService
+      .getCitations(publication.pubId);
 
-    if (!tree) {
-      return null;
-    }
-
-    const classified = tree.citing.map((entry) => {
+    const classified = citations.map((citation) => {
       return {
-        publication: entry.publication,
-        contributions: entry.contributions,
+        publication: citation,
         classification: this.classifyCitation(
-          tree.citedContributions,
-          entry.contributions,
+          publication.contributions,
+          citation.contributions,
         ),
       };
     });
 
-    this.treeService?.save({
-      publication: tree.publication,
-      citedContributions: tree.citedContributions,
-      citing: classified,
-    });
-
-    const metrics = this.aggregate(
-      classified.map((entry) =>
-        entry.classification));
-
     return {
-      publication: tree.publication,
-      metrics: metrics,
-      citations: classified.map((entry) => {
-        return {
-          publication: entry.publication,
-          classification: entry.classification,
-        };
-      }),
+      publication: publication,
+      metrics: this.aggregate(
+        classified.map((entry) =>
+          entry.classification)),
+      citations: classified,
     };
   }
 
   /**
-   * Scenario 2: citation metrics for an author aggregated across all their papers.
+   * Get author citation metrics, aggregated across all their papers.
    *
    * @param {string} authorId
    * @returns {Promise<null | {
    *   author: import('../../db/schema.js').Author,
    *   metrics: ReturnType<ClassificationService['aggregate']>,
-   *   publications: Awaited<ReturnType<ClassificationService['getPaperMetrics']>>[],
-   *   fetch: { total: number, fetched: number, failed: number },
+   *   publications: Awaited<ReturnType<ClassificationService['getPublicationMetrics']>>[],
+   *   stats: { total: number, fetched: number, failed: number },
    * }>} null when the author is not found
    */
   async getAuthorMetrics(authorId) {
@@ -164,7 +147,7 @@ export class ClassificationService {
 
     const settled = await Promise.allSettled(
       tree.publications.map((publication) =>
-        this.getPaperMetrics(publication.pubId)),
+        this.getPublicationMetrics(publication)),
     );
     const publications = settled
       .filter((result) =>
@@ -173,6 +156,19 @@ export class ClassificationService {
         result.value);
     const failed = settled.filter((result) =>
       result.status === 'rejected').length;
+
+    publications.forEach((entry) =>
+      this.treeService?.save({
+        publication: entry.publication,
+        citedContributions: entry.publication.contributions,
+        citing: entry.citations.map((citation) => {
+          return {
+            publication: citation.publication,
+            contributions: citation.publication.contributions,
+            classification: citation.classification,
+          };
+        }),
+      }));
 
     const metrics = this.aggregate(
       publications.flatMap((entry) =>

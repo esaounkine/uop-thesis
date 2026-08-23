@@ -29,14 +29,20 @@ describe('wire', () => {
     beforeEach(async () => {
       const connectorMock = {
         id: 'stub',
-        getPublication: jest.fn().mockResolvedValue(createPublication('W1')),
+        getAuthorById: jest.fn().mockResolvedValue({
+          authorId: 'A1',
+          originalName: 'Jane Roe',
+          normalisedName: 'jane roe',
+          organisation: null,
+        }),
+        getAuthorPublications: jest.fn().mockResolvedValue([createPublication('W1')]),
         getCitations: jest.fn().mockResolvedValue([createPublication('W2')]),
       };
       const [provider] = wire({
         dbPath: ':memory:',
         connector: connectorMock,
       });
-      result = await provider.classification.getPaperMetrics('W1');
+      result = await provider.classification.getAuthorMetrics('A1');
     });
 
     it('builds a working provider for the injected connector', () => {
