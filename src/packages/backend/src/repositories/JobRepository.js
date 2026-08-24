@@ -1,6 +1,13 @@
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { jobs } from '../db/schema.js';
 import { JOB_STATUS } from '../constants/job-status.js';
+
+const buildConditions = (filters) =>
+  Object.entries(filters)
+    .filter(([, value]) =>
+      value !== undefined)
+    .map(([field, value]) =>
+      eq(jobs[field], value));
 
 /**
  * Persists jobs.
@@ -36,24 +43,27 @@ export class JobRepository {
   }
 
   /**
-   * @param {string} id
-   * @returns {Object | undefined}
+   * @param {Object} filters - fields to match
+   * @returns {Object | undefined} top matching job, ordered by `updatedAt` descending
    */
-  findJobById(id) {
+  findJob(filters) {
     return this.db
       .select()
       .from(jobs)
-      .where(eq(jobs.id, id))
+      .where(and(...buildConditions(filters)))
+      .orderBy(desc(jobs.updatedAt))
       .get();
   }
 
   /**
-   * @returns {Object[]} all jobs, newest first
+   * @param {Object} [filters] - fields to match
+   * @returns {Object[]} matching jobs, ordered by `createdAt` descending
    */
-  findAllJobs() {
+  findJobs(filters = {}) {
     return this.db
       .select()
       .from(jobs)
+      .where(and(...buildConditions(filters)))
       .orderBy(desc(jobs.createdAt))
       .all();
   }

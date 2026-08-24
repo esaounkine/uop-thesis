@@ -102,6 +102,7 @@ describe('the HTTP API', () => {
               originalName: 'Jane Roe',
               normalisedName: 'jane roe',
               organisation: null,
+              storedAt: null,
             },
           ],
         },
@@ -168,6 +169,22 @@ describe('the HTTP API', () => {
         provider: 'stub',
         subjectId: 'A1',
       });
+    });
+
+    it('tags the author with a stored cut-off date in search', async () => {
+      const [{ authors }] = await (await fetch(`${base}/search/authors?q=roe`)).json();
+      expect(authors[0].storedAt).toEqual(expect.any(String));
+    });
+
+    it('serves the stored metrics without contacting the provider', async () => {
+      const body = await (await fetch(`${base}/authors/stub/A1/metrics`)).json();
+      expect(body).toMatchObject({ metrics: { total: 2 } });
+    });
+  });
+
+  describe('stored metrics for an author with no job', () => {
+    it('is 404', async () => {
+      expect((await fetch(`${base}/authors/stub/A1/metrics`)).status).toBe(404);
     });
   });
 

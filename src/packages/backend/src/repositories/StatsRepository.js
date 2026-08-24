@@ -10,7 +10,7 @@ const TABLES = [
 ];
 
 /**
- * Get DB table counts.
+ * Get object counts per table.
  * Used for status reporting.
  */
 export class StatsRepository {

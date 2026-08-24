@@ -51,4 +51,17 @@ export class JobController {
   listJobs() {
     return this.jobs.listJobs();
   }
+
+  /**
+   * Get stored metrics graph for an author.
+   */
+  getStoredMetrics({ params }) {
+    const stored = this.jobs.getStored(params.provider, params.authorId);
+
+    if (!stored) {
+      throw new ApiError(404, 'no stored metrics for this author');
+    }
+
+    return stored.result;
+  }
 }

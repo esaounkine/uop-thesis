@@ -86,7 +86,22 @@ export class JobService {
    * @returns {Object | undefined}
    */
   getJob(id) {
-    return this.running.get(id) ?? this.jobRepository.findJobById(id);
+    return this.running.get(id) ?? this.jobRepository.findJob({ id: id });
+  }
+
+  /**
+   * Get stored result of the last completed job for a subject.
+   *
+   * @param {string} provider
+   * @param {string} subjectId
+   * @returns {Object | null}
+   */
+  getStored(provider, subjectId) {
+    return this.jobRepository.findJob({
+      provider: provider,
+      subjectId: subjectId,
+      status: JOB_STATUS.DONE,
+    }) ?? null;
   }
 
   /**
@@ -94,7 +109,7 @@ export class JobService {
    */
   listJobs() {
     return this.jobRepository
-      .findAllJobs()
+      .findJobs()
       .map((job) =>
         this.running.get(job.id) ?? job);
   }

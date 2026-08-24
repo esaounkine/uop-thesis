@@ -42,7 +42,7 @@ const cors = (req, res, next) => {
 export const buildServer = ({
   providers, jobs, stats, publicDir: dist = publicDir,
 }) => {
-  const searchController = new SearchController(providers);
+  const searchController = new SearchController(providers, jobs);
   const authorController = new AuthorController(providers);
   const jobController = new JobController(providers, jobs);
   const statusController = new StatusController(providers, stats);
@@ -61,6 +61,9 @@ export const buildServer = ({
   });
   app.get('/authors/:provider/:authorId/papers', async (req, res) => {
     res.json(await authorController.getAuthorPapers(req));
+  });
+  app.get('/authors/:provider/:authorId/metrics', (req, res) => {
+    res.json(jobController.getStoredMetrics(req));
   });
   app.post('/jobs', (req, res) => {
     res.status(202).json(jobController.submitJob(req));
