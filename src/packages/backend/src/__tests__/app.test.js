@@ -42,7 +42,7 @@ describe('wire', () => {
         dbPath: ':memory:',
         connector: connectorMock,
       });
-      result = await provider.metrics.getAuthorMetrics('A1');
+      result = await provider.metricsService.getAuthorMetrics('A1');
     });
 
     it('builds a working provider for the injected connector', () => {

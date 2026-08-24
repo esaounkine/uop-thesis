@@ -108,7 +108,7 @@ const runAuthorById = async (value) => {
   printSection(provider.id);
 
   const result = await withQueueProgressReport(provider.queue, () =>
-    provider.metrics.getAuthorMetrics(id), provider.id);
+    provider.metricsService.getAuthorMetrics(id), provider.id);
 
   if (!result) {
     console.error(`Author not found: ${id}`);
@@ -119,12 +119,12 @@ const runAuthorById = async (value) => {
 };
 
 const resolveAuthor = async (provider, name) => {
-  const candidates = await provider.authors.searchByName(name);
+  const candidates = await provider.authorService.searchByName(name);
 
   const shortlist = candidates.slice(0, CANDIDATE_LIMIT);
   const settled = await Promise.allSettled(
     shortlist.map(async (author) => {
-      const { publications } = await provider.authors.getPublications(
+      const { publications } = await provider.authorService.getPublications(
         author.authorId,
       );
 

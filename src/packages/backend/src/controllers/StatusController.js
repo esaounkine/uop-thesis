@@ -29,9 +29,9 @@ const getSystemStats = () => {
 };
 
 export class StatusController {
-  constructor(providers, stats) {
+  constructor(providers, statsRepository) {
     this.providers = providers;
-    this.stats = stats;
+    this.statsRepository = statsRepository;
   }
 
   async getStatus() {
@@ -45,7 +45,7 @@ export class StatusController {
           apiKey: maskValue(spec.apiKey),
           requestsPerSecond: spec.requestsPerSecond,
           quota: await this.fetchQuota(provider),
-          records: this.stats.countByProvider(provider.id),
+          records: this.statsRepository.countByProvider(provider.id),
         };
       })),
       system: getSystemStats(),

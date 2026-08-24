@@ -26,7 +26,7 @@ const createService = ({
     authorService: authorServiceMock,
     publicationService: publicationServiceMock,
     classificationService: new ClassificationService(),
-    citationGraph: citationGraphMock,
+    citationGraphService: citationGraphMock,
   });
 
 describe('MetricsService', () => {

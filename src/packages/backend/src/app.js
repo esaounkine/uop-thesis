@@ -18,9 +18,9 @@ import { AuthorService } from './services/author/AuthorService.js';
 import { MetricsService } from './services/metrics/MetricsService.js';
 
 const createProvider = ({
-  id, queue, connector, citationGraph,
+  id, queue, connector, citationGraphService,
 }) => {
-  const authors = new AuthorService({
+  const authorService = new AuthorService({
     connector: connector,
   });
 
@@ -28,14 +28,14 @@ const createProvider = ({
     id: id,
     queue: queue,
     connector: connector,
-    authors: authors,
-    metrics: new MetricsService({
-      authorService: authors,
+    authorService: authorService,
+    metricsService: new MetricsService({
+      authorService: authorService,
       publicationService: new PublicationService({
         connector: connector,
       }),
       classificationService: new ClassificationService(),
-      citationGraph: citationGraph,
+      citationGraphService: citationGraphService,
     }),
   };
 };
@@ -48,7 +48,7 @@ const createProvider = ({
  * @param {Object} [args]
  * @param {string} [args.dbPath]
  * @param {import('./connectors/ProviderConnector.js').ProviderConnector} [args.connector]
- * @returns {{ id: string, queue, connector, authors: AuthorService, metrics: MetricsService }[]}
+ * @returns {{ id: string, queue, connector, authorService: AuthorService, metricsService: MetricsService }[]}
  */
 export const wire = ({
   dbPath = dbFile, connector,
@@ -65,7 +65,7 @@ export const wire = ({
   const { db } = new DbClient(dbPath);
   migrate(db, { migrationsFolder: migrationsDir });
 
-  const cache = new CacheRepository(db);
+  const cacheRepository = new CacheRepository(db);
   const repos = {
     publicationRepository: new PublicationRepository(db),
     authorRepository: new AuthorRepository(db),
@@ -83,10 +83,10 @@ export const wire = ({
       id: id,
       queue: queue,
       connector: spec.create(new HttpClient({
-        cache: cache,
+        cacheRepository: cacheRepository,
         queue: queue,
       })),
-      citationGraph: new CitationGraphService({
+      citationGraphService: new CitationGraphService({
         provider: id,
         ...repos,
       }),

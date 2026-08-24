@@ -9,18 +9,18 @@ export class MetricsService {
    * @param {import('../author/AuthorService.js').AuthorService} args.authorService
    * @param {import('../publication/PublicationService.js').PublicationService} args.publicationService
    * @param {import('../classification/ClassificationService.js').ClassificationService} args.classificationService
-   * @param {import('../citation-graph/CitationGraphService.js').CitationGraphService} [args.citationGraph]
+   * @param {import('../citation-graph/CitationGraphService.js').CitationGraphService} [args.citationGraphService]
    */
   constructor({
     authorService,
     publicationService,
     classificationService,
-    citationGraph,
+    citationGraphService,
   }) {
     this.authorService = authorService;
     this.publicationService = publicationService;
     this.classificationService = classificationService;
-    this.citationGraph = citationGraph;
+    this.citationGraphService = citationGraphService;
   }
 
   /**
@@ -54,7 +54,7 @@ export class MetricsService {
       result.status === 'rejected').length;
 
     publications.forEach((entry) =>
-      this.citationGraph?.save(entry));
+      this.citationGraphService?.save(entry));
 
     return {
       author: author.author,

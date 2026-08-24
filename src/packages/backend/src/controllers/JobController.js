@@ -6,9 +6,9 @@ import { ApiError } from '../lib/api.js';
  * and fetched asynchronously.
  */
 export class JobController {
-  constructor(providers, jobs) {
+  constructor(providers, jobService) {
     this.providers = providers;
-    this.jobs = jobs;
+    this.jobService = jobService;
   }
 
   submitJob({ body }) {
@@ -22,9 +22,9 @@ export class JobController {
       throw new ApiError(400, 'body must contain `provider` and `id`');
     }
 
-    const requestId = this.jobs.submitJob(
+    const requestId = this.jobService.submitJob(
       () =>
-        provider.metrics.getAuthorMetrics(id),
+        provider.metricsService.getAuthorMetrics(id),
       {
         queue: provider.queue,
         kind: 'author',
@@ -39,7 +39,7 @@ export class JobController {
   }
 
   getJob({ params }) {
-    const job = this.jobs.getJob(params.id);
+    const job = this.jobService.getJob(params.id);
 
     if (!job) {
       throw new ApiError(404, 'job not found');
@@ -49,14 +49,14 @@ export class JobController {
   }
 
   listJobs() {
-    return this.jobs.listJobs();
+    return this.jobService.listJobs();
   }
 
   /**
    * Get stored metrics graph for an author.
    */
   getStoredMetrics({ params }) {
-    const stored = this.jobs.getStored(params.provider, params.authorId);
+    const stored = this.jobService.getStored(params.provider, params.authorId);
 
     if (!stored) {
       throw new ApiError(404, 'no stored metrics for this author');

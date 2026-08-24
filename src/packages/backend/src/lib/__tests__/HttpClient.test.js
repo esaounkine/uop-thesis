@@ -173,11 +173,11 @@ describe('HttpClient', () => {
     });
 
     describe('when a cache is provided', () => {
-      let cache;
+      let cacheRepository;
       let fetchImplMock;
 
       beforeEach(() => {
-        cache = createCache();
+        cacheRepository = createCache();
         fetchImplMock = jest.fn()
           .mockResolvedValueOnce(createOkResponse({ n: 1 }))
           .mockResolvedValueOnce(createOkResponse({ n: 2 }));
@@ -189,7 +189,7 @@ describe('HttpClient', () => {
         beforeEach(async () => {
           result = await new HttpClient({
             fetchImpl: fetchImplMock,
-            cache: cache,
+            cacheRepository: cacheRepository,
           }).getJson('https://api.test/works?a=1', 60_000);
         });
 
@@ -204,7 +204,7 @@ describe('HttpClient', () => {
         beforeEach(async () => {
           const client = new HttpClient({
             fetchImpl: fetchImplMock,
-            cache: cache,
+            cacheRepository: cacheRepository,
           });
           await client.getJson('https://api.test/works?a=1&b=2', 60_000);
           // Same query, params in a different order -> same normalised key.
@@ -226,7 +226,7 @@ describe('HttpClient', () => {
         beforeEach(async () => {
           const client = new HttpClient({
             fetchImpl: fetchImplMock,
-            cache: cache,
+            cacheRepository: cacheRepository,
           });
           // Seed a fresh entry, then request the same url live.
           await client.getJson('https://api.test/works?a=1', 60_000);

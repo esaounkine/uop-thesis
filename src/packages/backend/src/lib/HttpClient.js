@@ -45,18 +45,18 @@ export class HttpClient {
   /**
    * @param {Object} [args]
    * @param {typeof fetch} [args.fetchImpl]
-   * @param {import('../repositories/CacheRepository.js').CacheRepository} [args.cache]
+   * @param {import('../repositories/CacheRepository.js').CacheRepository} [args.cacheRepository]
    * @param {import('./RequestQueue.js').RequestQueue} [args.queue] - paces requests
    * @param {import('./RetryStrategy.js').RetryStrategy} [args.retryStrategy] - overrides the default HTTP retry strategy
    */
   constructor({
     fetchImpl = fetch,
-    cache,
+    cacheRepository,
     queue,
     retryStrategy = defaultRetryStrategy,
   } = {}) {
     this.fetch = fetchImpl;
-    this.cache = cache;
+    this.cacheRepository = cacheRepository;
     this.queue = queue;
     this.retryStrategy = retryStrategy;
   }
@@ -72,7 +72,7 @@ export class HttpClient {
     const key = createCacheKeyFromUrl(url);
 
     if (ttl) {
-      const hit = this.cache?.get(key, ttl);
+      const hit = this.cacheRepository?.get(key, ttl);
 
       if (hit) {
         return {
@@ -86,7 +86,7 @@ export class HttpClient {
       this.runFetch(url, headers));
 
     const data = await response.json();
-    const fetchedAt = this.cache?.put(key, data) ?? new Date();
+    const fetchedAt = this.cacheRepository?.put(key, data) ?? new Date();
 
     return {
       data: data,

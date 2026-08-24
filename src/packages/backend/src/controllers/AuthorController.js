@@ -16,7 +16,8 @@ export class AuthorController {
       throw new ApiError(404, `unknown provider: ${params.provider}`);
     }
 
-    const result = await provider.authors.getPublications(params.authorId);
+    const result = await provider.authorService
+      .getPublications(params.authorId);
 
     if (!result) {
       throw new ApiError(404, `author not found: ${params.authorId}`);
