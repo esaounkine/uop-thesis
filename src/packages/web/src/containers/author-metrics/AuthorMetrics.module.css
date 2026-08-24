@@ -2,6 +2,24 @@
   margin-top: 0.25rem;
 }
 
+.Header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.Title {
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.AsOf {
+  flex: 1;
+  font-size: 0.8em;
+  color: var(--pico-muted-color, #666);
+}
+
 .AuthorMetrics button {
   padding: 0.1rem 0.5rem;
   font-size: 0.8em;

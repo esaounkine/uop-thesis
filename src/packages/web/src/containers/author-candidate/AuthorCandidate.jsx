@@ -39,7 +39,10 @@ export const AuthorCandidate = ({ provider, author, showPapers }) => {
         organisation={author.organisation}
         originalName={author.originalName} />
 
-      <AuthorMetrics provider={provider} authorId={author.authorId} />
+      <AuthorMetrics
+        provider={provider}
+        authorId={author.authorId}
+        storedAt={author.storedAt} />
 
       {showPapers &&
         <>

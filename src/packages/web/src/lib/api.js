@@ -30,6 +30,9 @@ export const searchAuthors = (query) =>
 export const getAuthorPapers = (provider, authorId) =>
   get(`/authors/${encodeURIComponent(provider)}/${encodeURIComponent(authorId)}/papers`);
 
+export const getStoredMetrics = (provider, authorId) =>
+  get(`/authors/${encodeURIComponent(provider)}/${encodeURIComponent(authorId)}/metrics`);
+
 export const submitJob = (job) =>
   post('/jobs', job);
 

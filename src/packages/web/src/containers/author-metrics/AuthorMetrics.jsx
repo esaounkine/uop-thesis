@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { getJob, submitJob } from '../../lib/api.js';
+import { getJob, getStoredMetrics, submitJob } from '../../lib/api.js';
 import styles from './AuthorMetrics.module.css';
 import { Loader } from '../../components/loader/Loader.jsx';
 import { ErrorMessage } from '../../components/error-message/ErrorMessage.jsx';
@@ -17,12 +17,43 @@ const JOB_STATUS = {
   DONE: 'done',
 };
 
-export const AuthorMetrics = ({ provider, authorId }) => {
-  const [requestId, setRequestId] = useState(null);
-  const [state, setState] = useState({ status: 'idle' });
+const formatDate = (iso) =>
+  new Date(iso).toISOString().split('T')[0];
 
-  const start = async () => {
-    setState({ status: 'running' });
+export const AuthorMetrics = ({ provider, authorId, storedAt }) => {
+  const [state, setState] = useState(storedAt
+    ? { status: 'loading' }
+    : { status: 'idle' });
+  const [fetchedAt, setFetchedAt] = useState(storedAt ?? null);
+  const [requestId, setRequestId] = useState(null);
+  const [progress, setProgress] = useState(null);
+
+  useEffect(() => {
+    if (!storedAt) {
+      return undefined;
+    }
+
+    let stale = false;
+
+    getStoredMetrics(provider, authorId)
+      .then((result) => {
+        if (!stale) {
+          setState({ status: 'ready', result: result });
+        }
+      })
+      .catch((error) => {
+        if (!stale) {
+          setState({ status: 'error', error: error.message });
+        }
+      });
+
+    return () => {
+      stale = true;
+    };
+  }, [provider, authorId, storedAt]);
+
+  const refresh = async () => {
+    setProgress({ done: 0, queued: 0, failed: 0 });
 
     try {
       const submitted = await submitJob({
@@ -31,10 +62,8 @@ export const AuthorMetrics = ({ provider, authorId }) => {
       });
       setRequestId(submitted.requestId);
     } catch (error) {
-      setState({
-        status: 'error',
-        error: error.message,
-      });
+      setProgress(null);
+      setState({ status: 'error', error: error.message });
     }
   };
 
@@ -55,32 +84,28 @@ export const AuthorMetrics = ({ provider, authorId }) => {
         }
 
         if (job.status === JOB_STATUS.DONE) {
-          setState({
-            status: 'done',
-            result: job.result,
-          });
+          setState({ status: 'ready', result: job.result });
+          console.log(job.result)
+          setFetchedAt(new Date().toISOString());
+          setProgress(null);
+          setRequestId(null);
           return;
         }
 
         if (job.status !== JOB_STATUS.RUNNING) {
-          setState({
-            status: 'error',
-            error: job.error ?? `job ${job.status}`,
-          });
+          setState({ status: 'error', error: job.error ?? `job ${job.status}` });
+          setProgress(null);
+          setRequestId(null);
           return;
         }
 
-        setState({
-          status: 'running',
-          progress: job.progress,
-        });
+        setProgress(job.progress);
         timer = setTimeout(check, POLL_MS);
       } catch (error) {
         if (!stale) {
-          setState({
-            status: 'error',
-            error: error.message,
-          });
+          setState({ status: 'error', error: error.message });
+          setProgress(null);
+          setRequestId(null);
         }
       }
     };
@@ -93,26 +118,28 @@ export const AuthorMetrics = ({ provider, authorId }) => {
     };
   }, [requestId]);
 
+  const running = progress !== null;
+
   return (
     <div className={styles.AuthorMetrics}>
-      {state.status === 'idle' &&
-        <button type="button" onClick={start}>
-          Get citation metrics
+      {state.status === 'idle' && !running &&
+        <button type="button" onClick={refresh}>
+          Get metrics
         </button>
       }
-      {state.status === 'running' &&
-        <Loader
-          label={`Fetching metrics... (${state.progress?.done ?? 0} done / ${state.progress?.queued ?? 0} queued / ${state.progress?.failed ?? 0} failed)`} />
-      }
-      {state.status === 'error' &&
-        <ErrorMessage title="Fetching metrics failed" message={state.error} />
-      }
-      {state.status === 'done' &&
+
+      {state.status === 'ready' &&
         <>
+          <div className={styles.Header}>
+            <span className={styles.Title}>Citation metrics</span>
+            <span className={styles.AsOf}>data as of {formatDate(fetchedAt)}</span>
+            <button type="button" onClick={refresh} disabled={running}>
+              {running ? 'Refreshing…' : 'Refresh'}
+            </button>
+          </div>
           <Metrics
             metrics={state.result.metrics}
-            stats={state.result.stats}
-          />
+            stats={state.result.stats} />
           <details className={styles.DebugDetails}>
             <summary>Citation graph</summary>
             <Suspense fallback={<Loader label="Loading graph..." />}>
@@ -126,6 +153,19 @@ export const AuthorMetrics = ({ provider, authorId }) => {
             <pre>{JSON.stringify(state.result, null, 2)}</pre>
           </details>
         </>
+      }
+
+      {state.status === 'loading' &&
+        <Loader label="Loading stored metrics..." />
+      }
+
+      {running &&
+        <Loader
+          label={`Fetching from ${provider}… (${progress.done ?? 0} done / ${progress.queued ?? 0} queued / ${progress.failed ?? 0} failed)`} />
+      }
+
+      {state.status === 'error' &&
+        <ErrorMessage title="Fetching metrics failed" message={state.error} />
       }
     </div>
   );
