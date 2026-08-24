@@ -17,25 +17,31 @@ export class ProviderConnector {
 
   /**
    * @param {string} id
+   * @param {Object} [options]
+   * @param {boolean} [options.cache] - true = use, false = skip the cache
    * @returns {Promise<Author>}
    */
-  getAuthorById(id) {
+  getAuthorById(id, options) {
     throw new Error('not implemented');
   }
 
   /**
    * @param {string} authorId
+   * @param {Object} [options]
+   * @param {boolean} [options.cache] - true = use, false = skip the cache
    * @returns {Promise<Publication[]>}
    */
-  getAuthorPublications(authorId) {
+  getAuthorPublications(authorId, options) {
     throw new Error('not implemented');
   }
 
   /**
    * @param {string} pubId
+   * @param {Object} [options]
+   * @param {boolean} [options.cache] - true = use, false = skip the cache
    * @returns {Promise<Publication[]>} the publications that cite pubId
    */
-  getCitations(pubId) {
+  getCitations(pubId, options) {
     throw new Error('not implemented');
   }
 

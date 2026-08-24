@@ -71,29 +71,44 @@ export class OpenAlexConnector extends ProviderConnector {
 
   /**
    * @see https://github.com/ourresearch/openalex-docs/blob/main/api-entities/authors/get-a-single-author.md
+   * @param {string} id
+   * @param {Object} [options]
+   * @param {boolean} [options.cache] - true = use, false = skip the cache
    */
-  async getAuthorById(id) {
-    const author = await this.fetchJson(`/authors/${id}`, {}, directFetchTtlMs);
+  async getAuthorById(id, { cache = true } = {}) {
+    const author = await this.fetchJson(`/authors/${id}`, {}, cache
+      ? directFetchTtlMs
+      : null);
     return this.toAuthor(author);
   }
 
   /**
    * @see https://github.com/ourresearch/openalex-docs/blob/main/api-entities/works/filter-works.md
+   * @param {string} authorId
+   * @param {Object} [options]
+   * @param {boolean} [options.cache] - true = use, false = skip the cache
    */
-  async getAuthorPublications(authorId) {
+  async getAuthorPublications(authorId, { cache = true } = {}) {
     return this.fetchAllPages('/works', {
       filter: `author.id:${authorId}`,
-    }, searchTtlMs, (work) =>
+    }, cache
+      ? searchTtlMs
+      : null, (work) =>
       this.toPublication(work));
   }
 
   /**
    * @see https://github.com/ourresearch/openalex-docs/blob/main/api-entities/works/filter-works.md
+   * @param {string} pubId
+   * @param {Object} [options]
+   * @param {boolean} [options.cache] - true = use, false = skip the cache
    */
-  async getCitations(pubId) {
+  async getCitations(pubId, { cache = true } = {}) {
     return this.fetchAllPages('/works', {
       filter: `cites:${pubId}`,
-    }, searchTtlMs, (work) =>
+    }, cache
+      ? searchTtlMs
+      : null, (work) =>
       this.toPublication(work));
   }
 

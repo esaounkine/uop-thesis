@@ -31,5 +31,20 @@ describe('PublicationService', () => {
       expect(citations.map((publication) =>
         publication.pubId)).toEqual(['W2', 'W3']);
     });
+
+    describe('when cache is disabled', () => {
+      let connectorMock;
+
+      beforeEach(async () => {
+        connectorMock = { getCitations: jest.fn().mockResolvedValue([]) };
+        await new PublicationService({
+          connector: connectorMock,
+        }).getCitations('W1', { cache: false });
+      });
+
+      it('forwards the flag to the connector', () => {
+        expect(connectorMock.getCitations).toHaveBeenCalledWith('W1', { cache: false });
+      });
+    });
   });
 });

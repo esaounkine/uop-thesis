@@ -199,6 +199,35 @@ describe('MetricsService', () => {
       });
     });
 
+    describe('when cache is disabled', () => {
+      let authorServiceMock;
+      let publicationServiceMock;
+
+      beforeEach(async () => {
+        authorServiceMock = {
+          getPublications: jest.fn().mockResolvedValue({
+            author: { authorId: 'A1' },
+            publications: [publication('W1')],
+          }),
+        };
+        publicationServiceMock = {
+          getCitations: jest.fn().mockResolvedValue([]),
+        };
+        await createService({
+          authorServiceMock: authorServiceMock,
+          publicationServiceMock: publicationServiceMock,
+        }).getAuthorMetrics('A1', { cache: false });
+      });
+
+      it('forwards the flag to the publications fetch', () => {
+        expect(authorServiceMock.getPublications).toHaveBeenCalledWith('A1', { cache: false });
+      });
+
+      it('forwards the flag to the citations fetch', () => {
+        expect(publicationServiceMock.getCitations).toHaveBeenCalledWith('W1', { cache: false });
+      });
+    });
+
     describe('when the author is not found', () => {
       let result;
 

@@ -14,9 +14,11 @@ export class PublicationService {
 
   /**
    * @param {string} pubId
+   * @param {Object} [options]
+   * @param {boolean} [options.cache] - true = use, false = skip the cache
    * @returns {Promise<Publication[]>} the publications that cite pubId
    */
-  async getCitations(pubId) {
-    return this.connector.getCitations(pubId);
+  async getCitations(pubId, { cache = true } = {}) {
+    return this.connector.getCitations(pubId, { cache: cache });
   }
 }

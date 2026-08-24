@@ -27,6 +27,8 @@ export class MetricsService {
    * Get citation metrics of an author.
    *
    * @param {string} authorId
+   * @param {Object} [options]
+   * @param {boolean} [options.cache] - true = use, false = skip the cache
    * @returns {Promise<null | {
    *   author: import('../../db/schema.js').Author,
    *   metrics: ReturnType<import('../classification/ClassificationService.js').ClassificationService['getMetrics']>,
@@ -34,8 +36,9 @@ export class MetricsService {
    *   stats: { total: number, fetched: number, failed: number },
    * }>} null when the author is not found
    */
-  async getAuthorMetrics(authorId) {
-    const author = await this.authorService.getPublications(authorId);
+  async getAuthorMetrics(authorId, { cache = true } = {}) {
+    const author = await this.authorService
+      .getPublications(authorId, { cache: cache });
 
     if (!author) {
       return null;
@@ -43,7 +46,7 @@ export class MetricsService {
 
     const settled = await Promise.allSettled(
       author.publications.map((publication) =>
-        this.getPublicationMetrics(publication)),
+        this.getPublicationMetrics(publication, { cache: cache })),
     );
     const publications = settled
       .filter((result) =>
@@ -76,15 +79,17 @@ export class MetricsService {
    * Get citation metrics of a publication.
    *
    * @param {Publication} publication
+   * @param {Object} [options]
+   * @param {boolean} [options.cache] - true = use, false = skip the cache
    * @returns {Promise<{
    *   publication: Publication,
    *   metrics: ReturnType<import('../classification/ClassificationService.js').ClassificationService['getMetrics']>,
    *   citations: { publication: Publication, classification: string }[],
    * }>}
    */
-  async getPublicationMetrics(publication) {
+  async getPublicationMetrics(publication, { cache = true } = {}) {
     const citations = await this.publicationService
-      .getCitations(publication.pubId);
+      .getCitations(publication.pubId, { cache: cache });
 
     const classified = citations.map((citation) => {
       return {

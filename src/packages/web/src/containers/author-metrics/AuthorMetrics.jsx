@@ -52,13 +52,14 @@ export const AuthorMetrics = ({ provider, authorId, storedAt }) => {
     };
   }, [provider, authorId, storedAt]);
 
-  const refresh = async () => {
+  const fetchMetrics = async (cache) => {
     setProgress({ done: 0, queued: 0, failed: 0 });
 
     try {
       const submitted = await submitJob({
         provider: provider,
         id: authorId,
+        cache: cache,
       });
       setRequestId(submitted.requestId);
     } catch (error) {
@@ -123,7 +124,8 @@ export const AuthorMetrics = ({ provider, authorId, storedAt }) => {
   return (
     <div className={styles.AuthorMetrics}>
       {state.status === 'idle' && !running &&
-        <button type="button" onClick={refresh}>
+        <button type="button" onClick={() =>
+          fetchMetrics(true)}>
           Get metrics
         </button>
       }
@@ -133,7 +135,8 @@ export const AuthorMetrics = ({ provider, authorId, storedAt }) => {
           <div className={styles.Header}>
             <span className={styles.Title}>Citation metrics</span>
             <span className={styles.AsOf}>data as of {formatDate(fetchedAt)}</span>
-            <button type="button" onClick={refresh} disabled={running}>
+            <button type="button" onClick={() =>
+              fetchMetrics(false)} disabled={running}>
               {running ? 'Refreshing…' : 'Refresh'}
             </button>
           </div>

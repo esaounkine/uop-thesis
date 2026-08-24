@@ -26,19 +26,23 @@ export class AuthorService {
 
   /**
    * @param {string} authorId
+   * @param {Object} [options]
+   * @param {boolean} [options.cache] - true = use, false = skip the cache
    * @returns {Promise<null | {
    *   author: Author,
    *   publications: Publication[],
    * }>} null when the author is not found
    */
-  async getPublications(authorId) {
-    const author = await this.connector.getAuthorById(authorId);
+  async getPublications(authorId, { cache = true } = {}) {
+    const author = await this.connector
+      .getAuthorById(authorId, { cache: cache });
 
     if (!author) {
       return null;
     }
 
-    const publications = await this.connector.getAuthorPublications(authorId);
+    const publications = await this.connector
+      .getAuthorPublications(authorId, { cache: cache });
 
     return {
       author: author,

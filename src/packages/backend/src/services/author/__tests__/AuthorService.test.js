@@ -74,6 +74,27 @@ describe('AuthorService', () => {
       });
     });
 
+    describe('when cache is disabled', () => {
+      let connectorMock;
+
+      beforeEach(async () => {
+        connectorMock = createConnector({
+          author: createAuthor('A1'),
+        });
+        await new AuthorService({
+          connector: connectorMock,
+        }).getPublications('A1', { cache: false });
+      });
+
+      it('forwards the flag to the author fetch', () => {
+        expect(connectorMock.getAuthorById).toHaveBeenCalledWith('A1', { cache: false });
+      });
+
+      it('forwards the flag to the publications fetch', () => {
+        expect(connectorMock.getAuthorPublications).toHaveBeenCalledWith('A1', { cache: false });
+      });
+    });
+
     describe('when the author is not found', () => {
       let result;
 

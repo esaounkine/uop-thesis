@@ -171,6 +171,54 @@ describe('OpenAlexConnector', () => {
     });
   });
 
+  describe('when cache is disabled', () => {
+    let getJsonMock;
+    let connector;
+
+    beforeEach(() => {
+      getJsonMock = jest.fn().mockResolvedValue({
+        data: {
+          results: [],
+          meta: { next_cursor: null },
+        },
+        fetchedAt: new Date(),
+      });
+      connector = new OpenAlexConnector({
+        httpClient: { getJson: getJsonMock },
+        baseUrl: 'https://api.openalex.org',
+        apiKey: undefined,
+      });
+    });
+
+    it('skips the cache read for the author', async () => {
+      getJsonMock.mockResolvedValueOnce({
+        data: {
+          id: 'https://openalex.org/A1',
+          display_name: 'Jane Roe',
+        },
+        fetchedAt: new Date(),
+      });
+      await connector.getAuthorById('A1', { cache: false });
+
+      expect(getJsonMock)
+        .toHaveBeenCalledWith(expect.any(URL), null, expect.anything());
+    });
+
+    it('skips the cache read for the author publications', async () => {
+      await connector.getAuthorPublications('A1', { cache: false });
+
+      expect(getJsonMock)
+        .toHaveBeenCalledWith(expect.any(URL), null, expect.anything());
+    });
+
+    it('skips the cache read for the citations', async () => {
+      await connector.getCitations('W1', { cache: false });
+
+      expect(getJsonMock)
+        .toHaveBeenCalledWith(expect.any(URL), null, expect.anything());
+    });
+  });
+
   describe('searchAuthors', () => {
     describe('when authors match', () => {
       let authors;

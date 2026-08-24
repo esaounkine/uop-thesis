@@ -166,6 +166,51 @@ describe('SemanticScholarConnector', () => {
     });
   });
 
+  describe('when cache is disabled', () => {
+    let getJsonMock;
+    let connector;
+
+    beforeEach(() => {
+      getJsonMock = jest.fn().mockResolvedValue({
+        data: { data: [] },
+        fetchedAt: new Date(),
+      });
+      connector = new SemanticScholarConnector({
+        httpClient: { getJson: getJsonMock },
+        baseUrl: 'https://api.semanticscholar.org/graph/v1',
+        apiKey: undefined,
+      });
+    });
+
+    it('skips the cache read for the author', async () => {
+      getJsonMock.mockResolvedValueOnce({
+        data: {
+          authorId: 'a1',
+          name: 'Jane Roe',
+        },
+        fetchedAt: new Date(),
+      });
+      await connector.getAuthorById('a1', { cache: false });
+
+      expect(getJsonMock)
+        .toHaveBeenCalledWith(expect.any(URL), null, expect.anything());
+    });
+
+    it('skips the cache read for the author publications', async () => {
+      await connector.getAuthorPublications('a1', { cache: false });
+
+      expect(getJsonMock)
+        .toHaveBeenCalledWith(expect.any(URL), null, expect.anything());
+    });
+
+    it('skips the cache read for the citations', async () => {
+      await connector.getCitations('p1', { cache: false });
+
+      expect(getJsonMock)
+        .toHaveBeenCalledWith(expect.any(URL), null, expect.anything());
+    });
+  });
+
   describe('searchAuthors', () => {
     describe('when authors match', () => {
       let authors;

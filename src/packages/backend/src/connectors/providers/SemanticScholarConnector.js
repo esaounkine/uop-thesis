@@ -72,31 +72,46 @@ export class SemanticScholarConnector extends ProviderConnector {
 
   /**
    * @see https://api.semanticscholar.org/api-docs/#tag/Author-Data/operation/get_graph_get_author
+   * @param {string} id
+   * @param {Object} [options]
+   * @param {boolean} [options.cache] - true = use, false = skip the cache
    */
-  async getAuthorById(id) {
+  async getAuthorById(id, { cache = true } = {}) {
     const author = await this.fetchJson(`/author/${id}`, {
       fields: SemanticScholarConnector.AUTHOR_FIELDS,
-    }, directFetchTtlMs);
+    }, cache
+      ? directFetchTtlMs
+      : null);
     return this.toAuthor(author);
   }
 
   /**
    * @see https://api.semanticscholar.org/api-docs/#tag/Author-Data/operation/get_graph_get_author_papers
+   * @param {string} authorId
+   * @param {Object} [options]
+   * @param {boolean} [options.cache] - true = use, false = skip the cache
    */
-  async getAuthorPublications(authorId) {
+  async getAuthorPublications(authorId, { cache = true } = {}) {
     return this.fetchAllPages(`/author/${authorId}/papers`, {
       fields: SemanticScholarConnector.PAPER_FIELDS,
-    }, searchTtlMs, (paper) =>
+    }, cache
+      ? searchTtlMs
+      : null, (paper) =>
       this.toPublication(paper));
   }
 
   /**
    * @see https://api.semanticscholar.org/api-docs/#tag/Paper-Data/operation/get_graph_get_paper_citations
+   * @param {string} pubId
+   * @param {Object} [options]
+   * @param {boolean} [options.cache] - true = use, false = skip the cache
    */
-  async getCitations(pubId) {
+  async getCitations(pubId, { cache = true } = {}) {
     const citing = await this.fetchAllPages(`/paper/${pubId}/citations`, {
       fields: SemanticScholarConnector.PAPER_FIELDS,
-    }, searchTtlMs, (item) =>
+    }, cache
+      ? searchTtlMs
+      : null, (item) =>
       item.citingPaper);
     // paperId might be `null` if the paper does not belong to the Semantic Scholar corpus.
     // We just drop them.

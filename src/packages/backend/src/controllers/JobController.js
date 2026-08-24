@@ -13,7 +13,7 @@ export class JobController {
 
   submitJob({ body }) {
     const {
-      provider: providerId, id,
+      provider: providerId, id, cache = true,
     } = body ?? {};
     const provider = this.providers.find((each) =>
       each.id === providerId);
@@ -24,7 +24,7 @@ export class JobController {
 
     const requestId = this.jobService.submitJob(
       () =>
-        provider.metricsService.getAuthorMetrics(id),
+        provider.metricsService.getAuthorMetrics(id, { cache: cache }),
       {
         queue: provider.queue,
         kind: 'author',
