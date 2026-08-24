@@ -90,21 +90,6 @@ export class JobService {
   }
 
   /**
-   * Get stored result of the last completed job for a subject.
-   *
-   * @param {string} provider
-   * @param {string} subjectId
-   * @returns {Object | null}
-   */
-  getStored(provider, subjectId) {
-    return this.jobRepository.findJob({
-      provider: provider,
-      subjectId: subjectId,
-      status: JOB_STATUS.DONE,
-    }) ?? null;
-  }
-
-  /**
    * @returns {Object[]} all jobs, newest first
    */
   listJobs() {

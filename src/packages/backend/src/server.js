@@ -9,6 +9,7 @@ import { DbClient } from './db/DbClient.js';
 import { JobRepository } from './repositories/JobRepository.js';
 import { StatsRepository } from './repositories/StatsRepository.js';
 import { JobService } from './services/jobs/JobService.js';
+import { StoredMetricsService } from './services/stored-metrics/StoredMetricsService.js';
 import { SearchController } from './controllers/SearchController.js';
 import { AuthorController } from './controllers/AuthorController.js';
 import { JobController } from './controllers/JobController.js';
@@ -32,28 +33,45 @@ const cors = (req, res, next) => {
  *
  * @param {Object} args
  * @param {ReturnType<import('./app.js').wire>} args.providers
- * @param {JobService} args.jobs
- * @param {StatsRepository} [args.stats] - repo to get DB counts
- * @param {string} [args.publicDir] - static files to serve, when the directory
+ * @param {JobService} args.jobService
+ * @param {StoredMetricsService} args.storedMetricsService
+ * @param {StatsRepository} [args.statsService] - repo to get DB counts
+ * @param {string} [args.staticDir] - static files to serve, when the directory
  *   exists; browser navigations (GET accepting text/html) fall back to
  *   index.html. Without the directory the server answers the API only.
  * @returns {import('node:http').Server}
  */
 export const buildServer = ({
-  providers, jobs, stats, publicDir: dist = publicDir,
+  providers,
+  jobService,
+  storedMetricsService,
+  statsService,
+  staticDir = publicDir,
 }) => {
-  const searchController = new SearchController(providers, jobs);
-  const authorController = new AuthorController(providers);
-  const jobController = new JobController(providers, jobs);
-  const statusController = new StatusController(providers, stats);
+  const searchController = new SearchController(
+    providers,
+    storedMetricsService,
+  );
+  const authorController = new AuthorController(
+    providers,
+  );
+  const jobController = new JobController(
+    providers,
+    jobService,
+    storedMetricsService,
+  );
+  const statusController = new StatusController(
+    providers,
+    statsService,
+  );
   const app = express();
-  const hasPublic = fs.existsSync(dist);
+  const hasPublic = fs.existsSync(staticDir);
 
   app.use(cors);
   app.use(express.json());
 
   if (hasPublic) {
-    app.use(express.static(dist));
+    app.use(express.static(staticDir));
   }
 
   app.get('/search/authors', async (req, res) => {
@@ -80,7 +98,7 @@ export const buildServer = ({
 
   app.use((req, res, next) => {
     if (hasPublic && req.method === 'GET' && req.headers.accept?.includes('text/html')) {
-      res.sendFile(path.join(dist, 'index.html'));
+      res.sendFile(path.join(staticDir, 'index.html'));
       return;
     }
 
@@ -104,11 +122,13 @@ export const buildServer = ({
 // Avoid running when imported (needed for unit tests)
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const { db } = new DbClient(dbFile);
+  const jobRepository = new JobRepository(db);
 
   buildServer({
     providers: wire(),
-    jobs: new JobService(new JobRepository(db)),
-    stats: new StatsRepository(db),
+    jobService: new JobService(jobRepository),
+    storedMetricsService: new StoredMetricsService(jobRepository),
+    statsService: new StatsRepository(db),
   }).listen(port, () => {
     process.stdout.write(`listening on ${port}\n`);
   });

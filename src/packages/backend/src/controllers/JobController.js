@@ -6,9 +6,10 @@ import { ApiError } from '../lib/api.js';
  * and fetched asynchronously.
  */
 export class JobController {
-  constructor(providers, jobService) {
+  constructor(providers, jobService, storedMetricsService) {
     this.providers = providers;
     this.jobService = jobService;
+    this.storedMetricsService = storedMetricsService;
   }
 
   submitJob({ body }) {
@@ -56,7 +57,8 @@ export class JobController {
    * Get stored metrics graph for an author.
    */
   getStoredMetrics({ params }) {
-    const stored = this.jobService.getStored(params.provider, params.authorId);
+    const stored = this.storedMetricsService
+      .getStoredMetrics(params.provider, params.authorId);
 
     if (!stored) {
       throw new ApiError(404, 'no stored metrics for this author');

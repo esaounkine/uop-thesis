@@ -8,11 +8,17 @@ import { DbClient } from '../db/DbClient.js';
 import { JOB_STATUS } from '../constants/job-status.js';
 import { JobRepository } from '../repositories/JobRepository.js';
 import { JobService } from '../services/jobs/JobService.js';
+import { StoredMetricsService } from '../services/stored-metrics/StoredMetricsService.js';
 
 const createJobService = () => {
   const { db } = new DbClient();
   migrate(db, { migrationsFolder: migrationsDir });
-  return new JobService(new JobRepository(db));
+  const jobRepository = new JobRepository(db);
+
+  return {
+    jobService: new JobService(jobRepository),
+    storedMetricsService: new StoredMetricsService(jobRepository),
+  };
 };
 
 const createContribution = (pubId, authorId) => {
@@ -74,11 +80,15 @@ describe('the HTTP API', () => {
       }),
       getAuthorPublications: jest.fn().mockResolvedValue([createPublication('W1'), createPublication('W2')]),
     };
+    const {
+      jobService, storedMetricsService,
+    } = createJobService();
     server = buildServer({
       providers: wire({
         connector: connector,
       }),
-      jobs: createJobService(),
+      jobService: jobService,
+      storedMetricsService: storedMetricsService,
       publicDir: fileURLToPath(new URL('./fixtures/public', import.meta.url)),
     });
     await new Promise((resolve) =>
@@ -220,11 +230,15 @@ describe('the HTTP API', () => {
     let bareBase;
 
     beforeEach(async () => {
+      const {
+        jobService, storedMetricsService,
+      } = createJobService();
       bareServer = buildServer({
         providers: wire({
           connector: connector,
         }),
-        jobs: createJobService(),
+        jobService: jobService,
+        storedMetricsService: storedMetricsService,
         publicDir: '/nonexistent',
       });
       await new Promise((resolve) =>
