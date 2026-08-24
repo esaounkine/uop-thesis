@@ -97,7 +97,7 @@ export const AuthorMetrics = ({ provider, authorId }) => {
     <div className={styles.AuthorMetrics}>
       {state.status === 'idle' &&
         <button type="button" onClick={start}>
-          Fetch citation metrics
+          Get citation metrics
         </button>
       }
       {state.status === 'running' &&
