@@ -11,17 +11,15 @@ import { CacheRepository } from './repositories/CacheRepository.js';
 import { CitationRepository } from './repositories/CitationRepository.js';
 import { ContributionRepository } from './repositories/ContributionRepository.js';
 import { PublicationRepository } from './repositories/PublicationRepository.js';
-import { TreeService } from './services/tree/TreeService.js';
+import { CitationGraphService } from './services/citation-graph/CitationGraphService.js';
 import { ClassificationService } from './services/classification/ClassificationService.js';
 import { PublicationService } from './services/publication/PublicationService.js';
 import { AuthorService } from './services/author/AuthorService.js';
+import { MetricsService } from './services/metrics/MetricsService.js';
 
 const createProvider = ({
-  id, queue, connector, treeService,
+  id, queue, connector, citationGraph,
 }) => {
-  const publications = new PublicationService({
-    connector: connector,
-  });
   const authors = new AuthorService({
     connector: connector,
   });
@@ -30,12 +28,14 @@ const createProvider = ({
     id: id,
     queue: queue,
     connector: connector,
-    publications: publications,
     authors: authors,
-    classification: new ClassificationService({
-      publicationService: publications,
+    metrics: new MetricsService({
       authorService: authors,
-      treeService: treeService,
+      publicationService: new PublicationService({
+        connector: connector,
+      }),
+      classificationService: new ClassificationService(),
+      citationGraph: citationGraph,
     }),
   };
 };
@@ -48,7 +48,7 @@ const createProvider = ({
  * @param {Object} [args]
  * @param {string} [args.dbPath]
  * @param {import('./connectors/ProviderConnector.js').ProviderConnector} [args.connector]
- * @returns {{ id: string, queue, publications: PublicationService, authors: AuthorService, classification: ClassificationService }[]}
+ * @returns {{ id: string, queue, connector, authors: AuthorService, metrics: MetricsService }[]}
  */
 export const wire = ({
   dbPath = dbFile, connector,
@@ -86,7 +86,7 @@ export const wire = ({
         cache: cache,
         queue: queue,
       })),
-      treeService: new TreeService({
+      citationGraph: new CitationGraphService({
         provider: id,
         ...repos,
       }),

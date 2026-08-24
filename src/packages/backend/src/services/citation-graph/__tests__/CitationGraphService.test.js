@@ -9,21 +9,9 @@ import { AuthorRepository } from '../../../repositories/AuthorRepository.js';
 import { CitationRepository } from '../../../repositories/CitationRepository.js';
 import { ContributionRepository } from '../../../repositories/ContributionRepository.js';
 import { PublicationRepository } from '../../../repositories/PublicationRepository.js';
-import { TreeService } from '../TreeService.js';
+import { CitationGraphService } from '../CitationGraphService.js';
 
 const PROVIDER = 'openalex';
-
-const createPublication = (pubId) => {
-  return {
-    provider: PROVIDER,
-    pubId: pubId,
-    title: pubId,
-    normalisedTitle: pubId.toLowerCase(),
-    externalId: null,
-    year: null,
-    citationCount: null,
-  };
-};
 
 const createContribution = (pubId, authorId) => {
   return {
@@ -34,27 +22,37 @@ const createContribution = (pubId, authorId) => {
   };
 };
 
+const createPublication = (pubId, authorId) => {
+  return {
+    provider: PROVIDER,
+    pubId: pubId,
+    title: pubId,
+    normalisedTitle: pubId.toLowerCase(),
+    externalId: null,
+    year: null,
+    citationCount: null,
+    contributions: [createContribution(pubId, authorId)],
+  };
+};
+
 const createTree = () => {
   return {
-    publication: createPublication('W1'),
-    citedContributions: [createContribution('W1', 'A1')],
-    citing: [
+    publication: createPublication('W1', 'A1'),
+    citations: [
       {
-        publication: createPublication('W2'),
-        contributions: [createContribution('W2', 'A1')],
+        publication: createPublication('W2', 'A1'),
         classification: 'self-direct',
       },
       {
-        publication: createPublication('W3'),
-        contributions: [createContribution('W3', 'Z1')],
+        publication: createPublication('W3', 'Z1'),
         classification: 'external',
       },
     ],
   };
 };
 
-const createTreeService = (db) =>
-  new TreeService({
+const createCitationGraphService = (db) =>
+  new CitationGraphService({
     provider: PROVIDER,
     publicationRepository: new PublicationRepository(db),
     authorRepository: new AuthorRepository(db),
@@ -62,20 +60,20 @@ const createTreeService = (db) =>
     citationRepository: new CitationRepository(db),
   });
 
-describe('TreeService', () => {
+describe('CitationGraphService', () => {
   let db;
-  let treeService;
+  let citationGraph;
 
   beforeEach(() => {
     ({ db } = new DbClient());
     migrate(db, { migrationsFolder: migrationsDir });
-    treeService = createTreeService(db);
+    citationGraph = createCitationGraphService(db);
   });
 
   describe('save', () => {
     describe('a classified tree', () => {
       beforeEach(() => {
-        treeService.save(createTree());
+        citationGraph.save(createTree());
       });
 
       it('stores every publication', () => {
@@ -112,18 +110,20 @@ describe('TreeService', () => {
 
     describe('when the contributions carry author names and affiliations', () => {
       beforeEach(() => {
-        treeService.save({
-          publication: createPublication('W1'),
-          citedContributions: [
-            {
-              pubId: 'W1',
-              authorId: 'A1',
-              authorName: 'Jane Roe',
-              organisation: 'University 1',
-              position: 1,
-            },
-          ],
-          citing: [],
+        citationGraph.save({
+          publication: {
+            ...createPublication('W1', 'A1'),
+            contributions: [
+              {
+                pubId: 'W1',
+                authorId: 'A1',
+                authorName: 'Jane Roe',
+                organisation: 'University 1',
+                position: 1,
+              },
+            ],
+          },
+          citations: [],
         });
       });
 
@@ -147,8 +147,8 @@ describe('TreeService', () => {
       let restored;
 
       beforeEach(() => {
-        treeService.save(createTree());
-        restored = treeService.restore('W1');
+        citationGraph.save(createTree());
+        restored = citationGraph.restore('W1');
       });
 
       it('rebuilds the same classified tree', () => {
@@ -158,7 +158,7 @@ describe('TreeService', () => {
 
     describe('when the publication is not in the db', () => {
       it('returns null', () => {
-        expect(treeService.restore('missing')).toBeNull();
+        expect(citationGraph.restore('missing')).toBeNull();
       });
     });
   });

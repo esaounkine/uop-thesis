@@ -3,19 +3,17 @@ import { normalise } from '../../lib/normalise.js';
 /**
  * @typedef {{
  *   publication: import('../../db/schema.js').Publication,
- *   citedContributions: import('../../db/schema.js').Contribution[],
- *   citing: {
+ *   citations: {
  *     publication: import('../../db/schema.js').Publication,
- *     contributions: import('../../db/schema.js').Contribution[],
  *     classification: string,
  *   }[],
  * }} ClassifiedTree
  */
 
 /**
- * Saves and restores a classified citation tree.
+ * Saves and restores a classified citation graph.
  */
-export class TreeService {
+export class CitationGraphService {
   /**
    * @param {Object} args
    * @param {string} args.provider - tags every stored row; scopes restore
@@ -44,19 +42,17 @@ export class TreeService {
    * @param {ClassifiedTree} tree
    */
   save({
-    publication, citedContributions, citing,
+    publication, citations,
   }) {
-    const contributions = [
-      citedContributions,
-      ...citing.map((entry) =>
-        entry.contributions),
-    ].flat();
-
-    const publicationRows = [
+    const publications = [
       publication,
-      ...citing.map((entry) =>
-        entry.publication),
-    ].map((row) => {
+      ...citations.map((citation) =>
+        citation.publication),
+    ];
+    const contributions = publications.flatMap((row) =>
+      row.contributions ?? []);
+
+    const publicationRows = publications.map((row) => {
       return {
         provider: this.provider,
         pubId: row.pubId,
@@ -90,12 +86,12 @@ export class TreeService {
         organisation: contribution.organisation ?? null,
       };
     });
-    const citationRows = citing.map((entry) => {
+    const citationRows = citations.map((citation) => {
       return {
         provider: this.provider,
-        sourcePubId: entry.publication.pubId,
+        sourcePubId: citation.publication.pubId,
         targetPubId: publication.pubId,
-        classification: entry.classification,
+        classification: citation.classification,
       };
     });
 
@@ -135,19 +131,21 @@ export class TreeService {
       (contribution) =>
         contribution.pubId,
     );
-
-    const citing = edges.map((edge) => {
+    const withContributions = (row) => {
       return {
-        publication: publicationById.get(edge.sourcePubId),
-        contributions: contributionsByPub.get(edge.sourcePubId) ?? [],
-        classification: edge.classification,
+        ...row,
+        contributions: contributionsByPub.get(row.pubId) ?? [],
       };
-    });
+    };
 
     return {
-      publication: publication,
-      citedContributions: contributionsByPub.get(pubId) ?? [],
-      citing: citing,
+      publication: withContributions(publication),
+      citations: edges.map((edge) => {
+        return {
+          publication: withContributions(publicationById.get(edge.sourcePubId)),
+          classification: edge.classification,
+        };
+      }),
     };
   }
 }

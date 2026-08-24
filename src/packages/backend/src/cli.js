@@ -108,7 +108,7 @@ const runAuthorById = async (value) => {
   printSection(provider.id);
 
   const result = await withQueueProgressReport(provider.queue, () =>
-    provider.classification.getAuthorMetrics(id), provider.id);
+    provider.metrics.getAuthorMetrics(id), provider.id);
 
   if (!result) {
     console.error(`Author not found: ${id}`);

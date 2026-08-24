@@ -22,13 +22,16 @@ export class JobController {
       throw new ApiError(400, 'body must contain `provider` and `id`');
     }
 
-    const requestId = this.jobs.submitJob(() =>
-      provider.classification.getAuthorMetrics(id), {
-      queue: provider.queue,
-      kind: 'author',
-      provider: provider.id,
-      subjectId: id,
-    });
+    const requestId = this.jobs.submitJob(
+      () =>
+        provider.metrics.getAuthorMetrics(id),
+      {
+        queue: provider.queue,
+        kind: 'author',
+        provider: provider.id,
+        subjectId: id,
+      },
+    );
 
     return {
       requestId: requestId,
