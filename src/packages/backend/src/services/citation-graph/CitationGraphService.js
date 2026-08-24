@@ -16,7 +16,7 @@ import { normalise } from '../../lib/normalise.js';
 export class CitationGraphService {
   /**
    * @param {Object} args
-   * @param {string} args.provider - tags every stored row; scopes restore
+   * @param {string} args.provider
    * @param {import('../../repositories/PublicationRepository.js').PublicationRepository} args.publicationRepository
    * @param {import('../../repositories/AuthorRepository.js').AuthorRepository} args.authorRepository
    * @param {import('../../repositories/ContributionRepository.js').ContributionRepository} args.contributionRepository
@@ -107,7 +107,7 @@ export class CitationGraphService {
    * @param {string} pubId - the cited publication id
    * @returns {ClassifiedTree | null} null when the tree was never saved
    */
-  restore(pubId) {
+  getTree(pubId) {
     const [publication] = this.publicationRepository.findByIds(
       this.provider, [pubId],
     );

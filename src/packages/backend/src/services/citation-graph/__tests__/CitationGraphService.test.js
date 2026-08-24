@@ -142,13 +142,13 @@ describe('CitationGraphService', () => {
     });
   });
 
-  describe('restore', () => {
+  describe('getTree', () => {
     describe('when the tree was saved', () => {
       let restored;
 
       beforeEach(() => {
         citationGraph.save(createTree());
-        restored = citationGraph.restore('W1');
+        restored = citationGraph.getTree('W1');
       });
 
       it('rebuilds the same classified tree', () => {
@@ -158,7 +158,7 @@ describe('CitationGraphService', () => {
 
     describe('when the publication is not in the db', () => {
       it('returns null', () => {
-        expect(citationGraph.restore('missing')).toBeNull();
+        expect(citationGraph.getTree('missing')).toBeNull();
       });
     });
   });

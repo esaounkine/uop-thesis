@@ -29,7 +29,7 @@ export class MetricsService {
    * @param {string} authorId
    * @returns {Promise<null | {
    *   author: import('../../db/schema.js').Author,
-   *   metrics: ReturnType<import('../classification/ClassificationService.js').ClassificationService['aggregate']>,
+   *   metrics: ReturnType<import('../classification/ClassificationService.js').ClassificationService['getMetrics']>,
    *   publications: Awaited<ReturnType<MetricsService['getPublicationMetrics']>>[],
    *   stats: { total: number, fetched: number, failed: number },
    * }>} null when the author is not found
@@ -58,7 +58,7 @@ export class MetricsService {
 
     return {
       author: author.author,
-      metrics: this.classificationService.aggregate(
+      metrics: this.classificationService.getMetrics(
         publications.flatMap((entry) =>
           entry.citations.map((citation) =>
             citation.classification)),
@@ -78,7 +78,7 @@ export class MetricsService {
    * @param {Publication} publication
    * @returns {Promise<{
    *   publication: Publication,
-   *   metrics: ReturnType<import('../classification/ClassificationService.js').ClassificationService['aggregate']>,
+   *   metrics: ReturnType<import('../classification/ClassificationService.js').ClassificationService['getMetrics']>,
    *   citations: { publication: Publication, classification: string }[],
    * }>}
    */
@@ -89,7 +89,7 @@ export class MetricsService {
     const classified = citations.map((citation) => {
       return {
         publication: citation,
-        classification: this.classificationService.classifyCitation(
+        classification: this.classificationService.getCitationType(
           publication.contributions,
           citation.contributions,
         ),
@@ -98,7 +98,7 @@ export class MetricsService {
 
     return {
       publication: publication,
-      metrics: this.classificationService.aggregate(
+      metrics: this.classificationService.getMetrics(
         classified.map((entry) =>
           entry.classification)),
       citations: classified,

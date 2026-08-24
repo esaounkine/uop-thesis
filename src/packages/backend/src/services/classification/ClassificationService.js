@@ -19,7 +19,7 @@ export class ClassificationService {
    * @param {Contribution[]} citing - authors of one citing paper
    * @returns {string} one of CITATION_TYPE
    */
-  classifyCitation(cited, citing) {
+  getCitationType(cited, citing) {
     if (getUniqueAuthorIds(cited).isDisjointFrom(getUniqueAuthorIds(citing))) {
       return CITATION_TYPE.EXTERNAL;
     }
@@ -41,7 +41,7 @@ export class ClassificationService {
    *   self: { total: number, direct: number, coauthor: number },
    * }}
    */
-  aggregate(labels) {
+  getMetrics(labels) {
     const groups = Map.groupBy(labels, (x) =>
       x);
     const countOf = (type) =>
@@ -59,17 +59,5 @@ export class ClassificationService {
         coauthor: coauthor,
       },
     };
-  }
-
-  /**
-   * @param {Contribution[]} cited - authors of the cited paper
-   * @param {Contribution[][]} citingList - authors per citing paper
-   * @returns {ReturnType<ClassificationService['aggregate']>}
-   */
-  classify(cited, citingList) {
-    return this.aggregate(
-      citingList.map((citing) =>
-        this.classifyCitation(cited, citing)),
-    );
   }
 }
