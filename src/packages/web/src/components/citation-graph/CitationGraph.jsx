@@ -125,6 +125,7 @@ const buildOption = (author, publications) => {
     color: [AUTHOR_COLOR, PAPER_COLOR, ...Object.values(CLASSIFICATION_COLOR)],
     tooltip: {
       trigger: 'item',
+      confine: true,
       formatter: (params) => {
         return params.dataType === 'node'
           ? toTooltipHtml(params.data.info)
