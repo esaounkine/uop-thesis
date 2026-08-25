@@ -115,10 +115,24 @@ export const buildServer = ({
   return createServer(app);
 };
 
+/**
+ * Collection of random actions needed to restore the state back to original.
+ *
+ * @param {Object} args
+ * @param {import('./repositories/JobRepository.js').JobRepository} args.jobRepository
+ */
+export const restoreState = ({ jobRepository }) => {
+  // System crash could leave jobs dangling and their state would never become final.
+  // This could result in the UI endlessly polling them.
+  jobRepository.interruptRunningJobs();
+};
+
 // Avoid running when imported (needed for unit tests)
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const { db } = new DbClient(dbFile);
   const jobRepository = new JobRepository(db);
+
+  restoreState({ jobRepository: jobRepository });
 
   buildServer({
     providers: wire(),

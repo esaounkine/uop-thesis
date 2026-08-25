@@ -1,74 +1,251 @@
 import {
   beforeEach, describe, expect, it, jest,
 } from '@jest/globals';
+import { JOB_STATUS } from '../../constants/job-status.js';
 import { JobController } from '../JobController.js';
 
-const createController = ({
-  metricsService,
-  jobService,
-  citationGraphService,
-  classificationService,
-}) =>
-  new JobController([
-    {
-      id: 'openalex',
-      metricsService: metricsService,
-      citationGraphService: citationGraphService,
-      classificationService: classificationService,
-      queue: null,
-    },
-  ], jobService);
-
 describe('JobController', () => {
-  describe('submitJob', () => {
-    let metricsServiceMock;
-    let jobServiceMock;
-    let controller;
+  let metricsServiceMock;
+  let citationGraphServiceMock;
+  let classificationServiceMock;
+  let jobServiceMock;
+  let queueMock;
+  let controller;
 
-    beforeEach(() => {
-      metricsServiceMock = { getAuthorMetrics: jest.fn() };
-      jobServiceMock = {
-        submitJob: jest.fn((run) => {
-          run();
-          return 'req-1';
-        }),
-      };
-      controller = createController({
+  beforeEach(() => {
+    metricsServiceMock = {
+      getAuthorMetrics: jest.fn(),
+    };
+    citationGraphServiceMock = {
+      getAuthorTree: jest.fn(),
+    };
+    classificationServiceMock = {
+      getMetrics: jest.fn(),
+    };
+    queueMock = {
+      add: jest.fn(),
+      onTaskCompleted: jest.fn(),
+      offTaskCompleted: jest.fn(),
+    };
+    jobServiceMock = {
+      submitJob: jest.fn(),
+      getJob: jest.fn(),
+      listJobs: jest.fn(),
+    };
+    const providers = [
+      {
+        id: 'openalex',
+        queue: queueMock,
         metricsService: metricsServiceMock,
-        jobService: jobServiceMock,
+        citationGraphService: citationGraphServiceMock,
+        classificationService: classificationServiceMock,
+      },
+    ];
+    controller = new JobController(providers, jobServiceMock);
+  });
+
+  describe('submitJob', () => {
+    describe('when no body in the request', () => {
+      it('is a 400', () => {
+        expect(() =>
+          controller.submitJob({}))
+          .toThrow('body must contain');
       });
     });
 
-    describe('when the body has cache disabled', () => {
-      beforeEach(() => {
-        controller.submitJob({
-          body: {
-            provider: 'openalex',
-            id: 'A1',
-            cache: false,
-          },
-        });
-      });
-
-      it('fetches the metrics without the cache', () => {
-        expect(metricsServiceMock.getAuthorMetrics)
-          .toHaveBeenCalledWith('openalex', 'A1', { cache: false });
+    describe('when no provider in the request', () => {
+      it('is a 400', () => {
+        expect(() =>
+          controller.submitJob({ body: { id: 'A1' } }))
+          .toThrow('body must contain');
       });
     });
 
-    describe('when the body has no cache flag', () => {
+    describe('when no id in the request', () => {
+      it('is a 400', () => {
+        expect(() =>
+          controller.submitJob({ body: { provider: 'openalex' } }))
+          .toThrow('body must contain');
+      });
+    });
+
+    describe('when provider is unknown', () => {
+      it('is a 404', () => {
+        expect(() =>
+          controller.submitJob({
+            body: {
+              provider: 'nope',
+              id: 'A1',
+            },
+          }))
+          .toThrow('unknown provider');
+      });
+    });
+
+    describe('when params are valid', () => {
+      const body = {
+        provider: 'openalex',
+        id: 'A1',
+      };
+
       beforeEach(() => {
-        controller.submitJob({
-          body: {
+        jobServiceMock.submitJob.mockReturnValue('req-1');
+      });
+
+      it('returns the request id', () => {
+        expect(controller.submitJob({ body: body }))
+          .toEqual({ requestId: 'req-1' });
+      });
+
+      it('submits a job tagged with provider and author', () => {
+        controller.submitJob({ body: body });
+
+        expect(jobServiceMock.submitJob).toHaveBeenCalledWith(
+          expect.any(Function),
+          {
+            queue: queueMock,
             provider: 'openalex',
-            id: 'A1',
+            authorId: 'A1',
           },
+        );
+      });
+
+      describe('and cache is enabled (default)', () => {
+        it('fetches metrics with cache', () => {
+          controller.submitJob({ body: body });
+          const [task] = jobServiceMock.submitJob.mock.calls[0];
+          task();
+
+          expect(metricsServiceMock.getAuthorMetrics)
+            .toHaveBeenCalledWith('openalex', 'A1', { cache: true });
         });
       });
 
-      it('fetches the metrics with the cache', () => {
-        expect(metricsServiceMock.getAuthorMetrics)
-          .toHaveBeenCalledWith('openalex', 'A1', { cache: true });
+      describe('and cache is disabled', () => {
+        it('fetches metrics without cache', () => {
+          controller.submitJob({
+            body: {
+              ...body,
+              cache: false,
+            },
+          });
+          const [task] = jobServiceMock.submitJob.mock.calls[0];
+          task();
+
+          expect(metricsServiceMock.getAuthorMetrics)
+            .toHaveBeenCalledWith('openalex', 'A1', { cache: false });
+        });
+      });
+
+      describe('but the metrics service throws', () => {
+        beforeEach(() => {
+          metricsServiceMock.getAuthorMetrics.mockImplementation(() => {
+            throw new Error('error-1');
+          });
+        });
+
+        it('the task propagates the error', () => {
+          controller.submitJob({ body: body });
+          const [task] = jobServiceMock.submitJob.mock.calls[0];
+
+          expect(() =>
+            task())
+            .toThrow('error-1');
+        });
+      });
+
+      describe('but the job service throws', () => {
+        beforeEach(() => {
+          jobServiceMock.submitJob.mockImplementation(() => {
+            throw new Error('error-2');
+          });
+        });
+
+        it('propagates the error', () => {
+          expect(() =>
+            controller.submitJob({ body: body })).toThrow('error-2');
+        });
+      });
+    });
+  });
+
+  describe('getJob', () => {
+    describe('when the job service returns the job', () => {
+      const job = {
+        id: 'req-1',
+        status: JOB_STATUS.DONE,
+      };
+
+      beforeEach(() => {
+        jobServiceMock.getJob.mockReturnValue(job);
+      });
+
+      it('returns the job', () => {
+        expect(controller.getJob({ params: { id: 'req-1' } })).toBe(job);
+      });
+    });
+
+    describe('when the job service returns nothing', () => {
+      beforeEach(() => {
+        jobServiceMock.getJob.mockReturnValue(undefined);
+      });
+
+      it('is a 404', () => {
+        expect(() =>
+          controller.getJob({ params: { id: 'nope' } }))
+          .toThrow('job not found');
+      });
+    });
+
+    describe('when the job service throws', () => {
+      beforeEach(() => {
+        jobServiceMock.getJob.mockImplementation(() => {
+          throw new Error('error-3');
+        });
+      });
+
+      it('propagates the error', () => {
+        expect(() =>
+          controller.getJob({ params: { id: 'req-1' } })).toThrow('error-3');
+      });
+    });
+  });
+
+  describe('listJobs', () => {
+    describe('when the job service returns jobs', () => {
+      const jobs = [{ id: 'job-1' }, { id: 'job-2' }];
+
+      beforeEach(() => {
+        jobServiceMock.listJobs.mockReturnValue(jobs);
+      });
+
+      it('returns them', () => {
+        expect(controller.listJobs()).toBe(jobs);
+      });
+    });
+
+    describe('when the job service returns no jobs', () => {
+      const jobs = [];
+
+      beforeEach(() => {
+        jobServiceMock.listJobs.mockReturnValue(jobs);
+      });
+
+      it('returns an empty list', () => {
+        expect(controller.listJobs()).toBe(jobs);
+      });
+    });
+
+    describe('when the job service throws', () => {
+      beforeEach(() => {
+        jobServiceMock.listJobs.mockImplementation(() => {
+          throw new Error('error-4');
+        });
+      });
+
+      it('propagates the error', () => {
+        expect(() =>
+          controller.listJobs()).toThrow('error-4');
       });
     });
   });
@@ -81,45 +258,94 @@ describe('JobController', () => {
       },
     };
 
-    describe('when the graph returns the author tree', () => {
-      let result;
+    describe('when provider is unknown', () => {
+      it('is a 404', () => {
+        expect(() =>
+          controller.getStoredMetrics({
+            params: {
+              provider: 'nope',
+              authorId: 'A1',
+            },
+          }))
+          .toThrow('no stored metrics for this author');
+      });
+    });
+
+    describe('when the citation graph returns the author tree', () => {
+      const tree = {
+        author: { authorId: 'A1' },
+        publications: [
+          {
+            citations: [{ classification: 'external' }],
+          },
+        ],
+      };
 
       beforeEach(() => {
-        const citationGraphServiceMock = {
-          getAuthorTree: jest.fn().mockReturnValue({
-            author: { authorId: 'A1' },
-            publications: [{ citations: [{ classification: 'external' }] }],
-          }),
-        };
-        const classificationServiceMock = {
-          getMetrics: jest.fn().mockReturnValue({ total: 1 }),
-        };
-        result = createController({
-          citationGraphService: citationGraphServiceMock,
-          classificationService: classificationServiceMock,
-        }).getStoredMetrics(request);
+        citationGraphServiceMock.getAuthorTree.mockReturnValue(tree);
       });
 
-      it('reconstructs the tree, metrics, and author', () => {
-        expect(result).toEqual({
-          author: { authorId: 'A1' },
-          metrics: { total: 1 },
-          publications: [{ citations: [{ classification: 'external' }] }],
+      describe('and classification returns metrics', () => {
+        beforeEach(() => {
+          classificationServiceMock.getMetrics.mockReturnValue({ total: 1 });
+        });
+
+        it('aggregates citation classifications', () => {
+          controller.getStoredMetrics(request);
+
+          expect(classificationServiceMock.getMetrics)
+            .toHaveBeenCalledWith(['external']);
+        });
+
+        it('returns author, metrics, and publications', () => {
+          expect(controller.getStoredMetrics(request)).toEqual({
+            author: { authorId: 'A1' },
+            metrics: { total: 1 },
+            publications: [
+              {
+                citations: [{ classification: 'external' }],
+              },
+            ],
+          });
+        });
+      });
+
+      describe('but classification throws', () => {
+        beforeEach(() => {
+          classificationServiceMock.getMetrics.mockImplementation(() => {
+            throw new Error('error-6');
+          });
+        });
+
+        it('propagates the error', () => {
+          expect(() =>
+            controller.getStoredMetrics(request)).toThrow('error-6');
         });
       });
     });
 
-    describe('when the graph returns nothing', () => {
-      it('is a 404', () => {
-        const citationGraphServiceMock = {
-          getAuthorTree: jest.fn().mockReturnValue(null),
-        };
-        const controller = createController({
-          citationGraphService: citationGraphServiceMock,
-        });
+    describe('when the citation graph returns nothing', () => {
+      beforeEach(() => {
+        citationGraphServiceMock.getAuthorTree.mockReturnValue(null);
+      });
 
+      it('is a 404', () => {
         expect(() =>
-          controller.getStoredMetrics(request)).toThrow('no stored metrics for this author');
+          controller.getStoredMetrics(request))
+          .toThrow('no stored metrics for this author');
+      });
+    });
+
+    describe('when the citation graph throws', () => {
+      beforeEach(() => {
+        citationGraphServiceMock.getAuthorTree.mockImplementation(() => {
+          throw new Error('error-5');
+        });
+      });
+
+      it('propagates the error', () => {
+        expect(() =>
+          controller.getStoredMetrics(request)).toThrow('error-5');
       });
     });
   });

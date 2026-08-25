@@ -1,23 +1,14 @@
-import { EventEmitter } from 'node:events';
 import {
   beforeEach, describe, expect, it, jest,
 } from '@jest/globals';
 import { withQueueProgressReport } from '../queue-progress.js';
 
-const createMockQueue = () => {
-  const queue = new EventEmitter();
-  queue.pending = 2;
-  queue.size = 3;
-  queue.onTaskCompleted = (listener) =>
-    queue.on('completed', listener);
-  queue.offTaskCompleted = (listener) =>
-    queue.off('completed', listener);
-  return queue;
-};
-
 describe('withQueueProgressReport', () => {
   let onProgressMock;
   let onDoneMock;
+
+  const report = (queue, task) =>
+    withQueueProgressReport(queue, task, 'queue', onProgressMock, onDoneMock);
 
   beforeEach(() => {
     onProgressMock = jest.fn();
@@ -25,44 +16,51 @@ describe('withQueueProgressReport', () => {
   });
 
   describe('when there is no queue', () => {
-    let result;
+    let task;
 
-    beforeEach(async () => {
-      result = await withQueueProgressReport(undefined, async () =>
-        'value', 'openalex', onProgressMock, onDoneMock);
+    beforeEach(() => {
+      task = jest.fn().mockResolvedValue('value');
     });
 
-    it('runs the function and returns its result', () => {
-      expect(result).toBe('value');
+    it('runs the function and returns its result', async () => {
+      expect(await report(undefined, task)).toBe('value');
     });
 
-    it('does not report progress', () => {
+    it('does not report progress', async () => {
+      await report(undefined, task);
       expect(onProgressMock).not.toHaveBeenCalled();
     });
   });
 
   describe('when a queue is provided', () => {
-    let queue;
+    let queueMock;
 
     beforeEach(() => {
-      queue = createMockQueue();
+      queueMock = {
+        onTaskCompleted: jest.fn(),
+        offTaskCompleted: jest.fn(),
+        pending: 2,
+        size: 3,
+      };
     });
 
     describe('and the function succeeds', () => {
-      let result;
+      let task;
 
-      beforeEach(async () => {
-        result = await withQueueProgressReport(queue, async () => {
-          queue.emit('completed');
+      beforeEach(() => {
+        task = jest.fn(async () => {
+          const [onCompleted] = queueMock.onTaskCompleted.mock.calls[0];
+          onCompleted();
           return 'done';
-        }, 'openalex', onProgressMock, onDoneMock);
+        });
       });
 
-      it('returns the result', () => {
-        expect(result).toBe('done');
+      it('returns the result', async () => {
+        expect(await report(queueMock, task)).toBe('done');
       });
 
-      it('reports the queue status on each completed request', () => {
+      it('reports the queue status on each completed request', async () => {
+        await report(queueMock, task);
         expect(onProgressMock).toHaveBeenCalledWith({
           completed: 1,
           pending: 2,
@@ -70,35 +68,38 @@ describe('withQueueProgressReport', () => {
         });
       });
 
-      it('reports done with the completed count', () => {
+      it('reports done with the completed count', async () => {
+        await report(queueMock, task);
         expect(onDoneMock).toHaveBeenCalledWith(1);
       });
 
-      it('detaches the listener afterwards', () => {
-        expect(queue.listenerCount('completed')).toBe(0);
+      it('detaches the listener afterwards', async () => {
+        await report(queueMock, task);
+        const [registered] = queueMock.onTaskCompleted.mock.calls[0];
+        expect(queueMock.offTaskCompleted).toHaveBeenCalledWith(registered);
       });
     });
 
-    describe('and the function throws', () => {
-      let rejection;
+    describe('but the function throws', () => {
+      let task;
 
-      beforeEach(async () => {
-        rejection = await withQueueProgressReport(queue, async () => {
-          throw new Error('err');
-        }, 'openalex', onProgressMock, onDoneMock).catch((error) =>
-          error);
+      beforeEach(() => {
+        task = jest.fn().mockRejectedValue(new Error('error-1'));
       });
 
-      it('rethrows the error', () => {
-        expect(rejection.message).toBe('err');
+      it('rethrows the error', async () => {
+        await expect(report(queueMock, task)).rejects.toThrow('error-1');
       });
 
-      it('still reports done', () => {
+      it('reports done', async () => {
+        await report(queueMock, task).catch(() => {});
         expect(onDoneMock).toHaveBeenCalledWith(0);
       });
 
-      it('still detaches the listener', () => {
-        expect(queue.listenerCount('completed')).toBe(0);
+      it('detaches the listener', async () => {
+        await report(queueMock, task).catch(() => {});
+        const [registered] = queueMock.onTaskCompleted.mock.calls[0];
+        expect(queueMock.offTaskCompleted).toHaveBeenCalledWith(registered);
       });
     });
   });

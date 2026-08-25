@@ -1,178 +1,231 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
-import { migrate } from 'drizzle-orm/node-sqlite/migrator';
-import { migrationsDir } from '../../config/env.js';
-import { DbClient } from '../../db/DbClient.js';
+import {
+  beforeEach, describe, expect, it, jest,
+} from '@jest/globals';
 import { JOB_STATUS } from '../../constants/job-status.js';
 import { JobRepository } from '../JobRepository.js';
 
-const createJob = (id, patch = {}) => {
-  return {
-    id: id,
-    provider: 'openalex',
-    authorId: 'W1',
-    status: JOB_STATUS.RUNNING,
-    progress: null,
-    error: null,
-    createdAt: '2026-08-17T10:00:00.000Z',
-    updatedAt: '2026-08-17T10:00:00.000Z',
-    ...patch,
+const createDbMock = () => {
+  const dbMock = {
+    select: jest.fn(() =>
+      dbMock),
+    from: jest.fn(() =>
+      dbMock),
+    where: jest.fn(() =>
+      dbMock),
+    orderBy: jest.fn(() =>
+      dbMock),
+    insert: jest.fn(() =>
+      dbMock),
+    values: jest.fn(() =>
+      dbMock),
+    update: jest.fn(() =>
+      dbMock),
+    set: jest.fn(() =>
+      dbMock),
+    get: jest.fn(),
+    all: jest.fn(),
+    run: jest.fn(),
   };
+  return dbMock;
 };
 
-const createRepo = () => {
-  const { db } = new DbClient();
-  migrate(db, { migrationsFolder: migrationsDir });
-  return new JobRepository(db);
+const job1 = {
+  id: 'job-1',
+  provider: 'openalex',
+  authorId: 'W1',
+  status: JOB_STATUS.RUNNING,
 };
 
 describe('JobRepository', () => {
+  let dbMock;
   let repo;
 
   beforeEach(() => {
-    repo = createRepo();
+    dbMock = createDbMock();
+    repo = new JobRepository(dbMock);
+  });
+
+  describe('createJob', () => {
+    describe('when given a job row', () => {
+      it('forwards it to the insert', () => {
+        repo.createJob(job1);
+        expect(dbMock.values).toHaveBeenCalledWith(job1);
+      });
+    });
+
+    describe('when the insert throws', () => {
+      beforeEach(() => {
+        dbMock.run.mockImplementation(() => {
+          throw new Error('error-1');
+        });
+      });
+
+      it('propagates the error', () => {
+        expect(() =>
+          repo.createJob(job1)).toThrow('error-1');
+      });
+    });
+  });
+
+  describe('updateJob', () => {
+    describe('when given a patch', () => {
+      it('forwards it with a refreshed date', () => {
+        repo.updateJob('job-1', {
+          status: JOB_STATUS.DONE,
+        });
+        expect(dbMock.set).toHaveBeenCalledWith({
+          status: JOB_STATUS.DONE,
+          updatedAt: expect.any(String),
+        });
+      });
+    });
+
+    describe('when the update throws', () => {
+      beforeEach(() => {
+        dbMock.run.mockImplementation(() => {
+          throw new Error('error-1');
+        });
+      });
+
+      it('propagates the error', () => {
+        expect(() =>
+          repo.updateJob('job-1', { status: JOB_STATUS.DONE })).toThrow('error-1');
+      });
+    });
   });
 
   describe('findJob', () => {
-    describe('when no job matches', () => {
+    describe('when the db returns a row', () => {
+      beforeEach(() => {
+        dbMock.get.mockReturnValue(job1);
+      });
+
+      it('returns it', () => {
+        expect(repo.findJob({ id: 'job-1' })).toBe(job1);
+      });
+    });
+
+    describe('when the db returns nothing', () => {
+      beforeEach(() => {
+        dbMock.get.mockReturnValue(undefined);
+      });
+
       it('returns undefined', () => {
         expect(repo.findJob({ id: 'nope' })).toBeUndefined();
       });
     });
 
-    describe('when a job exists', () => {
+    describe('when the db throws', () => {
       beforeEach(() => {
-        repo.createJob(createJob('job-1', {
-          progress: {
-            done: 0,
-            running: 0,
-            queued: 0,
-          },
-        }));
-      });
-
-      it('finds it by id with the decoded payload', () => {
-        expect(repo.findJob({ id: 'job-1' })).toEqual(createJob('job-1', {
-          progress: {
-            done: 0,
-            running: 0,
-            queued: 0,
-          },
-        }));
-      });
-
-      describe('and it is updated', () => {
-        beforeEach(() => {
-          repo.updateJob('job-1', {
-            status: JOB_STATUS.DONE,
-          });
-        });
-
-        it('persists the new status', () => {
-          expect(repo.findJob({ id: 'job-1' }).status).toBe(JOB_STATUS.DONE);
-        });
-
-        it('refreshes the updated date', () => {
-          expect(repo.findJob({ id: 'job-1' }).updatedAt)
-            .not.toBe('2026-08-17T10:00:00.000Z');
-        });
-
-        it('keeps the created date', () => {
-          expect(repo.findJob({ id: 'job-1' }).createdAt).toBe('2026-08-17T10:00:00.000Z');
+        dbMock.get.mockImplementation(() => {
+          throw new Error('error-1');
         });
       });
-    });
 
-    describe('with filters', () => {
-      beforeEach(() => {
-        repo.createJob(createJob('done-old', {
-          authorId: 'A1',
-          status: JOB_STATUS.DONE,
-          updatedAt: '2026-08-17T10:00:00.000Z',
-        }));
-        repo.createJob(createJob('done-new', {
-          authorId: 'A1',
-          status: JOB_STATUS.DONE,
-          updatedAt: '2026-08-17T12:00:00.000Z',
-        }));
-        repo.createJob(createJob('running', {
-          authorId: 'A1',
-          status: JOB_STATUS.RUNNING,
-          updatedAt: '2026-08-17T13:00:00.000Z',
-        }));
-      });
-
-      it('returns the most recent matching job', () => {
-        expect(repo.findJob({
-          provider: 'openalex',
-          authorId: 'A1',
-          status: JOB_STATUS.DONE,
-        }).id).toBe('done-new');
-      });
-
-      it('honors the status filter', () => {
-        expect(repo.findJob({
-          authorId: 'A1',
-          status: JOB_STATUS.RUNNING,
-        }).id).toBe('running');
-      });
-
-      it('returns undefined when no job matches the filters', () => {
-        expect(repo.findJob({
-          provider: 'openalex',
-          authorId: 'A2',
-          status: JOB_STATUS.DONE,
-        })).toBeUndefined();
+      it('propagates the error', () => {
+        expect(() =>
+          repo.findJob({ id: 'job-1' })).toThrow('error-1');
       });
     });
   });
 
   describe('findJobs', () => {
-    beforeEach(() => {
-      repo.createJob(createJob('job-old'));
-      repo.createJob(createJob('job-new', {
-        status: JOB_STATUS.DONE,
-        createdAt: '2026-08-17T11:00:00.000Z',
-      }));
+    describe('when the db returns rows', () => {
+      const rows = [job1];
+
+      beforeEach(() => {
+        dbMock.all.mockReturnValue(rows);
+      });
+
+      it('returns them', () => {
+        expect(repo.findJobs()).toBe(rows);
+      });
     });
 
-    it('returns the jobs newest first', () => {
-      expect(repo.findJobs().map((job) =>
-        job.id)).toEqual(['job-new', 'job-old']);
+    describe('when the db returns nothing', () => {
+      beforeEach(() => {
+        dbMock.all.mockReturnValue([]);
+      });
+
+      it('returns an empty list', () => {
+        expect(repo.findJobs()).toEqual([]);
+      });
     });
 
-    describe('with a status filter', () => {
-      it('returns only the matching jobs', () => {
-        expect(repo.findJobs({ status: JOB_STATUS.RUNNING }).map((job) =>
-          job.id)).toEqual(['job-old']);
+    describe('when the db throws', () => {
+      beforeEach(() => {
+        dbMock.all.mockImplementation(() => {
+          throw new Error('error-1');
+        });
+      });
+
+      it('propagates the error', () => {
+        expect(() =>
+          repo.findJobs()).toThrow('error-1');
       });
     });
   });
 
-  describe('interruptRunning', () => {
-    describe('with a running and a done job', () => {
+  describe('interruptRunningJobs', () => {
+    describe('when the db returns running jobs', () => {
       beforeEach(() => {
-        repo.createJob(createJob('job-running'));
-        repo.createJob(createJob('job-done', {
-          status: JOB_STATUS.DONE,
-        }));
-        repo.interruptRunningJobs();
+        dbMock.all.mockReturnValue([{ id: 'r1' }, { id: 'r2' }]);
       });
 
-      it('marks the running job interrupted with the reason', () => {
-        expect(repo.findJob({ id: 'job-running' })).toMatchObject({
+      it('marks each interrupted with the reason', () => {
+        repo.interruptRunningJobs();
+        expect(dbMock.set).toHaveBeenCalledWith({
           status: JOB_STATUS.INTERRUPTED,
           error: 'server restarted while the job was running',
+          updatedAt: expect.any(String),
         });
       });
 
-      it('leaves the done job alone', () => {
-        expect(repo.findJob({ id: 'job-done' }).status).toBe(JOB_STATUS.DONE);
+      it('returns how many it interrupted', () => {
+        expect(repo.interruptRunningJobs()).toBe(2);
+      });
+
+      describe('but one update throws', () => {
+        beforeEach(() => {
+          dbMock.run
+            .mockReturnValueOnce(undefined)
+            .mockImplementationOnce(() => {
+              throw new Error('error-1');
+            });
+        });
+
+        it('propagates the error', () => {
+          expect(() =>
+            repo.interruptRunningJobs()).toThrow('error-1');
+        });
       });
     });
 
-    describe('without running jobs', () => {
-      it('interrupts nothing', () => {
+    describe('when the db returns no running job', () => {
+      beforeEach(() => {
+        dbMock.all.mockReturnValue([]);
+      });
+
+      it('returns zero', () => {
         expect(repo.interruptRunningJobs()).toBe(0);
+      });
+
+      it('updates nothing', () => {
+        repo.interruptRunningJobs();
+        expect(dbMock.update).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the db throws', () => {
+      beforeEach(() => {
+        dbMock.all.mockImplementation(() => {
+          throw new Error('error-1');
+        });
+      });
+
+      it('propagates the error', () => {
+        expect(() =>
+          repo.interruptRunningJobs()).toThrow('error-1');
       });
     });
   });

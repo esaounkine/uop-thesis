@@ -13,23 +13,30 @@ export class JobController {
 
   submitJob({ body }) {
     const {
-      provider: providerId, id, cache = true,
+      provider: providerId,
+      id: authorId,
+      cache = true,
     } = body ?? {};
-    const provider = this.providers.find((each) =>
-      each.id === providerId);
 
-    if (!provider || !id) {
+    if (!providerId || !authorId) {
       throw new ApiError(400, 'body must contain `provider` and `id`');
+    }
+
+    const provider = this.providers.find((p) =>
+      p.id === providerId);
+
+    if (!provider) {
+      throw new ApiError(404, `unknown provider: ${providerId}`);
     }
 
     const requestId = this.jobService.submitJob(
       () =>
         provider.metricsService
-          .getAuthorMetrics(provider.id, id, { cache: cache }),
+          .getAuthorMetrics(provider.id, authorId, { cache: cache }),
       {
         queue: provider.queue,
         provider: provider.id,
-        authorId: id,
+        authorId: authorId,
       },
     );
 
@@ -55,6 +62,7 @@ export class JobController {
   /**
    * Get stored metrics graph for an author.
    */
+  // TODO move this method out of jobcontroller
   getStoredMetrics({ params }) {
     const provider = this.providers.find((each) =>
       each.id === params.provider);

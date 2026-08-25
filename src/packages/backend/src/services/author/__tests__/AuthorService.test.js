@@ -1,112 +1,177 @@
-import {
-  beforeEach, describe, expect, it, jest,
-} from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { AuthorService } from '../AuthorService.js';
 
-const createAuthor = (authorId) => {
-  return {
-    authorId: authorId,
-    originalName: authorId,
-    normalisedName: authorId.toLowerCase(),
-  };
+const author1 = {
+  authorId: 'A1',
+  originalName: 'A1',
+  normalisedName: 'a1',
 };
 
-const createPublication = (pubId) => {
-  return {
-    pubId: pubId,
-    title: pubId,
-    normalisedTitle: pubId.toLowerCase(),
-    externalId: null,
-  };
+const author2 = {
+  authorId: 'A2',
+  originalName: 'A2',
+  normalisedName: 'a2',
 };
 
-const createConnector = ({
-  author = null, publications = [], searchResults = [],
-}) => {
-  return {
-    id: 'openalex',
-    getAuthorById: jest.fn().mockResolvedValue(author),
-    getAuthorPublications: jest.fn().mockResolvedValue(publications),
-    searchAuthors: jest.fn().mockResolvedValue(searchResults),
-  };
+const pub1 = {
+  pubId: 'W1',
+  title: 'W1',
+  normalisedTitle: 'w1',
+  externalId: null,
+};
+
+const pub2 = {
+  pubId: 'W2',
+  title: 'W2',
+  normalisedTitle: 'w2',
+  externalId: null,
 };
 
 describe('AuthorService', () => {
-  describe('searchByName', () => {
-    describe('when authors match', () => {
-      let candidates;
+  let connectorMock;
+  let authorService;
 
-      beforeEach(async () => {
-        const connectorMock = createConnector({
-          searchResults: [createAuthor('A1'), createAuthor('A2')],
-        });
-        candidates = await new AuthorService({
-          connector: connectorMock,
-        }).searchByName('jane');
+  beforeEach(() => {
+    connectorMock = {
+      searchAuthors: jest.fn(),
+      getAuthorById: jest.fn(),
+      getAuthorPublications: jest.fn(),
+    };
+    authorService = new AuthorService({
+      connector: connectorMock,
+    });
+  });
+
+  describe('searchByName', () => {
+    describe('when the connector returns', () => {
+      beforeEach(() => {
+        connectorMock.searchAuthors
+          .mockResolvedValue([author1, author2]);
       });
 
-      it('returns the candidate authors', () => {
-        expect(candidates).toEqual([createAuthor('A1'), createAuthor('A2')]);
+      it('returns the candidate authors', async () => {
+        expect(await authorService.searchByName('jane'))
+          .toEqual([author1, author2]);
+      });
+    });
+
+    describe('when the connector rejects', () => {
+      beforeEach(() => {
+        connectorMock.searchAuthors.mockRejectedValue(new Error('error-1'));
+      });
+
+      it('propagates the error', async () => {
+        await expect(authorService.searchByName('jane'))
+          .rejects.toThrow('error-1');
       });
     });
   });
 
   describe('getPublications', () => {
-    describe('when the author exists', () => {
-      let result;
-
-      beforeEach(async () => {
-        const connectorMock = createConnector({
-          author: createAuthor('A1'),
-          publications: [createPublication('W1'), createPublication('W2')],
-        });
-        result = await new AuthorService({
-          connector: connectorMock,
-        }).getPublications('A1');
+    describe('when the connector returns no results', () => {
+      beforeEach(() => {
+        connectorMock.getAuthorById.mockResolvedValue(null);
       });
 
-      it('returns the author', () => {
-        expect(result.author).toEqual(createAuthor('A1'));
+      it('returns null', async () => {
+        expect(await authorService.getPublications('missing')).toBeNull();
       });
 
-      it('returns their publications', () => {
-        expect(result.publications).toEqual([createPublication('W1'), createPublication('W2')]);
+      it('does not fetch publications', async () => {
+        await authorService.getPublications('missing');
+
+        expect(connectorMock.getAuthorPublications).not.toHaveBeenCalled();
       });
     });
 
-    describe('when cache is disabled', () => {
-      let connectorMock;
-
-      beforeEach(async () => {
-        connectorMock = createConnector({
-          author: createAuthor('A1'),
-        });
-        await new AuthorService({
-          connector: connectorMock,
-        }).getPublications('A1', { cache: false });
+    describe('when the connector rejects', () => {
+      beforeEach(() => {
+        connectorMock.getAuthorById.mockRejectedValue(new Error('error-2'));
       });
 
-      it('forwards the flag to the author fetch', () => {
-        expect(connectorMock.getAuthorById).toHaveBeenCalledWith('A1', { cache: false });
-      });
-
-      it('forwards the flag to the publications fetch', () => {
-        expect(connectorMock.getAuthorPublications).toHaveBeenCalledWith('A1', { cache: false });
+      it('propagates the error', async () => {
+        await expect(authorService.getPublications('A1'))
+          .rejects.toThrow('error-2');
       });
     });
 
-    describe('when the author is not found', () => {
-      let result;
-
-      beforeEach(async () => {
-        const connectorMock = createConnector({ author: null });
-        result = await new AuthorService({
-          connector: connectorMock,
-        }).getPublications('missing');
+    describe('when the connector returns results', () => {
+      beforeEach(() => {
+        connectorMock.getAuthorById
+          .mockResolvedValue(author1);
       });
 
-      it('returns null', () => {
-        expect(result).toBeNull();
+      describe('and the publications fetch succeeds', () => {
+        const publications = [pub1, pub2];
+
+        beforeEach(() => {
+          connectorMock.getAuthorPublications
+            .mockResolvedValue(publications);
+        });
+
+        it('returns the author', async () => {
+          const result = await authorService.getPublications('A1');
+
+          expect(result.author).toEqual(author1);
+        });
+
+        it('returns their publications', async () => {
+          const result = await authorService.getPublications('A1');
+
+          expect(result.publications).toBe(publications);
+        });
+      });
+
+      describe('but the publications fetch rejects', () => {
+        beforeEach(() => {
+          connectorMock.getAuthorPublications
+            .mockRejectedValue(new Error('error-3'));
+        });
+
+        it('propagates the error', async () => {
+          await expect(authorService.getPublications('A1'))
+            .rejects.toThrow('error-3');
+        });
+      });
+
+      describe('and the cache is enabled (default)', () => {
+        beforeEach(() => {
+          connectorMock.getAuthorPublications.mockResolvedValue([]);
+        });
+
+        it('uses the cache for the author fetch', async () => {
+          await authorService.getPublications('A1');
+
+          expect(connectorMock.getAuthorById)
+            .toHaveBeenCalledWith('A1', { cache: true });
+        });
+
+        it('uses the cache for the publications fetch', async () => {
+          await authorService.getPublications('A1');
+
+          expect(connectorMock.getAuthorPublications)
+            .toHaveBeenCalledWith('A1', { cache: true });
+        });
+      });
+
+      describe('and the cache is disabled', () => {
+        beforeEach(() => {
+          connectorMock.getAuthorPublications.mockResolvedValue([]);
+        });
+
+        it('forwards the flag to the author fetch', async () => {
+          await authorService.getPublications('A1', { cache: false });
+
+          expect(connectorMock.getAuthorById)
+            .toHaveBeenCalledWith('A1', { cache: false });
+        });
+
+        it('forwards the flag to the publications fetch', async () => {
+          await authorService.getPublications('A1', { cache: false });
+
+          expect(connectorMock.getAuthorPublications)
+            .toHaveBeenCalledWith('A1', { cache: false });
+        });
       });
     });
   });

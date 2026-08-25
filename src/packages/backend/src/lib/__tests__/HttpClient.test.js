@@ -1,10 +1,7 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { migrate } from 'drizzle-orm/node-sqlite/migrator';
-import { migrationsDir } from '../../config/env.js';
-import { DbClient } from '../../db/DbClient.js';
-import { CacheRepository } from '../../repositories/CacheRepository.js';
+import {
+  beforeEach, describe, expect, it, jest,
+} from '@jest/globals';
 import { HttpClient } from '../HttpClient.js';
-import { RetryStrategy } from '../RetryStrategy.js';
 
 const createOkResponse = (body) => {
   return {
@@ -25,221 +22,165 @@ const createErrorResponse = (status) => {
   };
 };
 
-const createCache = () => {
-  const { db } = new DbClient();
-  migrate(db, { migrationsFolder: migrationsDir });
-  return new CacheRepository(db);
-};
+describe('HttpClient', () => {
+  let fetchImplMock;
+  let retryStrategyMock;
+  let client;
 
-// A strategy that always retries with no real delay.
-const retryingStrategy = (maxRetries) =>
-  new RetryStrategy({
-    maxRetries: maxRetries,
-    shouldRetry: () =>
-      true,
-    delayMs: () =>
-      0,
-    sleep: async () => {
-    },
+  beforeEach(() => {
+    fetchImplMock = jest.fn();
+    retryStrategyMock = {
+      run: jest.fn((task) =>
+        task()),
+    };
+    client = new HttpClient({
+      fetchImpl: fetchImplMock,
+      retryStrategy: retryStrategyMock,
+    });
   });
 
-describe('HttpClient', () => {
   describe('getJson', () => {
-    describe('when there is no cache', () => {
-      describe('and the response is ok', () => {
-        let result;
+    describe('when the response is ok', () => {
+      beforeEach(() => {
+        fetchImplMock.mockResolvedValue(createOkResponse({ hello: 'world' }));
+      });
 
-        beforeEach(async () => {
-          const fetchImplMock = jest.fn().mockResolvedValue(createOkResponse({ hello: 'world' }));
-          result = await new HttpClient({ fetchImpl: fetchImplMock }).getJson('https://x/');
-        });
+      it('returns the parsed data', async () => {
+        const result = await client.getJson('https://x/');
+        expect(result.data).toEqual({ hello: 'world' });
+      });
 
-        it('returns the parsed data', () => {
-          expect(result.data).toEqual({ hello: 'world' });
-        });
+      it('returns a fetched date', async () => {
+        const result = await client.getJson('https://x/');
+        expect(result.fetchedAt).toBeInstanceOf(Date);
+      });
 
-        it('returns a fetched date', () => {
-          expect(result.fetchedAt).toBeInstanceOf(Date);
-        });
+      it('calls fetch directly', async () => {
+        await client.getJson('https://x/');
+        expect(fetchImplMock).toHaveBeenCalledTimes(1);
+      });
+
+      it('sends no extra headers by default', async () => {
+        await client.getJson('https://x/');
+        const [, options] = fetchImplMock.mock.calls[0];
+        expect(options.headers).toEqual({});
       });
 
       describe('and headers are passed', () => {
-        let fetchImplMock;
-
-        beforeEach(async () => {
-          fetchImplMock = jest.fn().mockResolvedValue(createOkResponse({
-            ok: true,
-          }));
-          await new HttpClient({
-            fetchImpl: fetchImplMock,
-          }).getJson('https://x/', undefined, {
+        it('injects them into the request', async () => {
+          await client.getJson('https://x/', undefined, {
             Authorization: 'Bearer secret',
           });
-        });
-
-        it('injects them into the request', () => {
           const [, options] = fetchImplMock.mock.calls[0];
           expect(options.headers.Authorization).toBe('Bearer secret');
         });
       });
 
-      describe('and the response is 429 then ok', () => {
-        let fetchImplMock;
-        let result;
-
-        beforeEach(async () => {
-          fetchImplMock = jest.fn()
-            .mockResolvedValueOnce(createErrorResponse(429))
-            .mockResolvedValue(createOkResponse({
-              hello: 'world',
-            }));
-          const client = new HttpClient({
-            retryStrategy: retryingStrategy(2),
-            fetchImpl: fetchImplMock,
-          });
-          result = await client.getJson('https://x/');
-        });
-
-        it('retries and returns the data', () => {
-          expect(result.data).toEqual({ hello: 'world' });
-        });
-
-        it('retried once', () => {
-          expect(fetchImplMock).toHaveBeenCalledTimes(2);
-        });
-      });
-
-      describe('and the response keeps being 429', () => {
-        let client;
-        let fetchImplMock;
-
-        beforeEach(() => {
-          fetchImplMock = jest.fn().mockResolvedValue(createErrorResponse(429));
-          client = new HttpClient({
-            retryStrategy: retryingStrategy(2),
-            fetchImpl: fetchImplMock,
-          });
-        });
-
-        it('throws once retries are exhausted', async () => {
-          await expect(client.getJson('https://x/')).rejects.toThrow('429');
-        });
-
-        it('tries maxRetries + 1 times', async () => {
-          await client.getJson('https://x/').catch(() => {
-          });
-          expect(fetchImplMock).toHaveBeenCalledTimes(3);
-        });
-      });
-
       describe('and a queue is provided', () => {
-        let addMock;
-        let result;
+        let queueMock;
 
-        beforeEach(async () => {
-          addMock = jest.fn((task) =>
-            task());
-          const client = new HttpClient({
-            queue: { add: addMock },
-            fetchImpl: jest.fn().mockResolvedValue(createOkResponse({
-              hello: 'world',
-            })),
+        beforeEach(() => {
+          queueMock = {
+            add: jest.fn((task) =>
+              task()),
+          };
+          client = new HttpClient({
+            fetchImpl: fetchImplMock,
+            retryStrategy: retryStrategyMock,
+            queue: queueMock,
           });
-          result = await client.getJson('https://x/');
         });
 
-        it('routes the request through the queue', () => {
-          expect(addMock).toHaveBeenCalledTimes(1);
-        });
-
-        it('still returns the data', () => {
-          expect(result.data).toEqual({ hello: 'world' });
+        it('routes the request through the queue', async () => {
+          await client.getJson('https://x/');
+          expect(queueMock.add).toHaveBeenCalledTimes(1);
         });
       });
 
-      describe('and the response is a non-transient error', () => {
-        let client;
+      describe('and a cache is provided', () => {
+        let cacheRepositoryMock;
 
         beforeEach(() => {
+          cacheRepositoryMock = {
+            get: jest.fn(),
+            put: jest.fn(),
+          };
           client = new HttpClient({
-            fetchImpl: jest.fn().mockResolvedValue(createErrorResponse(404)),
+            fetchImpl: fetchImplMock,
+            retryStrategy: retryStrategyMock,
+            cacheRepository: cacheRepositoryMock,
           });
         });
 
-        it('throws with the status without retrying', async () => {
-          await expect(client.getJson('https://x/')).rejects.toThrow('404');
+        describe('and a ttl is set', () => {
+          describe('and the cache has a fresh entry', () => {
+            beforeEach(() => {
+              cacheRepositoryMock.get.mockReturnValue({
+                value: { cached: true },
+                fetchedAt: new Date(),
+              });
+            });
+
+            it('serves the cached value', async () => {
+              const result = await client.getJson('https://x/?a=1', 60_000);
+              expect(result.data).toEqual({ cached: true });
+            });
+
+            it('does not fetch', async () => {
+              await client.getJson('https://x/?a=1', 60_000);
+              expect(fetchImplMock).not.toHaveBeenCalled();
+            });
+          });
+
+          describe('but the cache is empty', () => {
+            beforeEach(() => {
+              cacheRepositoryMock.get.mockReturnValue(null);
+            });
+
+            it('fetches from the network', async () => {
+              const result = await client.getJson('https://x/?a=1', 60_000);
+              expect(result.data).toEqual({ hello: 'world' });
+            });
+
+            it('stores the response under the normalised key', async () => {
+              await client.getJson('https://x/?b=2&a=1', 60_000);
+              expect(cacheRepositoryMock.put)
+                .toHaveBeenCalledWith('https://x/?a=1&b=2', { hello: 'world' });
+            });
+          });
+        });
+
+        describe('and the ttl is null', () => {
+          it('skips the cache read', async () => {
+            await client.getJson('https://x/?a=1', null);
+            expect(cacheRepositoryMock.get).not.toHaveBeenCalled();
+          });
+
+          it('fetches live', async () => {
+            const result = await client.getJson('https://x/?a=1', null);
+            expect(result.data).toEqual({ hello: 'world' });
+          });
         });
       });
     });
 
-    describe('when a cache is provided', () => {
-      let cacheRepository;
-      let fetchImplMock;
-
+    describe('when the response is not ok', () => {
       beforeEach(() => {
-        cacheRepository = createCache();
-        fetchImplMock = jest.fn()
-          .mockResolvedValueOnce(createOkResponse({ n: 1 }))
-          .mockResolvedValueOnce(createOkResponse({ n: 2 }));
+        fetchImplMock.mockResolvedValue(createErrorResponse(404));
       });
 
-      describe('and nothing is cached', () => {
-        let result;
+      it('throws with the status', async () => {
+        await expect(client.getJson('https://x/')).rejects.toThrow('404');
+      });
+    });
 
-        beforeEach(async () => {
-          result = await new HttpClient({
-            fetchImpl: fetchImplMock,
-            cacheRepository: cacheRepository,
-          }).getJson('https://api.test/works?a=1', 60_000);
-        });
-
-        it('fetches from the network', () => {
-          expect(result.data).toEqual({ n: 1 });
-        });
+    describe('when the retry strategy rejects', () => {
+      beforeEach(() => {
+        retryStrategyMock.run.mockRejectedValue(new Error('error-1'));
       });
 
-      describe('and a fresh entry is cached under the same query', () => {
-        let second;
-
-        beforeEach(async () => {
-          const client = new HttpClient({
-            fetchImpl: fetchImplMock,
-            cacheRepository: cacheRepository,
-          });
-          await client.getJson('https://api.test/works?a=1&b=2', 60_000);
-          // Same query, params in a different order -> same normalised key.
-          second = await client.getJson('https://api.test/works?b=2&a=1', 60_000);
-        });
-
-        it('serves from the cache', () => {
-          expect(second.data).toEqual({ n: 1 });
-        });
-
-        it('does not fetch again', () => {
-          expect(fetchImplMock).toHaveBeenCalledTimes(1);
-        });
-      });
-
-      describe('and the ttl is null', () => {
-        let result;
-
-        beforeEach(async () => {
-          const client = new HttpClient({
-            fetchImpl: fetchImplMock,
-            cacheRepository: cacheRepository,
-          });
-          // Seed a fresh entry, then request the same url live.
-          await client.getJson('https://api.test/works?a=1', 60_000);
-          result = await client.getJson('https://api.test/works?a=1', null);
-        });
-
-        it('fetches live instead of serving the cache', () => {
-          expect(result.data).toEqual({ n: 2 });
-        });
-
-        it('still calls the network', () => {
-          expect(fetchImplMock).toHaveBeenCalledTimes(2);
-        });
+      it('propagates the error', async () => {
+        await expect(client.getJson('https://x/')).rejects.toThrow('error-1');
       });
     });
   });

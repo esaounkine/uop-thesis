@@ -96,7 +96,10 @@ export class CitationGraphService {
     this.publicationRepository.saveAll(publicationRows);
     this.authorRepository.saveAll(authorRows);
     this.contributionRepository.saveAll(contributionRows);
-    this.citationRepository.saveAll(citationRows);
+
+    if (citationRows.length > 0) {
+      this.citationRepository.saveAll(citationRows);
+    }
   }
 
   /**

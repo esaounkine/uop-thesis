@@ -17,10 +17,22 @@ import { PublicationService } from './services/publication/PublicationService.js
 import { AuthorService } from './services/author/AuthorService.js';
 import { MetricsService } from './services/metrics/MetricsService.js';
 
+// TODO revisit what is the shapeless object this function returns
+//  ideally we'd like to return an instance of a real class
 const createProvider = ({
-  id, queue, connector, citationGraphService, classificationService,
+  id,
+  queue,
+  connector,
+  citationGraphService,
+  classificationService,
+  apiKey = null,
+  requestsPerSecond = null,
 }) => {
   const authorService = new AuthorService({
+    connector: connector,
+  });
+
+  const publicationService = new PublicationService({
     connector: connector,
   });
 
@@ -28,14 +40,15 @@ const createProvider = ({
     id: id,
     queue: queue,
     connector: connector,
+    apiKey: apiKey,
+    requestsPerSecond: requestsPerSecond,
+    // TODO the duplicate author service instance in this object is smelly
     authorService: authorService,
     citationGraphService: citationGraphService,
     classificationService: classificationService,
     metricsService: new MetricsService({
       authorService: authorService,
-      publicationService: new PublicationService({
-        connector: connector,
-      }),
+      publicationService: publicationService,
       classificationService: classificationService,
       citationGraphService: citationGraphService,
     }),
@@ -51,6 +64,7 @@ const createProvider = ({
  * @param {import('./connectors/ProviderConnector.js').ProviderConnector} [args.connector]
  * @returns {{ id: string, queue, connector, authorService: AuthorService, metricsService: MetricsService }[]}
  */
+// TODO if the ultimate outcome of this wiring is providers, it should be named `wireProviders` or `getProviders` or `initProviders`
 export const wire = ({
   dbPath = dbFile, connector,
 } = {}) => {
@@ -59,7 +73,6 @@ export const wire = ({
     : dbPath);
   migrate(db, { migrationsFolder: migrationsDir });
 
-  const cacheRepository = new CacheRepository(db);
   const citationGraphService = new CitationGraphService({
     publicationRepository: new PublicationRepository(db),
     authorRepository: new AuthorRepository(db),
@@ -67,20 +80,19 @@ export const wire = ({
     citationRepository: new CitationRepository(db),
   });
   const classificationService = new ClassificationService();
-  const shared = {
-    citationGraphService: citationGraphService,
-    classificationService: classificationService,
-  };
 
   if (connector) {
     return [
       createProvider({
         id: connector.id,
         connector: connector,
-        ...shared,
+        citationGraphService: citationGraphService,
+        classificationService: classificationService,
       }),
     ];
   }
+
+  const cacheRepository = new CacheRepository(db);
 
   return (providerIds ?? listProviders()).map((id) => {
     const spec = selectProvider(id);
@@ -95,7 +107,10 @@ export const wire = ({
         cacheRepository: cacheRepository,
         queue: queue,
       })),
-      ...shared,
+      apiKey: spec.apiKey,
+      requestsPerSecond: spec.requestsPerSecond,
+      citationGraphService: citationGraphService,
+      classificationService: classificationService,
     });
   });
 };

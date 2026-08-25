@@ -1,6 +1,5 @@
 import os from 'node:os';
 import { readFileSync, statfsSync } from 'node:fs';
-import { selectProvider } from '../connectors/providers/registry.js';
 
 const { version } = JSON.parse(
   readFileSync(new URL('../../package.json', import.meta.url)),
@@ -38,12 +37,10 @@ export class StatusController {
     return {
       version: version,
       providers: await Promise.all(this.providers.map(async (provider) => {
-        const spec = selectProvider(provider.id);
-
         return {
           id: provider.id,
-          apiKey: maskValue(spec.apiKey),
-          requestsPerSecond: spec.requestsPerSecond,
+          apiKey: maskValue(provider.apiKey),
+          requestsPerSecond: provider.requestsPerSecond,
           quota: await this.fetchQuota(provider),
           records: this.statsRepository.countByProvider(provider.id),
         };
@@ -52,13 +49,13 @@ export class StatusController {
     };
   }
 
-  // Best effort: a provider without a quota, or a failed lookup, reports null.
   async fetchQuota(provider) {
     try {
       const quota = await provider.connector?.getQuota?.();
 
       return quota ?? null;
     } catch {
+      // TODO when catching errors, print a log message
       return null;
     }
   }

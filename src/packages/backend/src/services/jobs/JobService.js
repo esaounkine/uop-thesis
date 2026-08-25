@@ -11,7 +11,6 @@ export class JobService {
   constructor(jobRepository) {
     this.jobRepository = jobRepository;
     this.running = new Map();
-    this.jobRepository.interruptRunningJobs();
   }
 
   /**

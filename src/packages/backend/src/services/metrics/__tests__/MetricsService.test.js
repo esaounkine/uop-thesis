@@ -1,12 +1,10 @@
 import {
   beforeEach, describe, expect, it, jest,
 } from '@jest/globals';
-import { ClassificationService } from '../../classification/ClassificationService.js';
 import { MetricsService } from '../MetricsService.js';
 
 const contribution = (authorId, position) => {
   return {
-    pubId: 'X',
     authorId: authorId,
     position: position,
   };
@@ -19,230 +17,368 @@ const publication = (pubId) => {
   };
 };
 
-const createService = ({
-  authorServiceMock, publicationServiceMock, citationGraphMock,
-}) =>
-  new MetricsService({
-    authorService: authorServiceMock,
-    publicationService: publicationServiceMock,
-    classificationService: new ClassificationService(),
-    citationGraphService: citationGraphMock,
+describe('MetricsService', () => {
+  let authorServiceMock;
+  let publicationServiceMock;
+  let classificationServiceMock;
+  let citationGraphServiceMock;
+  let metricsService;
+
+  beforeEach(() => {
+    authorServiceMock = {
+      getPublications: jest.fn(),
+    };
+    publicationServiceMock = {
+      getCitations: jest.fn(),
+    };
+    classificationServiceMock = {
+      getCitationType: jest.fn(),
+      getMetrics: jest.fn(),
+    };
+    citationGraphServiceMock = {
+      storePubTree: jest.fn(),
+    };
+    metricsService = new MetricsService({
+      authorService: authorServiceMock,
+      publicationService: publicationServiceMock,
+      classificationService: classificationServiceMock,
+      citationGraphService: citationGraphServiceMock,
+    });
   });
 
-describe('MetricsService', () => {
   describe('getPublicationMetrics', () => {
-    let result;
+    const paper = {
+      pubId: 'W1',
+      contributions: [contribution('A1', 1)],
+    };
+    const aggregate = {
+      total: 2,
+    };
 
-    beforeEach(async () => {
-      const publicationServiceMock = {
-        getCitations: jest.fn().mockResolvedValue([
-          {
-            pubId: 'W2',
-            contributions: [contribution('A1', 1)], // direct
-          },
-          {
-            pubId: 'W3',
-            contributions: [contribution('C1', 1), contribution('A1', 2)], // co-author
-          },
-          {
-            pubId: 'W4',
-            contributions: [contribution('Z1', 1)], // external
-          },
-        ]),
-      };
-      result = await createService({
-        publicationServiceMock: publicationServiceMock,
-      }).getPublicationMetrics({
-        pubId: 'W1',
-        contributions: [contribution('A1', 1), contribution('A2', 2)],
-      });
-    });
-
-    it('returns the publication', () => {
-      expect(result.publication.pubId).toBe('W1');
-    });
-
-    it('aggregates the metrics', () => {
-      expect(result.metrics).toEqual({
-        total: 3,
-        external: 1,
-        self: {
-          total: 2,
-          direct: 1,
-          coauthor: 1,
+    describe('when the publication service returns citations', () => {
+      const citations = [
+        {
+          pubId: 'W2',
+          contributions: [contribution('A1', 1)],
         },
+        {
+          pubId: 'W3',
+          contributions: [contribution('Z1', 1)],
+        },
+      ];
+
+      beforeEach(() => {
+        publicationServiceMock.getCitations.mockResolvedValue(citations);
+        classificationServiceMock.getCitationType
+          .mockReturnValueOnce('self-direct')
+          .mockReturnValueOnce('external');
+        classificationServiceMock.getMetrics.mockReturnValue(aggregate);
+      });
+
+      it('returns the publication', async () => {
+        const result = await metricsService.getPublicationMetrics(paper);
+
+        expect(result.publication).toBe(paper);
+      });
+
+      it('compares the cited paper to each citing paper', async () => {
+        const { getCitationType } = classificationServiceMock;
+
+        await metricsService.getPublicationMetrics(paper);
+
+        expect(getCitationType).toHaveBeenNthCalledWith(
+          1,
+          paper.contributions,
+          citations[0].contributions,
+        );
+        expect(getCitationType).toHaveBeenNthCalledWith(
+          2,
+          paper.contributions,
+          citations[1].contributions,
+        );
+      });
+
+      it('labels each citation with the classification', async () => {
+        const result = await metricsService.getPublicationMetrics(paper);
+
+        expect(result.citations).toEqual([
+          {
+            publication: citations[0],
+            classification: 'self-direct',
+          },
+          {
+            publication: citations[1],
+            classification: 'external',
+          },
+        ]);
+      });
+
+      it('aggregates the classifications', async () => {
+        await metricsService.getPublicationMetrics(paper);
+
+        expect(classificationServiceMock.getMetrics)
+          .toHaveBeenCalledWith(['self-direct', 'external']);
+      });
+
+      it('returns the aggregate', async () => {
+        const result = await metricsService.getPublicationMetrics(paper);
+
+        expect(result.metrics).toBe(aggregate);
+      });
+
+      describe('and the cache is enabled (default)', () => {
+        it('uses the cache for the citations fetch', async () => {
+          await metricsService.getPublicationMetrics(paper);
+
+          expect(publicationServiceMock.getCitations)
+            .toHaveBeenCalledWith('W1', { cache: true });
+        });
+      });
+
+      describe('and the cache is disabled', () => {
+        it('skips the cache for the citations fetch', async () => {
+          await metricsService.getPublicationMetrics(paper, { cache: false });
+
+          expect(publicationServiceMock.getCitations)
+            .toHaveBeenCalledWith('W1', { cache: false });
+        });
       });
     });
 
-    it('labels each citation for the debug details', () => {
-      expect(result.citations.map((entry) =>
-        [entry.publication.pubId, entry.classification])).toEqual([
-        ['W2', 'self-direct'],
-        ['W3', 'self-coauthor'],
-        ['W4', 'external'],
-      ]);
+    describe('when the publication service returns no citations', () => {
+      beforeEach(() => {
+        publicationServiceMock.getCitations.mockResolvedValue([]);
+        classificationServiceMock.getMetrics.mockReturnValue(aggregate);
+      });
+
+      it('has no citations', async () => {
+        const result = await metricsService.getPublicationMetrics(paper);
+
+        expect(result.citations).toEqual([]);
+      });
+
+      it('aggregates an empty classification list', async () => {
+        await metricsService.getPublicationMetrics(paper);
+
+        expect(classificationServiceMock.getMetrics).toHaveBeenCalledWith([]);
+      });
+    });
+
+    describe('when the publication service rejects', () => {
+      beforeEach(() => {
+        publicationServiceMock.getCitations
+          .mockRejectedValue(new Error('error-1'));
+      });
+
+      it('propagates the error', async () => {
+        await expect(metricsService.getPublicationMetrics(paper))
+          .rejects.toThrow('error-1');
+      });
     });
   });
 
   describe('getAuthorMetrics', () => {
-    describe('when the author exists', () => {
-      let result;
-      let citationGraphMock;
-
-      beforeEach(async () => {
-        const citationsByPub = {
-          W1: [
-            {
-              pubId: 'W10',
-              contributions: [contribution('A1', 1)], // direct
-            },
-            {
-              pubId: 'W11',
-              contributions: [contribution('Z1', 1)], // external
-            },
-          ],
-          W2: [
-            {
-              pubId: 'W20',
-              contributions: [contribution('C1', 1), contribution('A1', 2)], // co-author
-            },
-          ],
-        };
-        citationGraphMock = { storePubTree: jest.fn() };
-        result = await createService({
-          publicationServiceMock: {
-            getCitations: jest.fn(async (pubId) =>
-              citationsByPub[pubId]),
-          },
-          authorServiceMock: {
-            getPublications: jest.fn().mockResolvedValue({
-              author: { authorId: 'A1' },
-              publications: [publication('W1'), publication('W2')],
-            }),
-          },
-          citationGraphMock: citationGraphMock,
-        }).getAuthorMetrics('openalex', 'A1');
+    describe('when the author service returns nothing', () => {
+      beforeEach(() => {
+        authorServiceMock.getPublications.mockResolvedValue(null);
       });
 
-      it('returns the author', () => {
-        expect(result.author.authorId).toBe('A1');
+      it('returns null', async () => {
+        expect(await metricsService.getAuthorMetrics('openalex', 'A1'))
+          .toBeNull();
+      });
+    });
+
+    describe('when the author service rejects', () => {
+      beforeEach(() => {
+        authorServiceMock.getPublications
+          .mockRejectedValue(new Error('error-2'));
       });
 
-      it('aggregates the metrics across all their papers', () => {
-        expect(result.metrics).toEqual({
-          total: 3,
-          external: 1,
-          self: {
-            total: 2,
-            direct: 1,
-            coauthor: 1,
+      it('propagates the error', async () => {
+        await expect(metricsService.getAuthorMetrics('openalex', 'A1'))
+          .rejects.toThrow('error-2');
+      });
+    });
+
+    describe('when the author has no publications', () => {
+      beforeEach(() => {
+        authorServiceMock.getPublications.mockResolvedValue({
+          author: {
+            authorId: 'A1',
           },
+          publications: [],
         });
       });
 
-      it('keeps the per-paper metrics for the debug details', () => {
-        expect(result.publications.map((entry) =>
-          entry.publication.pubId)).toEqual(['W1', 'W2']);
-      });
+      it('reports zero stats', async () => {
+        const result = await metricsService.getAuthorMetrics('openalex', 'A1');
 
-      it('reports the fetch stats', () => {
         expect(result.stats).toEqual({
-          total: 2,
-          fetched: 2,
+          total: 0,
+          fetched: 0,
           failed: 0,
         });
       });
 
-      it('persists each classified publication graph', () => {
-        expect(citationGraphMock.storePubTree).toHaveBeenCalledTimes(2);
-        expect(citationGraphMock.storePubTree)
-          .toHaveBeenCalledWith('openalex', expect.anything());
+      it('persists nothing', async () => {
+        await metricsService.getAuthorMetrics('openalex', 'A1');
+
+        expect(citationGraphServiceMock.storePubTree).not.toHaveBeenCalled();
       });
     });
 
-    describe('when some papers fail to fetch', () => {
-      let result;
+    describe('when the author has publications', () => {
+      const authorAggregate = {
+        total: 3,
+      };
+      const citationsByPub = {
+        W1: [{ pubId: 'W10' }, { pubId: 'W11' }],
+        W2: [{ pubId: 'W20' }],
+      };
 
-      beforeEach(async () => {
-        result = await createService({
-          publicationServiceMock: {
-            getCitations: jest.fn(async (pubId) => {
-              if (pubId === 'W2') {
-                throw new Error('rate limited');
-              }
-
-              return [
-                {
-                  pubId: 'W10',
-                  contributions: [contribution('A1', 1)], // direct
-                },
-              ];
-            }),
+      beforeEach(() => {
+        authorServiceMock.getPublications.mockResolvedValue({
+          author: {
+            authorId: 'A1',
           },
-          authorServiceMock: {
-            getPublications: jest.fn().mockResolvedValue({
-              author: { authorId: 'A1' },
-              publications: [publication('W1'), publication('W2')],
-            }),
-          },
-        }).getAuthorMetrics('openalex', 'A1');
-      });
-
-      it('skips the failed paper and counts it', () => {
-        expect(result.stats).toEqual({
-          total: 2,
-          fetched: 1,
-          failed: 1,
+          publications: [publication('W1'), publication('W2')],
         });
       });
 
-      it('aggregates over the papers it could fetch', () => {
-        expect(result.metrics.total).toBe(1);
+      describe('and every paper fetches', () => {
+        beforeEach(() => {
+          publicationServiceMock.getCitations.mockImplementation((pubId) =>
+            Promise.resolve(citationsByPub[pubId]));
+          classificationServiceMock.getCitationType.mockReturnValue('external');
+          classificationServiceMock.getMetrics.mockReturnValue(authorAggregate);
+        });
+
+        it('returns the author', async () => {
+          const result = await metricsService
+            .getAuthorMetrics('openalex', 'A1');
+
+          expect(result.author).toEqual({
+            authorId: 'A1',
+          });
+        });
+
+        it('aggregates the classifications across papers', async () => {
+          await metricsService.getAuthorMetrics('openalex', 'A1');
+
+          expect(classificationServiceMock.getMetrics)
+            .toHaveBeenCalledWith([
+              'external',
+              'external',
+              'external',
+            ]);
+        });
+
+        it('returns the aggregate', async () => {
+          const result = await metricsService
+            .getAuthorMetrics('openalex', 'A1');
+
+          expect(result.metrics).toBe(authorAggregate);
+        });
+
+        it('reports the fetch stats', async () => {
+          const result = await metricsService
+            .getAuthorMetrics('openalex', 'A1');
+
+          expect(result.stats).toEqual({
+            total: 2,
+            fetched: 2,
+            failed: 0,
+          });
+        });
+
+        it('persists each paper graph under the provider', async () => {
+          await metricsService.getAuthorMetrics('openalex', 'A1');
+
+          expect(citationGraphServiceMock.storePubTree)
+            .toHaveBeenCalledTimes(2);
+          expect(citationGraphServiceMock.storePubTree)
+            .toHaveBeenCalledWith('openalex', expect.anything());
+        });
       });
-    });
 
-    describe('when cache is disabled', () => {
-      let authorServiceMock;
-      let publicationServiceMock;
+      describe('but a paper fails to fetch', () => {
+        beforeEach(() => {
+          publicationServiceMock.getCitations.mockImplementation((pubId) => {
+            if (pubId === 'W2') {
+              return Promise.reject(new Error('error-3'));
+            }
 
-      beforeEach(async () => {
-        authorServiceMock = {
-          getPublications: jest.fn().mockResolvedValue({
-            author: { authorId: 'A1' },
-            publications: [publication('W1')],
-          }),
-        };
-        publicationServiceMock = {
-          getCitations: jest.fn().mockResolvedValue([]),
-        };
-        await createService({
-          authorServiceMock: authorServiceMock,
-          publicationServiceMock: publicationServiceMock,
-        }).getAuthorMetrics('openalex', 'A1', { cache: false });
+            return Promise.resolve(citationsByPub[pubId]);
+          });
+        });
+
+        it('counts the failure and keeps the rest', async () => {
+          const result = await metricsService
+            .getAuthorMetrics('openalex', 'A1');
+
+          expect(result.stats).toEqual({
+            total: 2,
+            fetched: 1,
+            failed: 1,
+          });
+        });
       });
 
-      it('forwards the flag to the publications fetch', () => {
-        expect(authorServiceMock.getPublications).toHaveBeenCalledWith('A1', { cache: false });
+      describe('but persisting a paper fails', () => {
+        beforeEach(() => {
+          publicationServiceMock.getCitations.mockResolvedValue([]);
+          citationGraphServiceMock.storePubTree.mockImplementation(() => {
+            throw new Error('error-4');
+          });
+        });
+
+        it('propagates the error', async () => {
+          await expect(metricsService.getAuthorMetrics('openalex', 'A1'))
+            .rejects.toThrow('error-4');
+        });
       });
 
-      it('forwards the flag to the citations fetch', () => {
-        expect(publicationServiceMock.getCitations).toHaveBeenCalledWith('W1', { cache: false });
+      describe('and the cache is enabled (default)', () => {
+        beforeEach(() => {
+          publicationServiceMock.getCitations.mockResolvedValue([]);
+        });
+
+        it('uses the cache for the author fetch', async () => {
+          await metricsService.getAuthorMetrics('openalex', 'A1');
+
+          expect(authorServiceMock.getPublications)
+            .toHaveBeenCalledWith('A1', { cache: true });
+        });
+
+        it('uses the cache for the citations fetch', async () => {
+          await metricsService.getAuthorMetrics('openalex', 'A1');
+
+          expect(publicationServiceMock.getCitations)
+            .toHaveBeenCalledWith('W1', { cache: true });
+        });
       });
-    });
 
-    describe('when the author is not found', () => {
-      let result;
+      describe('and the cache is disabled', () => {
+        beforeEach(() => {
+          publicationServiceMock.getCitations.mockResolvedValue([]);
+        });
 
-      beforeEach(async () => {
-        result = await createService({
-          authorServiceMock: {
-            getPublications: jest.fn().mockResolvedValue(null),
-          },
-        }).getAuthorMetrics('openalex', 'missing');
-      });
+        it('forwards the flag to the author fetch', async () => {
+          await metricsService
+            .getAuthorMetrics('openalex', 'A1', { cache: false });
 
-      it('returns null', () => {
-        expect(result).toBeNull();
+          expect(authorServiceMock.getPublications)
+            .toHaveBeenCalledWith('A1', { cache: false });
+        });
+
+        it('forwards the flag to the citations fetch', async () => {
+          await metricsService
+            .getAuthorMetrics('openalex', 'A1', { cache: false });
+
+          expect(publicationServiceMock.getCitations)
+            .toHaveBeenCalledWith('W1', { cache: false });
+        });
       });
     });
   });
