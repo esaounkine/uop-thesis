@@ -85,8 +85,13 @@ export const AuthorMetrics = ({ provider, authorId, storedAt }) => {
         }
 
         if (job.status === JOB_STATUS.DONE) {
-          setState({ status: 'ready', result: job.result });
-          console.log(job.result)
+          const result = await getStoredMetrics(provider, authorId);
+
+          if (stale) {
+            return;
+          }
+
+          setState({ status: 'ready', result: result });
           setFetchedAt(new Date().toISOString());
           setProgress(null);
           setRequestId(null);
