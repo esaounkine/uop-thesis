@@ -175,9 +175,8 @@ describe('the HTTP API', () => {
       expect(body).toHaveLength(1);
       expect(body[0]).toMatchObject({
         status: JOB_STATUS.DONE,
-        kind: 'author',
         provider: 'stub',
-        subjectId: 'A1',
+        authorId: 'A1',
       });
     });
 

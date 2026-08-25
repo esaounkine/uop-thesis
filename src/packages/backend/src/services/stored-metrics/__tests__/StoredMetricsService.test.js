@@ -21,8 +21,7 @@ const createJob = (id, patch = {}) => {
   return {
     id: id,
     provider: 'openalex',
-    kind: 'author',
-    subjectId: 'A1',
+    authorId: 'A1',
     status: JOB_STATUS.RUNNING,
     progress: null,
     result: null,

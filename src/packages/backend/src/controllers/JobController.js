@@ -28,9 +28,8 @@ export class JobController {
         provider.metricsService.getAuthorMetrics(id, { cache: cache }),
       {
         queue: provider.queue,
-        kind: 'author',
         provider: provider.id,
-        subjectId: id,
+        authorId: id,
       },
     );
 

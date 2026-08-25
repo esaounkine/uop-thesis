@@ -9,8 +9,7 @@ const createJob = (id, patch = {}) => {
   return {
     id: id,
     provider: 'openalex',
-    kind: 'author',
-    subjectId: 'W1',
+    authorId: 'W1',
     status: JOB_STATUS.RUNNING,
     progress: null,
     result: null,
@@ -96,17 +95,17 @@ describe('JobRepository', () => {
     describe('with filters', () => {
       beforeEach(() => {
         repo.createJob(createJob('done-old', {
-          subjectId: 'A1',
+          authorId: 'A1',
           status: JOB_STATUS.DONE,
           updatedAt: '2026-08-17T10:00:00.000Z',
         }));
         repo.createJob(createJob('done-new', {
-          subjectId: 'A1',
+          authorId: 'A1',
           status: JOB_STATUS.DONE,
           updatedAt: '2026-08-17T12:00:00.000Z',
         }));
         repo.createJob(createJob('running', {
-          subjectId: 'A1',
+          authorId: 'A1',
           status: JOB_STATUS.RUNNING,
           updatedAt: '2026-08-17T13:00:00.000Z',
         }));
@@ -115,14 +114,14 @@ describe('JobRepository', () => {
       it('returns the most recent matching job', () => {
         expect(repo.findJob({
           provider: 'openalex',
-          subjectId: 'A1',
+          authorId: 'A1',
           status: JOB_STATUS.DONE,
         }).id).toBe('done-new');
       });
 
       it('honors the status filter', () => {
         expect(repo.findJob({
-          subjectId: 'A1',
+          authorId: 'A1',
           status: JOB_STATUS.RUNNING,
         }).id).toBe('running');
       });
@@ -130,7 +129,7 @@ describe('JobRepository', () => {
       it('returns undefined when no job matches the filters', () => {
         expect(repo.findJob({
           provider: 'openalex',
-          subjectId: 'A2',
+          authorId: 'A2',
           status: JOB_STATUS.DONE,
         })).toBeUndefined();
       });

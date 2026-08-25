@@ -107,8 +107,7 @@ export const cache = sqliteTable('cache', {
 export const jobs = sqliteTable('jobs', {
   id: text('id').primaryKey(),
   provider: text('provider').notNull(),
-  kind: text('kind').notNull(),
-  subjectId: text('subject_id').notNull(),
+  authorId: text('author_id').notNull(),
   status: text('status', {
     enum: JOB_STATUSES,
   }).notNull(),

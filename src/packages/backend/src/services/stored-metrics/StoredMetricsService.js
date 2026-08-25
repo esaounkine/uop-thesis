@@ -14,13 +14,13 @@ export class StoredMetricsService {
 
   /**
    * @param {string} provider
-   * @param {string} subjectId
-   * @returns {Object | null} the last completed job for the subject
+   * @param {string} authorId
+   * @returns {Object | null} the last completed job for the author
    */
-  getStoredMetrics(provider, subjectId) {
+  getStoredMetrics(provider, authorId) {
     return this.jobRepository.findJob({
       provider: provider,
-      subjectId: subjectId,
+      authorId: authorId,
       status: JOB_STATUS.DONE,
     }) ?? null;
   }

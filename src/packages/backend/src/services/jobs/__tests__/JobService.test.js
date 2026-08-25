@@ -34,9 +34,8 @@ describe('JobService', () => {
     beforeEach(async () => {
       id = jobs.submitJob(async () =>
         'metrics', {
-        kind: 'author',
         provider: 'openalex',
-        subjectId: 'W1',
+        authorId: 'W1',
       });
       await completeTask();
     });
@@ -45,7 +44,6 @@ describe('JobService', () => {
       expect(jobs.getJob(id)).toMatchObject({
         status: JOB_STATUS.DONE,
         result: 'metrics',
-        kind: 'author',
         provider: 'openalex',
       });
     });
@@ -55,7 +53,7 @@ describe('JobService', () => {
       expect(restarted.getJob(id)).toMatchObject({
         status: JOB_STATUS.DONE,
         result: 'metrics',
-        subjectId: 'W1',
+        authorId: 'W1',
       });
     });
   });
@@ -67,9 +65,8 @@ describe('JobService', () => {
       id = jobs.submitJob(async () => {
         throw new Error('boom');
       }, {
-        kind: 'author',
         provider: 'openalex',
-        subjectId: 'W1',
+        authorId: 'W1',
       });
       await completeTask();
     });
@@ -105,9 +102,8 @@ describe('JobService', () => {
         queue.emit('completed');
       }, {
         queue: queue,
-        kind: 'author',
         provider: 'openalex',
-        subjectId: 'W1',
+        authorId: 'W1',
       });
       await completeTask();
 
@@ -123,15 +119,13 @@ describe('JobService', () => {
     beforeEach(async () => {
       jobs.submitJob(async () =>
         'first', {
-        kind: 'author',
         provider: 'openalex',
-        subjectId: 'W1',
+        authorId: 'W1',
       });
       jobs.submitJob(async () =>
         'second', {
-        kind: 'author',
         provider: 'openalex',
-        subjectId: 'A1',
+        authorId: 'A1',
       });
       await completeTask();
     });
@@ -154,9 +148,8 @@ describe('JobService', () => {
       const first = new JobService(repo2);
       first.submitJob(() =>
         new Promise(() => {}), {
-        kind: 'author',
         provider: 'openalex',
-        subjectId: 'W1',
+        authorId: 'W1',
       });
     });
 
