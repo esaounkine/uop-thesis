@@ -108,7 +108,7 @@ describe('MetricsService', () => {
             },
           ],
         };
-        citationGraphMock = { save: jest.fn() };
+        citationGraphMock = { storePubTree: jest.fn() };
         result = await createService({
           publicationServiceMock: {
             getCitations: jest.fn(async (pubId) =>
@@ -121,7 +121,7 @@ describe('MetricsService', () => {
             }),
           },
           citationGraphMock: citationGraphMock,
-        }).getAuthorMetrics('A1');
+        }).getAuthorMetrics('openalex', 'A1');
       });
 
       it('returns the author', () => {
@@ -154,7 +154,9 @@ describe('MetricsService', () => {
       });
 
       it('persists each classified publication graph', () => {
-        expect(citationGraphMock.save).toHaveBeenCalledTimes(2);
+        expect(citationGraphMock.storePubTree).toHaveBeenCalledTimes(2);
+        expect(citationGraphMock.storePubTree)
+          .toHaveBeenCalledWith('openalex', expect.anything());
       });
     });
 
@@ -183,7 +185,7 @@ describe('MetricsService', () => {
               publications: [publication('W1'), publication('W2')],
             }),
           },
-        }).getAuthorMetrics('A1');
+        }).getAuthorMetrics('openalex', 'A1');
       });
 
       it('skips the failed paper and counts it', () => {
@@ -216,7 +218,7 @@ describe('MetricsService', () => {
         await createService({
           authorServiceMock: authorServiceMock,
           publicationServiceMock: publicationServiceMock,
-        }).getAuthorMetrics('A1', { cache: false });
+        }).getAuthorMetrics('openalex', 'A1', { cache: false });
       });
 
       it('forwards the flag to the publications fetch', () => {
@@ -236,7 +238,7 @@ describe('MetricsService', () => {
           authorServiceMock: {
             getPublications: jest.fn().mockResolvedValue(null),
           },
-        }).getAuthorMetrics('missing');
+        }).getAuthorMetrics('openalex', 'missing');
       });
 
       it('returns null', () => {

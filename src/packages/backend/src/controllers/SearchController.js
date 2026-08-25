@@ -3,9 +3,9 @@ import { ApiError } from '../lib/api.js';
 const CANDIDATE_LIMIT = 10;
 
 export class SearchController {
-  constructor(providers, storedMetricsService) {
+  constructor(providers, jobService) {
     this.providers = providers;
-    this.storedMetricsService = storedMetricsService;
+    this.jobService = jobService;
   }
 
   searchAuthors({ query }) {
@@ -23,8 +23,8 @@ export class SearchController {
         return {
           provider: provider.id,
           authors: authors.map((author) => {
-            const stored = this.storedMetricsService
-              .getStoredMetrics(provider.id, author.authorId);
+            const stored = this.jobService
+              .getLastUpdateJob(provider.id, author.authorId);
 
             return {
               ...author,

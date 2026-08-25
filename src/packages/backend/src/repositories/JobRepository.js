@@ -1,13 +1,7 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { jobs } from '../db/schema.js';
 import { JOB_STATUS } from '../constants/job-status.js';
-
-const buildConditions = (filters) =>
-  Object.entries(filters)
-    .filter(([, value]) =>
-      value !== undefined)
-    .map(([field, value]) =>
-      eq(jobs[field], value));
+import { buildConditions } from '../lib/build-conditions.js';
 
 /**
  * Persists jobs.
@@ -50,7 +44,7 @@ export class JobRepository {
     return this.db
       .select()
       .from(jobs)
-      .where(and(...buildConditions(filters)))
+      .where(buildConditions(jobs, filters))
       .orderBy(desc(jobs.updatedAt))
       .get();
   }
@@ -63,7 +57,7 @@ export class JobRepository {
     return this.db
       .select()
       .from(jobs)
-      .where(and(...buildConditions(filters)))
+      .where(buildConditions(jobs, filters))
       .orderBy(desc(jobs.createdAt))
       .all();
   }

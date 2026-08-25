@@ -9,7 +9,6 @@ import { DbClient } from './db/DbClient.js';
 import { JobRepository } from './repositories/JobRepository.js';
 import { StatsRepository } from './repositories/StatsRepository.js';
 import { JobService } from './services/jobs/JobService.js';
-import { StoredMetricsService } from './services/stored-metrics/StoredMetricsService.js';
 import { SearchController } from './controllers/SearchController.js';
 import { AuthorController } from './controllers/AuthorController.js';
 import { JobController } from './controllers/JobController.js';
@@ -34,7 +33,6 @@ const cors = (req, res, next) => {
  * @param {Object} args
  * @param {ReturnType<import('./app.js').wire>} args.providers
  * @param {JobService} args.jobService
- * @param {StoredMetricsService} args.storedMetricsService
  * @param {StatsRepository} [args.statsService] - repo to get DB counts
  * @param {string} [args.staticDir] - static files to serve, when the directory
  *   exists; browser navigations (GET accepting text/html) fall back to
@@ -44,13 +42,12 @@ const cors = (req, res, next) => {
 export const buildServer = ({
   providers,
   jobService,
-  storedMetricsService,
   statsService,
   staticDir = publicDir,
 }) => {
   const searchController = new SearchController(
     providers,
-    storedMetricsService,
+    jobService,
   );
   const authorController = new AuthorController(
     providers,
@@ -58,7 +55,6 @@ export const buildServer = ({
   const jobController = new JobController(
     providers,
     jobService,
-    storedMetricsService,
   );
   const statusController = new StatusController(
     providers,
@@ -127,7 +123,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   buildServer({
     providers: wire(),
     jobService: new JobService(jobRepository),
-    storedMetricsService: new StoredMetricsService(jobRepository),
     statsService: new StatsRepository(db),
   }).listen(port, () => {
     process.stdout.write(`listening on ${port}\n`);

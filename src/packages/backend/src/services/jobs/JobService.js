@@ -33,7 +33,6 @@ export class JobService {
         running: 0,
         queued: 0,
       },
-      result: null,
       error: null,
     };
     const now = new Date().toISOString();
@@ -55,13 +54,11 @@ export class JobService {
     queue?.onTaskCompleted(onTaskCompleted);
 
     run()
-      .then((result) => {
+      .then(() => {
         job.status = JOB_STATUS.DONE;
-        job.result = result;
         this.jobRepository.updateJob(id, {
           status: JOB_STATUS.DONE,
           progress: job.progress,
-          result: result,
         });
       })
       .catch((error) => {
@@ -87,6 +84,21 @@ export class JobService {
    */
   getJob(id) {
     return this.running.get(id) ?? this.jobRepository.findJob({ id: id });
+  }
+
+  /**
+   * Get the most recent job to update an author.
+   *
+   * @param {string} provider
+   * @param {string} authorId
+   * @returns {Object | undefined}
+   */
+  getLastUpdateJob(provider, authorId) {
+    return this.jobRepository.findJob({
+      provider: provider,
+      authorId: authorId,
+      status: JOB_STATUS.DONE,
+    });
   }
 
   /**

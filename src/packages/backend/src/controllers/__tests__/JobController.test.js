@@ -4,15 +4,20 @@ import {
 import { JobController } from '../JobController.js';
 
 const createController = ({
-  metricsServiceMock, jobServiceMock, storedMetricsServiceMock,
+  metricsService,
+  jobService,
+  citationGraphService,
+  classificationService,
 }) =>
   new JobController([
     {
       id: 'openalex',
-      metricsService: metricsServiceMock,
+      metricsService: metricsService,
+      citationGraphService: citationGraphService,
+      classificationService: classificationService,
       queue: null,
     },
-  ], jobServiceMock, storedMetricsServiceMock);
+  ], jobService);
 
 describe('JobController', () => {
   describe('submitJob', () => {
@@ -29,8 +34,8 @@ describe('JobController', () => {
         }),
       };
       controller = createController({
-        metricsServiceMock: metricsServiceMock,
-        jobServiceMock: jobServiceMock,
+        metricsService: metricsServiceMock,
+        jobService: jobServiceMock,
       });
     });
 
@@ -47,7 +52,7 @@ describe('JobController', () => {
 
       it('fetches the metrics without the cache', () => {
         expect(metricsServiceMock.getAuthorMetrics)
-          .toHaveBeenCalledWith('A1', { cache: false });
+          .toHaveBeenCalledWith('openalex', 'A1', { cache: false });
       });
     });
 
@@ -63,7 +68,7 @@ describe('JobController', () => {
 
       it('fetches the metrics with the cache', () => {
         expect(metricsServiceMock.getAuthorMetrics)
-          .toHaveBeenCalledWith('A1', { cache: true });
+          .toHaveBeenCalledWith('openalex', 'A1', { cache: true });
       });
     });
   });
@@ -76,36 +81,41 @@ describe('JobController', () => {
       },
     };
 
-    describe('when stored metrics exist', () => {
+    describe('when the graph returns the author tree', () => {
       let result;
 
       beforeEach(() => {
-        const storedMetricsServiceMock = {
-          getStoredMetrics: jest.fn().mockReturnValue({
-            result: {
-              metrics: { total: 3 },
-            },
+        const citationGraphServiceMock = {
+          getAuthorTree: jest.fn().mockReturnValue({
+            author: { authorId: 'A1' },
+            publications: [{ citations: [{ classification: 'external' }] }],
           }),
         };
+        const classificationServiceMock = {
+          getMetrics: jest.fn().mockReturnValue({ total: 1 }),
+        };
         result = createController({
-          storedMetricsServiceMock: storedMetricsServiceMock,
+          citationGraphService: citationGraphServiceMock,
+          classificationService: classificationServiceMock,
         }).getStoredMetrics(request);
       });
 
-      it('returns the stored result', () => {
+      it('reconstructs the tree, metrics, and author', () => {
         expect(result).toEqual({
-          metrics: { total: 3 },
+          author: { authorId: 'A1' },
+          metrics: { total: 1 },
+          publications: [{ citations: [{ classification: 'external' }] }],
         });
       });
     });
 
-    describe('when no metrics are stored', () => {
+    describe('when the graph returns nothing', () => {
       it('is a 404', () => {
-        const storedMetricsServiceMock = {
-          getStoredMetrics: jest.fn().mockReturnValue(null),
+        const citationGraphServiceMock = {
+          getAuthorTree: jest.fn().mockReturnValue(null),
         };
         const controller = createController({
-          storedMetricsServiceMock: storedMetricsServiceMock,
+          citationGraphService: citationGraphServiceMock,
         });
 
         expect(() =>

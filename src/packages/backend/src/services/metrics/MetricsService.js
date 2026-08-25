@@ -26,6 +26,7 @@ export class MetricsService {
   /**
    * Get citation metrics of an author.
    *
+   * @param {string} provider
    * @param {string} authorId
    * @param {Object} [options]
    * @param {boolean} [options.cache] - true = use, false = skip the cache
@@ -36,7 +37,7 @@ export class MetricsService {
    *   stats: { total: number, fetched: number, failed: number },
    * }>} null when the author is not found
    */
-  async getAuthorMetrics(authorId, { cache = true } = {}) {
+  async getAuthorMetrics(provider, authorId, { cache = true } = {}) {
     const author = await this.authorService
       .getPublications(authorId, { cache: cache });
 
@@ -57,7 +58,7 @@ export class MetricsService {
       result.status === 'rejected').length;
 
     publications.forEach((entry) =>
-      this.citationGraphService?.save(entry));
+      this.citationGraphService?.storePubTree(provider, entry));
 
     return {
       author: author.author,

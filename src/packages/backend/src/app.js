@@ -18,7 +18,7 @@ import { AuthorService } from './services/author/AuthorService.js';
 import { MetricsService } from './services/metrics/MetricsService.js';
 
 const createProvider = ({
-  id, queue, connector, citationGraphService,
+  id, queue, connector, citationGraphService, classificationService,
 }) => {
   const authorService = new AuthorService({
     connector: connector,
@@ -29,21 +29,22 @@ const createProvider = ({
     queue: queue,
     connector: connector,
     authorService: authorService,
+    citationGraphService: citationGraphService,
+    classificationService: classificationService,
     metricsService: new MetricsService({
       authorService: authorService,
       publicationService: new PublicationService({
         connector: connector,
       }),
-      classificationService: new ClassificationService(),
+      classificationService: classificationService,
       citationGraphService: citationGraphService,
     }),
   };
 };
 
 /**
- * Initialises the active providers (one or two), each independent.
- * Pass a connector to bypass the DB and network setup (tests): it becomes the
- * single provider, keyed by its id.
+ * Initialises the active providers.
+ * Pass a connector to bypass the network setup (needed for tests).
  *
  * @param {Object} [args]
  * @param {string} [args.dbPath]
@@ -53,25 +54,33 @@ const createProvider = ({
 export const wire = ({
   dbPath = dbFile, connector,
 } = {}) => {
+  const { db } = new DbClient(connector
+    ? undefined
+    : dbPath);
+  migrate(db, { migrationsFolder: migrationsDir });
+
+  const cacheRepository = new CacheRepository(db);
+  const citationGraphService = new CitationGraphService({
+    publicationRepository: new PublicationRepository(db),
+    authorRepository: new AuthorRepository(db),
+    contributionRepository: new ContributionRepository(db),
+    citationRepository: new CitationRepository(db),
+  });
+  const classificationService = new ClassificationService();
+  const shared = {
+    citationGraphService: citationGraphService,
+    classificationService: classificationService,
+  };
+
   if (connector) {
     return [
       createProvider({
         id: connector.id,
         connector: connector,
+        ...shared,
       }),
     ];
   }
-
-  const { db } = new DbClient(dbPath);
-  migrate(db, { migrationsFolder: migrationsDir });
-
-  const cacheRepository = new CacheRepository(db);
-  const repos = {
-    publicationRepository: new PublicationRepository(db),
-    authorRepository: new AuthorRepository(db),
-    contributionRepository: new ContributionRepository(db),
-    citationRepository: new CitationRepository(db),
-  };
 
   return (providerIds ?? listProviders()).map((id) => {
     const spec = selectProvider(id);
@@ -86,10 +95,7 @@ export const wire = ({
         cacheRepository: cacheRepository,
         queue: queue,
       })),
-      citationGraphService: new CitationGraphService({
-        provider: id,
-        ...repos,
-      }),
+      ...shared,
     });
   });
 };

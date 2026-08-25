@@ -114,9 +114,6 @@ export const jobs = sqliteTable('jobs', {
   progress: text('progress', {
     mode: 'json',
   }),
-  result: text('result', {
-    mode: 'json',
-  }),
   error: text('error'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),

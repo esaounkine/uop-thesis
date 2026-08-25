@@ -21,18 +21,18 @@ const createRepo = () => {
 
 describe('JobService', () => {
   let repo;
-  let jobs;
+  let jobService;
 
   beforeEach(() => {
     repo = createRepo();
-    jobs = new JobService(repo);
+    jobService = new JobService(repo);
   });
 
   describe('when the task succeeds', () => {
     let id;
 
     beforeEach(async () => {
-      id = jobs.submitJob(async () =>
+      id = jobService.submitJob(async () =>
         'metrics', {
         provider: 'openalex',
         authorId: 'W1',
@@ -40,11 +40,11 @@ describe('JobService', () => {
       await completeTask();
     });
 
-    it('marks the job done with its result and metadata', () => {
-      expect(jobs.getJob(id)).toMatchObject({
+    it('marks the job done with its metadata', () => {
+      expect(jobService.getJob(id)).toMatchObject({
         status: JOB_STATUS.DONE,
-        result: 'metrics',
         provider: 'openalex',
+        authorId: 'W1',
       });
     });
 
@@ -52,7 +52,6 @@ describe('JobService', () => {
       const restarted = new JobService(repo);
       expect(restarted.getJob(id)).toMatchObject({
         status: JOB_STATUS.DONE,
-        result: 'metrics',
         authorId: 'W1',
       });
     });
@@ -62,7 +61,7 @@ describe('JobService', () => {
     let id;
 
     beforeEach(async () => {
-      id = jobs.submitJob(async () => {
+      id = jobService.submitJob(async () => {
         throw new Error('boom');
       }, {
         provider: 'openalex',
@@ -72,7 +71,7 @@ describe('JobService', () => {
     });
 
     it('marks the job as errored with the message', () => {
-      expect(jobs.getJob(id)).toMatchObject({
+      expect(jobService.getJob(id)).toMatchObject({
         status: JOB_STATUS.ERROR,
         error: 'boom',
       });
@@ -97,7 +96,7 @@ describe('JobService', () => {
         queue.on('completed', listener);
       queue.offTaskCompleted = (listener) =>
         queue.off('completed', listener);
-      const id = jobs.submitJob(async () => {
+      const id = jobService.submitJob(async () => {
         queue.emit('completed');
         queue.emit('completed');
       }, {
@@ -107,7 +106,7 @@ describe('JobService', () => {
       });
       await completeTask();
 
-      expect(jobs.getJob(id).progress).toEqual({
+      expect(jobService.getJob(id).progress).toEqual({
         done: 2,
         running: 2,
         queued: 5,
@@ -117,12 +116,12 @@ describe('JobService', () => {
 
   describe('list', () => {
     beforeEach(async () => {
-      jobs.submitJob(async () =>
+      jobService.submitJob(async () =>
         'first', {
         provider: 'openalex',
         authorId: 'W1',
       });
-      jobs.submitJob(async () =>
+      jobService.submitJob(async () =>
         'second', {
         provider: 'openalex',
         authorId: 'A1',
@@ -131,12 +130,54 @@ describe('JobService', () => {
     });
 
     it('returns every job', () => {
-      expect(jobs.listJobs()).toHaveLength(2);
+      expect(jobService.listJobs()).toHaveLength(2);
     });
 
-    it('carries the persisted results', () => {
-      expect(jobs.listJobs().map((job) =>
-        job.result)).toEqual(expect.arrayContaining(['first', 'second']));
+    it('contains the author', () => {
+      expect(jobService.listJobs().map((job) =>
+        job.authorId)).toEqual(expect.arrayContaining(['W1', 'A1']));
+    });
+  });
+
+  describe('getLastUpdateJob', () => {
+    describe('when a job exists for the author', () => {
+      let resolveTask;
+
+      beforeEach(() => {
+        jobService.submitJob(() =>
+          new Promise((resolve) => {
+            resolveTask = resolve;
+          }), {
+          provider: 'openalex',
+          authorId: 'A1',
+        });
+      });
+
+      describe('and it is completed', () => {
+        beforeEach(async () => {
+          resolveTask();
+          await completeTask();
+        });
+
+        it('returns that job', () => {
+          expect(jobService.getLastUpdateJob('openalex', 'A1')).toMatchObject({
+            authorId: 'A1',
+            status: JOB_STATUS.DONE,
+          });
+        });
+      });
+
+      describe('but it is still running', () => {
+        it('returns undefined', () => {
+          expect(jobService.getLastUpdateJob('openalex', 'A1')).toBeUndefined();
+        });
+      });
+    });
+
+    describe('when no job exists for the author', () => {
+      it('returns undefined', () => {
+        expect(jobService.getLastUpdateJob('openalex', 'A1')).toBeUndefined();
+      });
     });
   });
 
@@ -165,7 +206,7 @@ describe('JobService', () => {
 
   describe('when the id is unknown', () => {
     it('returns undefined', () => {
-      expect(jobs.getJob('nope')).toBeUndefined();
+      expect(jobService.getJob('nope')).toBeUndefined();
     });
   });
 });

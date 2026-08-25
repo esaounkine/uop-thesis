@@ -1,5 +1,5 @@
-import { and, eq } from 'drizzle-orm';
 import { citations } from '../db/schema.js';
+import { buildConditions } from '../lib/build-conditions.js';
 
 export class CitationRepository {
   constructor(db) {
@@ -22,20 +22,14 @@ export class CitationRepository {
   }
 
   /**
-   * The citation edges pointing at a cited publication (papers that cite it).
-   *
-   * @param {string} provider
-   * @param {string} targetPubId
+   * @param {import('../db/schema.js').Citation} filters - fields to match
    * @returns {import('../db/schema.js').Citation[]}
    */
-  findByTarget(provider, targetPubId) {
+  findCitations(filters) {
     return this.db
       .select()
       .from(citations)
-      .where(and(
-        eq(citations.provider, provider),
-        eq(citations.targetPubId, targetPubId),
-      ))
+      .where(buildConditions(citations, filters))
       .all();
   }
 }

@@ -12,7 +12,6 @@ const createJob = (id, patch = {}) => {
     authorId: 'W1',
     status: JOB_STATUS.RUNNING,
     progress: null,
-    result: null,
     error: null,
     createdAt: '2026-08-17T10:00:00.000Z',
     updatedAt: '2026-08-17T10:00:00.000Z',
@@ -65,20 +64,11 @@ describe('JobRepository', () => {
         beforeEach(() => {
           repo.updateJob('job-1', {
             status: JOB_STATUS.DONE,
-            result: {
-              metrics: { total: 3 },
-            },
           });
         });
 
         it('persists the new status', () => {
           expect(repo.findJob({ id: 'job-1' }).status).toBe(JOB_STATUS.DONE);
-        });
-
-        it('persists the decoded result', () => {
-          expect(repo.findJob({ id: 'job-1' }).result).toEqual({
-            metrics: { total: 3 },
-          });
         });
 
         it('refreshes the updated date', () => {

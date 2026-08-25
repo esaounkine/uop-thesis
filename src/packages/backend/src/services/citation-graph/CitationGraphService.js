@@ -16,20 +16,17 @@ import { normalise } from '../../lib/normalise.js';
 export class CitationGraphService {
   /**
    * @param {Object} args
-   * @param {string} args.provider
    * @param {import('../../repositories/PublicationRepository.js').PublicationRepository} args.publicationRepository
    * @param {import('../../repositories/AuthorRepository.js').AuthorRepository} args.authorRepository
    * @param {import('../../repositories/ContributionRepository.js').ContributionRepository} args.contributionRepository
    * @param {import('../../repositories/CitationRepository.js').CitationRepository} args.citationRepository
    */
   constructor({
-    provider,
     publicationRepository,
     authorRepository,
     contributionRepository,
     citationRepository,
   }) {
-    this.provider = provider;
     this.publicationRepository = publicationRepository;
     this.authorRepository = authorRepository;
     this.contributionRepository = contributionRepository;
@@ -39,9 +36,10 @@ export class CitationGraphService {
   /**
    * Decomposes the tree and stores it.
    *
+   * @param {string} provider
    * @param {ClassifiedTree} tree
    */
-  save({
+  storePubTree(provider, {
     publication, citations,
   }) {
     const publications = [
@@ -54,7 +52,7 @@ export class CitationGraphService {
 
     const publicationRows = publications.map((row) => {
       return {
-        provider: this.provider,
+        provider: provider,
         pubId: row.pubId,
         title: row.title,
         normalisedTitle: row.normalisedTitle,
@@ -64,7 +62,7 @@ export class CitationGraphService {
     });
     const contributionRows = contributions.map((contribution) => {
       return {
-        provider: this.provider,
+        provider: provider,
         pubId: contribution.pubId,
         authorId: contribution.authorId,
         position: contribution.position,
@@ -77,7 +75,7 @@ export class CitationGraphService {
       const name = contribution.authorName ?? null;
 
       return {
-        provider: this.provider,
+        provider: provider,
         authorId: authorId,
         originalName: name,
         normalisedName: name == null
@@ -88,7 +86,7 @@ export class CitationGraphService {
     });
     const citationRows = citations.map((citation) => {
       return {
-        provider: this.provider,
+        provider: provider,
         sourcePubId: citation.publication.pubId,
         targetPubId: publication.pubId,
         classification: citation.classification,
@@ -104,30 +102,39 @@ export class CitationGraphService {
   /**
    * Rebuilds the classified tree for a paper from the DB.
    *
+   * @param {string} provider
    * @param {string} pubId - the cited publication id
    * @returns {ClassifiedTree | null} null when the tree was never saved
    */
-  getTree(pubId) {
-    const [publication] = this.publicationRepository.findByIds(
-      this.provider, [pubId],
-    );
+  getPubTree(provider, pubId) {
+    const publication = this.publicationRepository.findPublication({
+      provider: provider,
+      pubId: pubId,
+    });
 
     if (!publication) {
       return null;
     }
 
-    const edges = this.citationRepository.findByTarget(this.provider, pubId);
+    const edges = this.citationRepository.findCitations({
+      provider: provider,
+      targetPubId: pubId,
+    });
     const citingIds = edges.map((edge) =>
       edge.sourcePubId);
     const publicationById = new Map(
       this.publicationRepository
-        .findByIds(this.provider, citingIds)
+        .findPublications({
+          provider: provider,
+          pubId: citingIds,
+        })
         .map((row) =>
           [row.pubId, row]));
     const contributionsByPub = Map.groupBy(
-      this.contributionRepository.findByPubIds(
-        this.provider, [pubId, ...citingIds],
-      ),
+      this.contributionRepository.findContributions({
+        provider: provider,
+        pubId: [pubId, ...citingIds],
+      }),
       (contribution) =>
         contribution.pubId,
     );
@@ -146,6 +153,43 @@ export class CitationGraphService {
           classification: edge.classification,
         };
       }),
+    };
+  }
+
+  /**
+   * Rebuilds tree for an author from the DB.
+   *
+   * @param {string} provider
+   * @param {string} authorId
+   * @returns {{ author: import('../../db/schema.js').Author, publications: ClassifiedTree[] } | null}
+   *   null when the author was never saved
+   */
+  getAuthorTree(provider, authorId) {
+    const author = this.authorRepository.findAuthor({
+      provider: provider,
+      authorId: authorId,
+    });
+
+    if (!author) {
+      return null;
+    }
+
+    const pubIds = [
+      ...new Set(this.contributionRepository
+        .findContributions({
+          provider: provider,
+          authorId: authorId,
+        })
+        .map((contribution) =>
+          contribution.pubId)),
+    ];
+
+    return {
+      author: author,
+      publications: pubIds
+        .map((pubId) =>
+          this.getPubTree(provider, pubId))
+        .filter(Boolean),
     };
   }
 }

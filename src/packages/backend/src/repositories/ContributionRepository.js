@@ -1,5 +1,5 @@
-import { and, eq, inArray } from 'drizzle-orm';
 import { contributions } from '../db/schema.js';
+import { buildConditions } from '../lib/build-conditions.js';
 
 export class ContributionRepository {
   constructor(db) {
@@ -22,22 +22,14 @@ export class ContributionRepository {
   }
 
   /**
-   * @param {string} provider
-   * @param {string[]} pubIds
+   * @param {Object} filters - fields to match
    * @returns {import('../db/schema.js').Contribution[]}
    */
-  findByPubIds(provider, pubIds) {
-    if (pubIds.length === 0) {
-      return [];
-    }
-
+  findContributions(filters) {
     return this.db
       .select()
       .from(contributions)
-      .where(and(
-        eq(contributions.provider, provider),
-        inArray(contributions.pubId, pubIds),
-      ))
+      .where(buildConditions(contributions, filters))
       .all();
   }
 }

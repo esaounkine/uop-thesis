@@ -1,164 +1,250 @@
 import {
-  beforeEach, describe, expect, it,
+  beforeEach, describe, expect, it, jest,
 } from '@jest/globals';
-import { migrate } from 'drizzle-orm/node-sqlite/migrator';
-import { migrationsDir } from '../../../config/env.js';
-import { DbClient } from '../../../db/DbClient.js';
-import * as schema from '../../../db/schema.js';
-import { AuthorRepository } from '../../../repositories/AuthorRepository.js';
-import { CitationRepository } from '../../../repositories/CitationRepository.js';
-import { ContributionRepository } from '../../../repositories/ContributionRepository.js';
-import { PublicationRepository } from '../../../repositories/PublicationRepository.js';
 import { CitationGraphService } from '../CitationGraphService.js';
 
 const PROVIDER = 'openalex';
 
-const createContribution = (pubId, authorId) => {
-  return {
-    provider: PROVIDER,
-    pubId: pubId,
-    authorId: authorId,
-    position: 1,
-  };
-};
-
-const createPublication = (pubId, authorId) => {
-  return {
-    provider: PROVIDER,
-    pubId: pubId,
-    title: pubId,
-    normalisedTitle: pubId.toLowerCase(),
-    externalId: null,
-    year: null,
-    citationCount: null,
-    contributions: [createContribution(pubId, authorId)],
-  };
-};
-
-const createTree = () => {
-  return {
-    publication: createPublication('W1', 'A1'),
-    citations: [
-      {
-        publication: createPublication('W2', 'A1'),
-        classification: 'self-direct',
-      },
-      {
-        publication: createPublication('W3', 'Z1'),
-        classification: 'external',
-      },
-    ],
-  };
-};
-
-const createCitationGraphService = (db) =>
-  new CitationGraphService({
-    provider: PROVIDER,
-    publicationRepository: new PublicationRepository(db),
-    authorRepository: new AuthorRepository(db),
-    contributionRepository: new ContributionRepository(db),
-    citationRepository: new CitationRepository(db),
-  });
-
 describe('CitationGraphService', () => {
-  let db;
-  let citationGraph;
+  let publicationRepositoryMock;
+  let authorRepositoryMock;
+  let contributionRepositoryMock;
+  let citationRepositoryMock;
+  let citationGraphService;
 
   beforeEach(() => {
-    ({ db } = new DbClient());
-    migrate(db, { migrationsFolder: migrationsDir });
-    citationGraph = createCitationGraphService(db);
+    publicationRepositoryMock = {
+      saveAll: jest.fn(),
+      findPublication: jest.fn(),
+      findPublications: jest.fn().mockReturnValue([]),
+    };
+    authorRepositoryMock = {
+      saveAll: jest.fn(),
+      findAuthor: jest.fn(),
+    };
+    contributionRepositoryMock = {
+      saveAll: jest.fn(),
+      findContributions: jest.fn().mockReturnValue([]),
+    };
+    citationRepositoryMock = {
+      saveAll: jest.fn(),
+      findCitations: jest.fn().mockReturnValue([]),
+    };
+    citationGraphService = new CitationGraphService({
+      publicationRepository: publicationRepositoryMock,
+      authorRepository: authorRepositoryMock,
+      contributionRepository: contributionRepositoryMock,
+      citationRepository: citationRepositoryMock,
+    });
   });
 
-  describe('save', () => {
-    describe('a classified tree', () => {
+  describe('storePubTree', () => {
+    beforeEach(() => {
+      citationGraphService.storePubTree(PROVIDER, {
+        publication: {
+          pubId: 'W1',
+          title: 'W1',
+          normalisedTitle: 'w1',
+          externalId: null,
+          year: 2020,
+          contributions: [
+            {
+              pubId: 'W1',
+              authorId: 'A1',
+              authorName: 'Jane Roe',
+              organisation: 'University 1',
+              position: 1,
+            },
+          ],
+        },
+        citations: [
+          {
+            publication: {
+              pubId: 'W2',
+              title: 'W2',
+              normalisedTitle: 'w2',
+              externalId: null,
+              year: 2019,
+              contributions: [],
+            },
+            classification: 'self-direct',
+          },
+        ],
+      });
+    });
+
+    it('stores the cited and citing publications', () => {
+      expect(publicationRepositoryMock.saveAll).toHaveBeenCalledWith([
+        {
+          provider: PROVIDER,
+          pubId: 'W1',
+          title: 'W1',
+          normalisedTitle: 'w1',
+          externalId: null,
+          year: 2020,
+        },
+        {
+          provider: PROVIDER,
+          pubId: 'W2',
+          title: 'W2',
+          normalisedTitle: 'w2',
+          externalId: null,
+          year: 2019,
+        },
+      ]);
+    });
+
+    it('stores the contributors with a normalised name', () => {
+      expect(authorRepositoryMock.saveAll).toHaveBeenCalledWith([
+        {
+          provider: PROVIDER,
+          authorId: 'A1',
+          originalName: 'Jane Roe',
+          normalisedName: 'jane roe',
+          organisation: 'University 1',
+        },
+      ]);
+    });
+
+    it('stores the contributions', () => {
+      expect(contributionRepositoryMock.saveAll).toHaveBeenCalledWith([
+        {
+          provider: PROVIDER,
+          pubId: 'W1',
+          authorId: 'A1',
+          position: 1,
+        },
+      ]);
+    });
+
+    it('stores the citation edges with their classification', () => {
+      expect(citationRepositoryMock.saveAll).toHaveBeenCalledWith([
+        {
+          provider: PROVIDER,
+          sourcePubId: 'W2',
+          targetPubId: 'W1',
+          classification: 'self-direct',
+        },
+      ]);
+    });
+  });
+
+  describe('getPubTree', () => {
+    describe('when the repo returns the publication', () => {
+      let restored;
+
       beforeEach(() => {
-        citationGraph.save(createTree());
-      });
-
-      it('stores every publication', () => {
-        const ids = db.select().from(schema.publications)
-          .all()
-          .map((row) =>
-            row.pubId)
-          .sort();
-        expect(ids).toEqual([
-          'W1',
-          'W2',
-          'W3',
-        ]);
-      });
-
-      it('stores the citation edges with their classification', () => {
-        expect(db.select().from(schema.citations)
-          .all()).toEqual([
+        publicationRepositoryMock.findPublication.mockReturnValue({
+          provider: PROVIDER,
+          pubId: 'W1',
+          title: 'W1',
+        });
+        citationRepositoryMock.findCitations.mockReturnValue([
           {
             provider: PROVIDER,
             sourcePubId: 'W2',
             targetPubId: 'W1',
             classification: 'self-direct',
           },
+        ]);
+        publicationRepositoryMock.findPublications.mockReturnValue([
           {
             provider: PROVIDER,
-            sourcePubId: 'W3',
-            targetPubId: 'W1',
-            classification: 'external',
+            pubId: 'W2',
+            title: 'W2',
+          },
+        ]);
+        contributionRepositoryMock.findContributions.mockReturnValue([
+          {
+            provider: PROVIDER,
+            pubId: 'W1',
+            authorId: 'A1',
+            position: 1,
+          },
+        ]);
+        restored = citationGraphService.getPubTree(PROVIDER, 'W1');
+      });
+
+      it('rebuilds the cited publication with its contributions', () => {
+        expect(restored.publication).toEqual({
+          provider: PROVIDER,
+          pubId: 'W1',
+          title: 'W1',
+          contributions: [
+            {
+              provider: PROVIDER,
+              pubId: 'W1',
+              authorId: 'A1',
+              position: 1,
+            },
+          ],
+        });
+      });
+
+      it('rebuilds each citation with its classification', () => {
+        expect(restored.citations).toEqual([
+          {
+            publication: {
+              provider: PROVIDER,
+              pubId: 'W2',
+              title: 'W2',
+              contributions: [],
+            },
+            classification: 'self-direct',
           },
         ]);
       });
     });
 
-    describe('when the contributions carry author names and affiliations', () => {
-      beforeEach(() => {
-        citationGraph.save({
-          publication: {
-            ...createPublication('W1', 'A1'),
-            contributions: [
-              {
-                pubId: 'W1',
-                authorId: 'A1',
-                authorName: 'Jane Roe',
-                organisation: 'University 1',
-                position: 1,
-              },
-            ],
-          },
-          citations: [],
-        });
-      });
-
-      it('stores the author with a normalised name and organisation', () => {
-        expect(db.select().from(schema.authors)
-          .all()).toEqual([
-          {
-            provider: PROVIDER,
-            authorId: 'A1',
-            originalName: 'Jane Roe',
-            normalisedName: 'jane roe',
-            organisation: 'University 1',
-          },
-        ]);
+    describe('when the repo returns no publication', () => {
+      it('returns null', () => {
+        publicationRepositoryMock.findPublication.mockReturnValue(undefined);
+        expect(citationGraphService.getPubTree(PROVIDER, 'missing')).toBeNull();
       });
     });
   });
 
-  describe('getTree', () => {
-    describe('when the tree was saved', () => {
+  describe('getAuthorTree', () => {
+    describe('when the repo returns the author', () => {
       let restored;
 
       beforeEach(() => {
-        citationGraph.save(createTree());
-        restored = citationGraph.getTree('W1');
+        authorRepositoryMock.findAuthor.mockReturnValue({
+          provider: PROVIDER,
+          authorId: 'A1',
+        });
+        contributionRepositoryMock.findContributions
+          .mockImplementation((filters) =>
+            (filters.authorId
+              ? [{ pubId: 'W1' }, { pubId: 'W2' }]
+              : []));
+        publicationRepositoryMock.findPublication
+          .mockImplementation((filters) => {
+            return {
+              provider: PROVIDER,
+              pubId: filters.pubId,
+            };
+          });
+        restored = citationGraphService.getAuthorTree(PROVIDER, 'A1');
       });
 
-      it('rebuilds the same classified tree', () => {
-        expect(restored).toEqual(createTree());
+      it('returns the author', () => {
+        expect(restored.author).toEqual({
+          provider: PROVIDER,
+          authorId: 'A1',
+        });
+      });
+
+      it('rebuilds a tree per authored publication', () => {
+        expect(restored.publications.map((entry) =>
+          entry.publication.pubId)).toEqual(['W1', 'W2']);
       });
     });
 
-    describe('when the publication is not in the db', () => {
+    describe('when the repo returns no author', () => {
       it('returns null', () => {
-        expect(citationGraph.getTree('missing')).toBeNull();
+        authorRepositoryMock.findAuthor.mockReturnValue(undefined);
+        expect(citationGraphService.getAuthorTree(PROVIDER, 'missing')).toBeNull();
       });
     });
   });

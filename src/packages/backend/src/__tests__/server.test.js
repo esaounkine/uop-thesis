@@ -8,17 +8,12 @@ import { DbClient } from '../db/DbClient.js';
 import { JOB_STATUS } from '../constants/job-status.js';
 import { JobRepository } from '../repositories/JobRepository.js';
 import { JobService } from '../services/jobs/JobService.js';
-import { StoredMetricsService } from '../services/stored-metrics/StoredMetricsService.js';
 
 const createJobService = () => {
   const { db } = new DbClient();
   migrate(db, { migrationsFolder: migrationsDir });
-  const jobRepository = new JobRepository(db);
 
-  return {
-    jobService: new JobService(jobRepository),
-    storedMetricsService: new StoredMetricsService(jobRepository),
-  };
+  return new JobService(new JobRepository(db));
 };
 
 const createContribution = (pubId, authorId) => {
@@ -55,7 +50,7 @@ const pollJob = async (url) => {
   throw new Error('job did not settle');
 };
 
-describe('the HTTP API', () => {
+describe('HTTP API', () => {
   let server;
   let base;
   let connector;
@@ -80,16 +75,12 @@ describe('the HTTP API', () => {
       }),
       getAuthorPublications: jest.fn().mockResolvedValue([createPublication('W1'), createPublication('W2')]),
     };
-    const {
-      jobService, storedMetricsService,
-    } = createJobService();
     server = buildServer({
       providers: wire({
         connector: connector,
       }),
-      jobService: jobService,
-      storedMetricsService: storedMetricsService,
-      publicDir: fileURLToPath(new URL('./fixtures/public', import.meta.url)),
+      jobService: createJobService(),
+      staticDir: fileURLToPath(new URL('./fixtures/public', import.meta.url)),
     });
     await new Promise((resolve) =>
       server.listen(0, resolve));
@@ -163,10 +154,11 @@ describe('the HTTP API', () => {
       job = await pollJob(`${base}/jobs/${requestId}`);
     });
 
-    it('finishes with the computed metrics', () => {
+    it('finishes as done', () => {
       expect(job).toMatchObject({
         status: JOB_STATUS.DONE,
-        result: { metrics: { total: 2 } },
+        provider: 'stub',
+        authorId: 'A1',
       });
     });
 
@@ -205,7 +197,7 @@ describe('the HTTP API', () => {
         headers = { accept: 'text/html' };
       });
 
-      it('serves index.html for a client route when the browser asks for html', async () => {
+      it('serves index.html', async () => {
         const response = await fetch(`${base}/any-path`, {
           headers: headers,
         });
@@ -229,16 +221,12 @@ describe('the HTTP API', () => {
     let bareBase;
 
     beforeEach(async () => {
-      const {
-        jobService, storedMetricsService,
-      } = createJobService();
       bareServer = buildServer({
         providers: wire({
           connector: connector,
         }),
-        jobService: jobService,
-        storedMetricsService: storedMetricsService,
-        publicDir: '/nonexistent',
+        jobService: createJobService(),
+        staticDir: '/nonexistent',
       });
       await new Promise((resolve) =>
         bareServer.listen(0, resolve));

@@ -1,5 +1,5 @@
-import { and, eq, inArray } from 'drizzle-orm';
 import { publications } from '../db/schema.js';
+import { buildConditions } from '../lib/build-conditions.js';
 
 export class PublicationRepository {
   constructor(db) {
@@ -22,22 +22,26 @@ export class PublicationRepository {
   }
 
   /**
-   * @param {string} provider
-   * @param {string[]} ids
-   * @returns {import('../db/schema.js').Publication[]}
+   * @param {Object} filters - fields to match
+   * @returns {import('../db/schema.js').Publication | undefined}
    */
-  findByIds(provider, ids) {
-    if (ids.length === 0) {
-      return [];
-    }
-
+  findPublication(filters) {
     return this.db
       .select()
       .from(publications)
-      .where(and(
-        eq(publications.provider, provider),
-        inArray(publications.pubId, ids),
-      ))
+      .where(buildConditions(publications, filters))
+      .get();
+  }
+
+  /**
+   * @param {Object} filters - fields to match
+   * @returns {import('../db/schema.js').Publication[]}
+   */
+  findPublications(filters) {
+    return this.db
+      .select()
+      .from(publications)
+      .where(buildConditions(publications, filters))
       .all();
   }
 }
