@@ -162,14 +162,14 @@ export class CitationGraphService {
   /**
    * Rebuilds tree for an author from the DB.
    *
-   * @param {string} provider
+   * @param {string} providerId
    * @param {string} authorId
    * @returns {{ author: import('../../db/schema.js').Author, publications: ClassifiedTree[] } | null}
    *   null when the author was never saved
    */
-  getAuthorTree(provider, authorId) {
+  getAuthorTree(providerId, authorId) {
     const author = this.authorRepository.findAuthor({
-      provider: provider,
+      provider: providerId,
       authorId: authorId,
     });
 
@@ -180,7 +180,7 @@ export class CitationGraphService {
     const pubIds = [
       ...new Set(this.contributionRepository
         .findContributions({
-          provider: provider,
+          provider: providerId,
           authorId: authorId,
         })
         .map((contribution) =>
@@ -191,7 +191,7 @@ export class CitationGraphService {
       author: author,
       publications: pubIds
         .map((pubId) =>
-          this.getPubTree(provider, pubId))
+          this.getPubTree(providerId, pubId))
         .filter(Boolean),
     };
   }

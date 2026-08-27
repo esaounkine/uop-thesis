@@ -36,26 +36,28 @@ export class StatusController {
   async getStatus() {
     return {
       version: version,
-      providers: await Promise.all(this.providers.map(async (provider) => {
-        return {
-          id: provider.id,
-          apiKey: maskValue(provider.apiKey),
-          requestsPerSecond: provider.requestsPerSecond,
-          quota: await this.fetchQuota(provider),
-          records: this.statsRepository.countByProvider(provider.id),
-        };
-      })),
+      providers: await Promise.all(
+        this.providers.map(async (provider) => {
+          return {
+            id: provider.id,
+            apiKey: maskValue(provider.apiKey),
+            requestsPerSecond: provider.httpClient.queue?.requestsPerSecond,
+            quota: await this.fetchQuota(provider),
+            records: this.statsRepository.countByProvider(provider.id),
+          };
+        })),
       system: getSystemStats(),
     };
   }
 
-  async fetchQuota(provider) {
+  async fetchQuota(connector) {
     try {
-      const quota = await provider.connector?.getQuota?.();
+      const quota = await connector?.getQuota?.();
 
       return quota ?? null;
-    } catch {
-      // TODO when catching errors, print a log message
+    } catch (error) {
+      process.stderr.write(`quota fetch failed: ${error.message}\n`);
+
       return null;
     }
   }

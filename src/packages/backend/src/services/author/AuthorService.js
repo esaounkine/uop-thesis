@@ -1,30 +1,55 @@
-/** @typedef {import('../../db/schema.js').Author} Author */
-
 /** @typedef {import('../../db/schema.js').Publication} Publication */
 
-/**
- * Operations per author.
- */
-export class AuthorService {
+import { AbstractService } from '../AbstractService.js';
+
+export class AuthorService extends AbstractService {
   /**
-   * @param {Object} args
-   * @param {import('../../connectors/ProviderConnector.js').ProviderConnector} args.connector
+   * @param {import('../../connectors/ProviderConnector.js').ProviderConnector[]} providers
+   * @param {import('../jobs/JobService.js').JobService} jobService
    */
-  constructor({ connector }) {
-    this.connector = connector;
+  constructor(providers, jobService) {
+    super(providers);
+
+    this.jobService = jobService;
   }
 
   /**
-   * Authors with name matching the search term.
+   * Authors with name matching the search term under all enabled providers.
    *
    * @param {string} name
-   * @returns {Promise<Author[]>}
+   * @returns {Promise<import('../../db/schema.js').Author[]>}
    */
   async searchByName(name) {
-    return this.connector.searchAuthors(name);
+    return Promise.all(
+      this.providers.map(async (provider) => {
+        try {
+          const authors = await provider.searchAuthors(name);
+
+          const res = authors.map((author) => {
+            const stored = this.jobService
+              .getLastUpdateJob(provider.id, author.authorId);
+
+            return {
+              ...author,
+              storedAt: stored?.updatedAt ?? null,
+            };
+          });
+
+          return {
+            provider: provider.id,
+            authors: res,
+          };
+        } catch (error) {
+          return {
+            provider: provider.id,
+            error: error.message,
+          };
+        }
+      }));
   }
 
   /**
+   * @param {string} providerId
    * @param {string} authorId
    * @param {Object} [options]
    * @param {boolean} [options.cache] - true = use, false = skip the cache
@@ -33,15 +58,21 @@ export class AuthorService {
    *   publications: Publication[],
    * }>} null when the author is not found
    */
-  async getPublications(authorId, { cache = true } = {}) {
-    const author = await this.connector
+  async getProviderPublications(
+    providerId,
+    authorId,
+    { cache = true } = {},
+  ) {
+    const provider = this.getProviderOrFail(providerId);
+
+    const author = await provider
       .getAuthorById(authorId, { cache: cache });
 
     if (!author) {
       return null;
     }
 
-    const publications = await this.connector
+    const publications = await provider
       .getAuthorPublications(authorId, { cache: cache });
 
     return {

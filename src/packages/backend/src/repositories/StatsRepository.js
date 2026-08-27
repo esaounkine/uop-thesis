@@ -19,10 +19,10 @@ export class StatsRepository {
   }
 
   /**
-   * @param {string} provider
+   * @param {string} providerId
    * @returns {Record<string, number>} row count per table for the provider
    */
-  countByProvider(provider) {
+  countByProvider(providerId) {
     return Object.fromEntries(
       TABLES.map((table) => {
         const name = getTableName(table);
@@ -31,7 +31,7 @@ export class StatsRepository {
             n: count(),
           })
           .from(table)
-          .where(eq(table.provider, provider))
+          .where(eq(table.provider, providerId))
           .get();
 
         return [name, row.n];

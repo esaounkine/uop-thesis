@@ -1,5 +1,5 @@
 import { migrate } from 'drizzle-orm/node-sqlite/migrator';
-import { createDb } from './create-db.js';
+import { createDbClient } from './create-db-client.js';
 import { migrationsDir } from '../config/env.js';
 
-migrate(createDb(), { migrationsFolder: migrationsDir });
+migrate(createDbClient(), { migrationsFolder: migrationsDir });

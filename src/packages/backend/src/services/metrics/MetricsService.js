@@ -26,20 +26,20 @@ export class MetricsService {
   /**
    * Get citation metrics of an author.
    *
-   * @param {string} provider
+   * @param {string} providerId
    * @param {string} authorId
    * @param {Object} [options]
    * @param {boolean} [options.cache] - true = use, false = skip the cache
    * @returns {Promise<null | {
    *   author: import('../../db/schema.js').Author,
    *   metrics: ReturnType<import('../classification/ClassificationService.js').ClassificationService['getMetrics']>,
-   *   publications: Awaited<ReturnType<MetricsService['getPublicationMetrics']>>[],
+   *   publications: Awaited<ReturnType<MetricsService['getProviderPublicationMetrics']>>[],
    *   stats: { total: number, fetched: number, failed: number },
    * }>} null when the author is not found
    */
-  async getAuthorMetrics(provider, authorId, { cache = true } = {}) {
+  async getAuthorMetrics(providerId, authorId, { cache = true } = {}) {
     const author = await this.authorService
-      .getPublications(authorId, { cache: cache });
+      .getProviderPublications(providerId, authorId, { cache: cache });
 
     if (!author) {
       return null;
@@ -47,7 +47,11 @@ export class MetricsService {
 
     const settled = await Promise.allSettled(
       author.publications.map((publication) =>
-        this.getPublicationMetrics(publication, { cache: cache })),
+        this.getProviderPublicationMetrics(
+          providerId,
+          publication,
+          { cache: cache },
+        )),
     );
     const publications = settled
       .filter((result) =>
@@ -58,7 +62,7 @@ export class MetricsService {
       result.status === 'rejected').length;
 
     publications.forEach((entry) =>
-      this.citationGraphService?.storePubTree(provider, entry));
+      this.citationGraphService?.storePubTree(providerId, entry));
 
     return {
       author: author.author,
@@ -79,6 +83,7 @@ export class MetricsService {
   /**
    * Get citation metrics of a publication.
    *
+   * @param {string} providerId
    * @param {Publication} publication
    * @param {Object} [options]
    * @param {boolean} [options.cache] - true = use, false = skip the cache
@@ -88,9 +93,13 @@ export class MetricsService {
    *   citations: { publication: Publication, classification: string }[],
    * }>}
    */
-  async getPublicationMetrics(publication, { cache = true } = {}) {
+  async getProviderPublicationMetrics(
+    providerId,
+    publication,
+    { cache = true } = {},
+  ) {
     const citations = await this.publicationService
-      .getCitations(publication.pubId, { cache: cache });
+      .getCitations(providerId, publication.pubId, { cache: cache });
 
     const classified = citations.map((citation) => {
       return {

@@ -26,7 +26,7 @@ describe('MetricsService', () => {
 
   beforeEach(() => {
     authorServiceMock = {
-      getPublications: jest.fn(),
+      getProviderPublications: jest.fn(),
     };
     publicationServiceMock = {
       getCitations: jest.fn(),
@@ -46,7 +46,7 @@ describe('MetricsService', () => {
     });
   });
 
-  describe('getPublicationMetrics', () => {
+  describe('getProviderPublicationMetrics', () => {
     const paper = {
       pubId: 'W1',
       contributions: [contribution('A1', 1)],
@@ -76,7 +76,8 @@ describe('MetricsService', () => {
       });
 
       it('returns the publication', async () => {
-        const result = await metricsService.getPublicationMetrics(paper);
+        const result = await metricsService
+          .getProviderPublicationMetrics('openalex', paper);
 
         expect(result.publication).toBe(paper);
       });
@@ -84,7 +85,7 @@ describe('MetricsService', () => {
       it('compares the cited paper to each citing paper', async () => {
         const { getCitationType } = classificationServiceMock;
 
-        await metricsService.getPublicationMetrics(paper);
+        await metricsService.getProviderPublicationMetrics('openalex', paper);
 
         expect(getCitationType).toHaveBeenNthCalledWith(
           1,
@@ -99,7 +100,8 @@ describe('MetricsService', () => {
       });
 
       it('labels each citation with the classification', async () => {
-        const result = await metricsService.getPublicationMetrics(paper);
+        const result = await metricsService
+          .getProviderPublicationMetrics('openalex', paper);
 
         expect(result.citations).toEqual([
           {
@@ -114,33 +116,35 @@ describe('MetricsService', () => {
       });
 
       it('aggregates the classifications', async () => {
-        await metricsService.getPublicationMetrics(paper);
+        await metricsService.getProviderPublicationMetrics('openalex', paper);
 
         expect(classificationServiceMock.getMetrics)
           .toHaveBeenCalledWith(['self-direct', 'external']);
       });
 
       it('returns the aggregate', async () => {
-        const result = await metricsService.getPublicationMetrics(paper);
+        const result = await metricsService
+          .getProviderPublicationMetrics('openalex', paper);
 
         expect(result.metrics).toBe(aggregate);
       });
 
       describe('and the cache is enabled (default)', () => {
         it('uses the cache for the citations fetch', async () => {
-          await metricsService.getPublicationMetrics(paper);
+          await metricsService.getProviderPublicationMetrics('openalex', paper);
 
           expect(publicationServiceMock.getCitations)
-            .toHaveBeenCalledWith('W1', { cache: true });
+            .toHaveBeenCalledWith('openalex', 'W1', { cache: true });
         });
       });
 
       describe('and the cache is disabled', () => {
         it('skips the cache for the citations fetch', async () => {
-          await metricsService.getPublicationMetrics(paper, { cache: false });
+          await metricsService
+            .getProviderPublicationMetrics('openalex', paper, { cache: false });
 
           expect(publicationServiceMock.getCitations)
-            .toHaveBeenCalledWith('W1', { cache: false });
+            .toHaveBeenCalledWith('openalex', 'W1', { cache: false });
         });
       });
     });
@@ -152,13 +156,14 @@ describe('MetricsService', () => {
       });
 
       it('has no citations', async () => {
-        const result = await metricsService.getPublicationMetrics(paper);
+        const result = await metricsService
+          .getProviderPublicationMetrics('openalex', paper);
 
         expect(result.citations).toEqual([]);
       });
 
       it('aggregates an empty classification list', async () => {
-        await metricsService.getPublicationMetrics(paper);
+        await metricsService.getProviderPublicationMetrics('openalex', paper);
 
         expect(classificationServiceMock.getMetrics).toHaveBeenCalledWith([]);
       });
@@ -171,7 +176,7 @@ describe('MetricsService', () => {
       });
 
       it('propagates the error', async () => {
-        await expect(metricsService.getPublicationMetrics(paper))
+        await expect(metricsService.getProviderPublicationMetrics('openalex', paper))
           .rejects.toThrow('error-1');
       });
     });
@@ -180,7 +185,7 @@ describe('MetricsService', () => {
   describe('getAuthorMetrics', () => {
     describe('when the author service returns nothing', () => {
       beforeEach(() => {
-        authorServiceMock.getPublications.mockResolvedValue(null);
+        authorServiceMock.getProviderPublications.mockResolvedValue(null);
       });
 
       it('returns null', async () => {
@@ -191,7 +196,7 @@ describe('MetricsService', () => {
 
     describe('when the author service rejects', () => {
       beforeEach(() => {
-        authorServiceMock.getPublications
+        authorServiceMock.getProviderPublications
           .mockRejectedValue(new Error('error-2'));
       });
 
@@ -203,7 +208,7 @@ describe('MetricsService', () => {
 
     describe('when the author has no publications', () => {
       beforeEach(() => {
-        authorServiceMock.getPublications.mockResolvedValue({
+        authorServiceMock.getProviderPublications.mockResolvedValue({
           author: {
             authorId: 'A1',
           },
@@ -238,7 +243,7 @@ describe('MetricsService', () => {
       };
 
       beforeEach(() => {
-        authorServiceMock.getPublications.mockResolvedValue({
+        authorServiceMock.getProviderPublications.mockResolvedValue({
           author: {
             authorId: 'A1',
           },
@@ -248,8 +253,9 @@ describe('MetricsService', () => {
 
       describe('and every paper fetches', () => {
         beforeEach(() => {
-          publicationServiceMock.getCitations.mockImplementation((pubId) =>
-            Promise.resolve(citationsByPub[pubId]));
+          publicationServiceMock.getCitations
+            .mockImplementation((providerId, pubId) =>
+              Promise.resolve(citationsByPub[pubId]));
           classificationServiceMock.getCitationType.mockReturnValue('external');
           classificationServiceMock.getMetrics.mockReturnValue(authorAggregate);
         });
@@ -304,13 +310,14 @@ describe('MetricsService', () => {
 
       describe('but a paper fails to fetch', () => {
         beforeEach(() => {
-          publicationServiceMock.getCitations.mockImplementation((pubId) => {
-            if (pubId === 'W2') {
-              return Promise.reject(new Error('error-3'));
-            }
+          publicationServiceMock.getCitations
+            .mockImplementation((providerId, pubId) => {
+              if (pubId === 'W2') {
+                return Promise.reject(new Error('error-3'));
+              }
 
-            return Promise.resolve(citationsByPub[pubId]);
-          });
+              return Promise.resolve(citationsByPub[pubId]);
+            });
         });
 
         it('counts the failure and keeps the rest', async () => {
@@ -347,15 +354,15 @@ describe('MetricsService', () => {
         it('uses the cache for the author fetch', async () => {
           await metricsService.getAuthorMetrics('openalex', 'A1');
 
-          expect(authorServiceMock.getPublications)
-            .toHaveBeenCalledWith('A1', { cache: true });
+          expect(authorServiceMock.getProviderPublications)
+            .toHaveBeenCalledWith('openalex', 'A1', { cache: true });
         });
 
         it('uses the cache for the citations fetch', async () => {
           await metricsService.getAuthorMetrics('openalex', 'A1');
 
           expect(publicationServiceMock.getCitations)
-            .toHaveBeenCalledWith('W1', { cache: true });
+            .toHaveBeenCalledWith('openalex', 'W1', { cache: true });
         });
       });
 
@@ -368,8 +375,8 @@ describe('MetricsService', () => {
           await metricsService
             .getAuthorMetrics('openalex', 'A1', { cache: false });
 
-          expect(authorServiceMock.getPublications)
-            .toHaveBeenCalledWith('A1', { cache: false });
+          expect(authorServiceMock.getProviderPublications)
+            .toHaveBeenCalledWith('openalex', 'A1', { cache: false });
         });
 
         it('forwards the flag to the citations fetch', async () => {
@@ -377,7 +384,7 @@ describe('MetricsService', () => {
             .getAuthorMetrics('openalex', 'A1', { cache: false });
 
           expect(publicationServiceMock.getCitations)
-            .toHaveBeenCalledWith('W1', { cache: false });
+            .toHaveBeenCalledWith('openalex', 'W1', { cache: false });
         });
       });
     });

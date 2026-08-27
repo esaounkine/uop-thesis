@@ -9,6 +9,7 @@ export class RequestQueue {
    * @param {number} args.requestsPerSecond - max tasks started per second
    */
   constructor({ requestsPerSecond }) {
+    this.requestsPerSecond = requestsPerSecond;
     this.queue = new PQueue({
       interval: 1000,
       intervalCap: requestsPerSecond,

@@ -7,7 +7,7 @@ import {
 import { OpenAlexConnector } from './OpenAlexConnector.js';
 import { SemanticScholarConnector } from './SemanticScholarConnector.js';
 
-const REGISTRY = {
+const PROVIDER_SPEC_REGISTRY = {
   openalex: {
     requestsPerSecond: openAlexMaxPerSecond,
     apiKey: openAlexApiKey,
@@ -29,8 +29,8 @@ const REGISTRY = {
 /**
  * @returns {string[]} every registered provider id
  */
-export const listProviders = () =>
-  Object.keys(REGISTRY);
+export const listProviderSpecs = () =>
+  Object.keys(PROVIDER_SPEC_REGISTRY);
 
 /**
  * Looks provider up by id.
@@ -38,11 +38,11 @@ export const listProviders = () =>
  * @param {string} id
  * @returns {{ requestsPerSecond: number, apiKey: string | undefined, create: (httpClient: import('../../lib/HttpClient.js').HttpClient) => import('../ProviderConnector.js').ProviderConnector }}
  */
-export const getProviderOrFail = (id) => {
-  const spec = REGISTRY[id];
+export const getProviderSpecOrFail = (id) => {
+  const spec = PROVIDER_SPEC_REGISTRY[id];
 
   if (!spec) {
-    throw new Error(`Unknown provider "${id}". Known providers: ${listProviders().join(', ')}`);
+    throw new Error(`Unknown provider "${id}". Known providers: ${listProviderSpecs().join(', ')}`);
   }
 
   return spec;

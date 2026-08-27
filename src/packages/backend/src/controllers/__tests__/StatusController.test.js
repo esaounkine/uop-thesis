@@ -1,12 +1,19 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  beforeEach, describe, expect, it, jest,
+} from '@jest/globals';
 import { StatusController } from '../StatusController.js';
 
-const createProvider = (connector) => {
+const createConnector = (overrides = {}) => {
   return {
     id: 'openalex',
     apiKey: 'secret',
-    requestsPerSecond: 5,
-    connector: connector,
+    httpClient: {
+      queue: {
+        requestsPerSecond: 5,
+      },
+    },
+    getQuota: jest.fn().mockResolvedValue(null),
+    ...overrides,
   };
 };
 
@@ -19,13 +26,8 @@ describe('StatusController', () => {
     statsRepositoryMock = {
       countByProvider: jest.fn(),
     };
-    connectorMock = {
-      getQuota: jest.fn(),
-    };
-    controller = new StatusController(
-      [createProvider(connectorMock)],
-      statsRepositoryMock,
-    );
+    connectorMock = createConnector();
+    controller = new StatusController([connectorMock], statsRepositoryMock);
   });
 
   describe('getStatus', () => {
@@ -93,12 +95,7 @@ describe('StatusController', () => {
         describe('and the provider has no api key', () => {
           beforeEach(() => {
             controller = new StatusController(
-              [
-                {
-                  ...createProvider(connectorMock),
-                  apiKey: null,
-                },
-              ],
+              [createConnector({ apiKey: null })],
               statsRepositoryMock,
             );
           });
@@ -111,19 +108,15 @@ describe('StatusController', () => {
         });
 
         describe('and several providers are configured', () => {
-          let otherConnectorMock;
-
           beforeEach(() => {
-            otherConnectorMock = {
-              getQuota: jest.fn().mockResolvedValue({ creditsRemaining: 5000 }),
-            };
             controller = new StatusController(
               [
-                createProvider(connectorMock),
-                {
-                  ...createProvider(otherConnectorMock),
+                connectorMock,
+                createConnector({
                   id: 'semanticscholar',
-                },
+                  getQuota: jest.fn()
+                    .mockResolvedValue({ creditsRemaining: 5000 }),
+                }),
               ],
               statsRepositoryMock,
             );
@@ -185,7 +178,7 @@ describe('StatusController', () => {
       describe('and the connector does not support quota', () => {
         beforeEach(() => {
           controller = new StatusController(
-            [createProvider({})],
+            [createConnector({ getQuota: undefined })],
             statsRepositoryMock,
           );
         });

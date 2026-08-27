@@ -7,6 +7,8 @@
  * Methods return data that keeps the native identifiers.
  */
 export class ProviderConnector {
+  id;
+
   /**
    * @param {string} name
    * @returns {Promise<Author[]>}
@@ -48,7 +50,7 @@ export class ProviderConnector {
   /**
    * API quota of the provider.
    *
-   * @returns {Promise<Object | null>} null when the provider doesn't exposes it
+   * @returns {Promise<Object | null>} null when the provider doesn't expose it
    */
   getQuota() {
     return Promise.resolve(null);

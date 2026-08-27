@@ -1,24 +1,25 @@
 /** @typedef {import('../../db/schema.js').Publication} Publication */
 
-/**
- * Operations per publication.
- */
-export class PublicationService {
+import { AbstractService } from '../AbstractService.js';
+
+export class PublicationService extends AbstractService {
   /**
-   * @param {Object} args
-   * @param {import('../../connectors/ProviderConnector.js').ProviderConnector} args.connector
+   * @param {import('../../connectors/ProviderConnector.js').ProviderConnector[]} providers
    */
-  constructor({ connector }) {
-    this.connector = connector;
+  constructor(providers) {
+    super(providers);
   }
 
   /**
+   * @param {string} providerId
    * @param {string} pubId
    * @param {Object} [options]
    * @param {boolean} [options.cache] - true = use, false = skip the cache
    * @returns {Promise<Publication[]>} the publications that cite pubId
    */
-  async getCitations(pubId, { cache = true } = {}) {
-    return this.connector.getCitations(pubId, { cache: cache });
+  async getCitations(providerId, pubId, { cache = true } = {}) {
+    const provider = this.getProviderOrFail(providerId);
+
+    return provider.getCitations(pubId, { cache: cache });
   }
 }

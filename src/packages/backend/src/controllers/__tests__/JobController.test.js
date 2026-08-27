@@ -7,31 +7,18 @@ import { JobController } from '../JobController.js';
 describe('JobController', () => {
   let metricsServiceMock;
   let jobServiceMock;
-  let queueMock;
   let controller;
 
   beforeEach(() => {
     metricsServiceMock = {
       getAuthorMetrics: jest.fn(),
     };
-    queueMock = {
-      add: jest.fn(),
-      onTaskCompleted: jest.fn(),
-      offTaskCompleted: jest.fn(),
-    };
     jobServiceMock = {
       submitJob: jest.fn(),
       getJob: jest.fn(),
       listJobs: jest.fn(),
     };
-    const providers = [
-      {
-        id: 'openalex',
-        queue: queueMock,
-        metricsService: metricsServiceMock,
-      },
-    ];
-    controller = new JobController(providers, jobServiceMock);
+    controller = new JobController(metricsServiceMock, jobServiceMock);
   });
 
   describe('submitJob', () => {
@@ -59,19 +46,6 @@ describe('JobController', () => {
       });
     });
 
-    describe('when provider is unknown', () => {
-      it('is a 404', () => {
-        expect(() =>
-          controller.submitJob({
-            body: {
-              provider: 'nope',
-              id: 'A1',
-            },
-          }))
-          .toThrow('unknown provider');
-      });
-    });
-
     describe('when params are valid', () => {
       const body = {
         provider: 'openalex',
@@ -93,8 +67,7 @@ describe('JobController', () => {
         expect(jobServiceMock.submitJob).toHaveBeenCalledWith(
           expect.any(Function),
           {
-            queue: queueMock,
-            provider: 'openalex',
+            providerId: 'openalex',
             authorId: 'A1',
           },
         );

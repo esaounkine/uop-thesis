@@ -25,7 +25,7 @@ const createDeferred = () => {
 };
 
 const meta = {
-  provider: 'openalex',
+  providerId: 'openalex',
   authorId: 'A1',
 };
 
@@ -37,6 +37,7 @@ const noProgress = {
 
 describe('JobService', () => {
   let jobRepositoryMock;
+  let queueMock;
   let jobService;
 
   beforeEach(() => {
@@ -46,7 +47,21 @@ describe('JobService', () => {
       findJob: jest.fn(),
       findJobs: jest.fn().mockReturnValue([]),
     };
-    jobService = new JobService(jobRepositoryMock);
+    queueMock = {
+      onTaskCompleted: jest.fn(),
+      offTaskCompleted: jest.fn(),
+      pending: 2,
+      size: 5,
+    };
+    const providers = [
+      {
+        id: 'openalex',
+        httpClient: {
+          queue: queueMock,
+        },
+      },
+    ];
+    jobService = new JobService(providers, jobRepositoryMock);
   });
 
   describe('submitJob', () => {
@@ -105,23 +120,9 @@ describe('JobService', () => {
         });
       });
 
-      describe('and a queue reports completions', () => {
-        let queueMock;
-
-        beforeEach(() => {
-          queueMock = {
-            onTaskCompleted: jest.fn(),
-            offTaskCompleted: jest.fn(),
-            pending: 2,
-            size: 5,
-          };
-        });
-
+      describe('and the provider queue reports completions', () => {
         it('advances progress on each completed event', async () => {
-          const requestId = jobService.submitJob(run, {
-            ...meta,
-            queue: queueMock,
-          });
+          const requestId = jobService.submitJob(run, meta);
           const [onCompleted] = queueMock.onTaskCompleted.mock.calls[0];
           onCompleted();
           onCompleted();
@@ -138,6 +139,17 @@ describe('JobService', () => {
             },
           });
         });
+      });
+    });
+
+    describe('when the provider is unknown', () => {
+      it('throws', () => {
+        expect(() =>
+          jobService.submitJob(jest.fn(), {
+            providerId: 'nope',
+            authorId: 'A1',
+          }))
+          .toThrow('unknown provider: nope');
       });
     });
 

@@ -1,30 +1,37 @@
 import { randomUUID } from 'node:crypto';
 import { JOB_STATUS } from '../../constants/job-status.js';
+import { AbstractService } from '../AbstractService.js';
 
 /**
  * Executes long-running tasks asynchronously and tracks their progress.
  */
-export class JobService {
+export class JobService extends AbstractService {
   /**
+   * @param {import('../../connectors/ProviderConnector.js').ProviderConnector[]} providers
    * @param {import('../../repositories/JobRepository.js').JobRepository} jobRepository
    */
-  constructor(jobRepository) {
+  constructor(providers, jobRepository) {
+    super(providers);
     this.jobRepository = jobRepository;
     this.running = new Map();
   }
 
   /**
    * @param {() => Promise<any>} run
-   * @param {import('../../lib/RequestQueue.js').RequestQueue} queue
-   * @param {Object} [meta] - fields stored on the job; a `queue` reports progress
+   * @param {string} providerId
+   * @param {Object} [meta] - fields stored on the job
    * @returns {string} the requestId
    */
   submitJob(run, {
-    queue, ...meta
+    providerId, ...meta
   } = {}) {
+    const provider = this.getProviderOrFail(providerId);
+    const queue = provider.httpClient.queue;
+
     const id = randomUUID();
     const job = {
       id: id,
+      provider: providerId,
       ...meta,
       status: JOB_STATUS.RUNNING,
       progress: {
