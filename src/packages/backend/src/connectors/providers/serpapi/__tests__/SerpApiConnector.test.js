@@ -1,17 +1,10 @@
 import {
   beforeEach, describe, expect, it, jest,
 } from '@jest/globals';
-import { directFetchTtlMs, searchTtlMs } from '../../../config/env.js';
-import { OpenAlexConnector } from '../OpenAlexConnector.js';
+import { directFetchTtlMs, searchTtlMs } from '../../../../config/env.js';
+import { SerpApiConnector } from '../SerpApiConnector.js';
 
-const emptyPage = {
-  results: [],
-  meta: {
-    next_cursor: null,
-  },
-};
-
-describe('OpenAlexConnector', () => {
+describe('SerpApiConnector', () => {
   let httpClientMock;
   let connector;
 
@@ -19,25 +12,27 @@ describe('OpenAlexConnector', () => {
     httpClientMock = {
       getJson: jest.fn(),
     };
-    connector = new OpenAlexConnector({
+    connector = new SerpApiConnector({
       httpClient: httpClientMock,
-      baseUrl: 'https://api.openalex.org',
-      apiKey: undefined,
+      baseUrl: 'https://serpapi.com',
+      apiKey: 'secret',
     });
   });
 
   describe('searchAuthors', () => {
-    describe('when authors match', () => {
+    describe('when profiles match', () => {
       beforeEach(() => {
         httpClientMock.getJson.mockResolvedValue({
           data: {
-            results: [
-              {
-                id: 'https://openalex.org/A1',
-                display_name: 'Jane Roe',
-                last_known_institutions: [{ display_name: 'University 1' }],
-              },
-            ],
+            profiles: {
+              authors: [
+                {
+                  author_id: 'A1',
+                  name: 'Jane Roe',
+                  affiliations: 'University 1',
+                },
+              ],
+            },
           },
         });
       });
@@ -54,13 +49,9 @@ describe('OpenAlexConnector', () => {
       });
     });
 
-    describe('when no author matches', () => {
+    describe('when no profile matches', () => {
       beforeEach(() => {
-        httpClientMock.getJson.mockResolvedValue({
-          data: {
-            results: [],
-          },
-        });
+        httpClientMock.getJson.mockResolvedValue({ data: {} });
       });
 
       it('returns an empty list', async () => {
@@ -84,14 +75,15 @@ describe('OpenAlexConnector', () => {
       beforeEach(() => {
         httpClientMock.getJson.mockResolvedValue({
           data: {
-            id: 'https://openalex.org/A1',
-            display_name: 'Jane Roe',
-            last_known_institutions: [{ display_name: 'University 1' }],
+            author: {
+              name: 'Jane Roe',
+              affiliations: 'University 1',
+            },
           },
         });
       });
 
-      it('maps it to an author', async () => {
+      it('maps it to an author with the requested id', async () => {
         expect(await connector.getAuthorById('A1')).toEqual({
           authorId: 'A1',
           originalName: 'Jane Roe',
@@ -137,12 +129,51 @@ describe('OpenAlexConnector', () => {
   });
 
   describe('getAuthorPublications', () => {
-    describe('when the http client returns a page', () => {
+    describe('when an article is returned', () => {
       beforeEach(() => {
-        httpClientMock.getJson.mockResolvedValue({ data: emptyPage });
+        httpClientMock.getJson.mockResolvedValue({
+          data: {
+            author: {
+              name: 'Jane Roe',
+              affiliations: 'University 1',
+            },
+            articles: [
+              {
+                title: 'A Paper',
+                citation_id: 'A1:cit1',
+                year: '2020',
+                cited_by: {
+                  value: 7,
+                  cites_id: 'clust123',
+                },
+              },
+            ],
+          },
+        });
       });
 
-      describe('and the cache is enabled (default)', () => {
+      it('maps it to a publication under the cluster id', async () => {
+        const [publication] = await connector.getAuthorPublications('A1');
+        expect(publication).toEqual({
+          pubId: 'clust123',
+          title: 'A Paper',
+          normalisedTitle: 'a paper',
+          externalId: null,
+          year: 2020,
+          citationCount: 7,
+          contributions: [
+            {
+              pubId: 'clust123',
+              authorId: 'A1',
+              authorName: 'Jane Roe',
+              organisation: 'University 1',
+              position: 1,
+            },
+          ],
+        });
+      });
+
+      describe('and cache is enabled (default)', () => {
         it('reads through the search ttl', async () => {
           await connector.getAuthorPublications('A1');
           expect(httpClientMock.getJson).toHaveBeenCalledWith(
@@ -154,7 +185,7 @@ describe('OpenAlexConnector', () => {
         });
       });
 
-      describe('and the cache is disabled', () => {
+      describe('and cache is disabled', () => {
         it('skips the cache', async () => {
           await connector.getAuthorPublications('A1', { cache: false });
           expect(httpClientMock.getJson).toHaveBeenCalledWith(
@@ -167,84 +198,133 @@ describe('OpenAlexConnector', () => {
       });
     });
 
+    describe('when an article has no citations', () => {
+      beforeEach(() => {
+        httpClientMock.getJson.mockResolvedValue({
+          data: {
+            author: { name: 'Jane Roe' },
+            articles: [
+              {
+                title: 'Uncited',
+                citation_id: 'A1:cit2',
+              },
+            ],
+          },
+        });
+      });
+
+      it('falls back to the citation id', async () => {
+        const [publication] = await connector.getAuthorPublications('A1');
+        expect(publication.pubId).toBe('A1:cit2');
+      });
+    });
+
+    describe('when the articles span several pages', () => {
+      beforeEach(() => {
+        httpClientMock.getJson
+          .mockResolvedValueOnce({
+            data: {
+              author: { name: 'Jane Roe' },
+              articles: [{ citation_id: 'c1' }],
+              serpapi_pagination: { next: 'page-2' },
+            },
+          })
+          .mockResolvedValueOnce({
+            data: {
+              author: { name: 'Jane Roe' },
+              articles: [{ citation_id: 'c2' }],
+            },
+          });
+      });
+
+      it('follows the next page until there is none', async () => {
+        const publications = await connector.getAuthorPublications('A1');
+        expect(publications).toHaveLength(2);
+      });
+    });
+
+    describe('when a later page rejects', () => {
+      beforeEach(() => {
+        httpClientMock.getJson
+          .mockResolvedValueOnce({
+            data: {
+              author: { name: 'Jane Roe' },
+              articles: [{ citation_id: 'c1' }],
+              serpapi_pagination: { next: 'page-2' },
+            },
+          })
+          .mockRejectedValueOnce(new Error('error-2'));
+      });
+
+      it('propagates the error', async () => {
+        await expect(connector.getAuthorPublications('A1'))
+          .rejects.toThrow('error-2');
+      });
+    });
+
     describe('when the http client rejects', () => {
       beforeEach(() => {
         httpClientMock.getJson.mockRejectedValue(new Error('error-1'));
       });
 
       it('propagates the error', async () => {
-        await expect(connector.getAuthorPublications('A1')).rejects.toThrow('error-1');
+        await expect(connector.getAuthorPublications('A1'))
+          .rejects.toThrow('error-1');
       });
     });
   });
 
   describe('getCitations', () => {
-    describe('when a work is returned', () => {
+    describe('when a citing paper is returned', () => {
       beforeEach(() => {
         httpClientMock.getJson.mockResolvedValue({
           data: {
-            results: [
+            organic_results: [
               {
-                id: 'https://openalex.org/W1',
-                title: 'A Paper',
-                doi: 'https://doi.org/10.1/x',
-                publication_year: 2020,
-                cited_by_count: 7,
-                authorships: [
-                  {
-                    author: {
-                      id: 'https://openalex.org/A1',
-                      display_name: 'Jane Roe',
-                    },
-                    institutions: [{ display_name: 'University 1' }],
+                result_id: 'r1',
+                title: 'Citing Paper',
+                inline_links: {
+                  cited_by: {
+                    total: 3,
                   },
-                  {
-                    author: {
-                      id: 'https://openalex.org/A2',
-                      display_name: 'John Doe',
+                },
+                publication_info: {
+                  authors: [
+                    {
+                      name: 'Amy Ng',
+                      author_id: 'B1',
                     },
-                  },
-                ],
+                  ],
+                },
               },
             ],
-            meta: {
-              next_cursor: null,
-            },
           },
         });
       });
 
       it('maps it to a publication', async () => {
-        const [publication] = await connector.getCitations('W0');
+        const [publication] = await connector.getCitations('clust123');
         expect(publication).toEqual({
-          pubId: 'W1',
-          title: 'A Paper',
-          normalisedTitle: 'a paper',
-          externalId: 'https://doi.org/10.1/x',
-          year: 2020,
-          citationCount: 7,
+          pubId: 'r1',
+          title: 'Citing Paper',
+          normalisedTitle: 'citing paper',
+          externalId: null,
+          year: null,
+          citationCount: 3,
           contributions: [
             {
-              pubId: 'W1',
-              authorId: 'A1',
-              authorName: 'Jane Roe',
-              organisation: 'University 1',
+              pubId: 'r1',
+              authorId: 'B1',
+              authorName: 'Amy Ng',
               position: 1,
-            },
-            {
-              pubId: 'W1',
-              authorId: 'A2',
-              authorName: 'John Doe',
-              organisation: null,
-              position: 2,
             },
           ],
         });
       });
 
-      describe('and the cache is enabled (default)', () => {
+      describe('and cache is enabled (default)', () => {
         it('reads through the search ttl', async () => {
-          await connector.getCitations('W0');
+          await connector.getCitations('clust123');
           expect(httpClientMock.getJson).toHaveBeenCalledWith(
             expect.any(URL),
             searchTtlMs,
@@ -254,9 +334,9 @@ describe('OpenAlexConnector', () => {
         });
       });
 
-      describe('and the cache is disabled', () => {
+      describe('and cache is disabled', () => {
         it('skips the cache', async () => {
-          await connector.getCitations('W0', { cache: false });
+          await connector.getCitations('clust123', { cache: false });
           expect(httpClientMock.getJson).toHaveBeenCalledWith(
             expect.any(URL),
             null,
@@ -267,44 +347,44 @@ describe('OpenAlexConnector', () => {
       });
     });
 
-    describe('when a work has an unmatched author', () => {
+    describe('when a citing author has no id', () => {
       beforeEach(() => {
         httpClientMock.getJson.mockResolvedValue({
           data: {
-            results: [
+            organic_results: [
               {
-                id: 'https://openalex.org/W1',
-                authorships: [
-                  {
-                    author: {
-                      id: null,
-                      display_name: 'Anon',
+                result_id: 'r1',
+                publication_info: {
+                  authors: [
+                    {
+                      name: 'Anon',
+                      author_id: null,
                     },
-                  },
-                  {
-                    author: {
-                      id: 'https://openalex.org/A2',
-                      display_name: 'John Doe',
+                    {
+                      name: 'Amy Ng',
+                      author_id: 'B2',
                     },
-                  },
-                ],
+                  ],
+                },
               },
             ],
-            meta: {
-              next_cursor: null,
-            },
           },
         });
       });
 
-      it('drops it but keeps the position of the rest', async () => {
-        const [publication] = await connector.getCitations('W0');
+      it('keeps it under the normalised name as its id', async () => {
+        const [publication] = await connector.getCitations('clust123');
         expect(publication.contributions).toEqual([
           {
-            pubId: 'W1',
-            authorId: 'A2',
-            authorName: 'John Doe',
-            organisation: null,
+            pubId: 'r1',
+            authorId: 'anon',
+            authorName: 'Anon',
+            position: 1,
+          },
+          {
+            pubId: 'r1',
+            authorId: 'B2',
+            authorName: 'Amy Ng',
             position: 2,
           },
         ]);
@@ -316,26 +396,20 @@ describe('OpenAlexConnector', () => {
         httpClientMock.getJson
           .mockResolvedValueOnce({
             data: {
-              results: [{ id: 'https://openalex.org/W2' }],
-              meta: {
-                next_cursor: 'c2',
-              },
+              organic_results: [{ result_id: 'r1' }],
+              serpapi_pagination: { next: 'page-2' },
             },
           })
           .mockResolvedValueOnce({
             data: {
-              results: [{ id: 'https://openalex.org/W3' }],
-              meta: {
-                next_cursor: null,
-              },
+              organic_results: [{ result_id: 'r2' }],
             },
           });
       });
 
-      it('follows the cursor until it is exhausted', async () => {
-        const citations = await connector.getCitations('W1');
-        expect(citations.map((publication) =>
-          publication.pubId)).toEqual(['W2', 'W3']);
+      it('follows the next page until there is none', async () => {
+        const citations = await connector.getCitations('clust123');
+        expect(citations).toHaveLength(2);
       });
     });
 
@@ -344,17 +418,16 @@ describe('OpenAlexConnector', () => {
         httpClientMock.getJson
           .mockResolvedValueOnce({
             data: {
-              results: [{ id: 'https://openalex.org/W2' }],
-              meta: {
-                next_cursor: 'c2',
-              },
+              organic_results: [{ result_id: 'r1' }],
+              serpapi_pagination: { next: 'page-2' },
             },
           })
           .mockRejectedValueOnce(new Error('error-2'));
       });
 
       it('propagates the error', async () => {
-        await expect(connector.getCitations('W1')).rejects.toThrow('error-2');
+        await expect(connector.getCitations('clust123'))
+          .rejects.toThrow('error-2');
       });
     });
 
@@ -364,41 +437,32 @@ describe('OpenAlexConnector', () => {
       });
 
       it('propagates the error', async () => {
-        await expect(connector.getCitations('W1')).rejects.toThrow('error-1');
+        await expect(connector.getCitations('clust123'))
+          .rejects.toThrow('error-1');
       });
     });
   });
 
   describe('getQuota', () => {
     describe('when there is an api key', () => {
-      beforeEach(() => {
-        connector = new OpenAlexConnector({
-          httpClient: httpClientMock,
-          baseUrl: 'https://api.openalex.org',
-          apiKey: 'secret',
-        });
-      });
-
-      describe('and the quota is returned', () => {
+      describe('and the account is returned', () => {
         beforeEach(() => {
           httpClientMock.getJson.mockResolvedValue({
             data: {
-              rate_limit: {
-                credits_limit: 10_000,
-                credits_used: 250,
-                credits_remaining: 9_750,
-                resets_at: '2026-08-23T00:00:00.000Z',
-              },
+              searches_per_month: 10_000,
+              this_month_usage: 250,
+              total_searches_left: 9_750,
+              plan_renewal_date: '2026-09-01',
             },
           });
         });
 
-        it('maps the remaining credits', async () => {
+        it('maps the account usage', async () => {
           expect(await connector.getQuota()).toEqual({
             creditsLimit: 10_000,
             creditsUsed: 250,
             creditsRemaining: 9_750,
-            resetsAt: '2026-08-23T00:00:00.000Z',
+            resetsAt: '2026-09-01',
           });
         });
       });
@@ -416,7 +480,7 @@ describe('OpenAlexConnector', () => {
 
     describe('when there is no api key', () => {
       beforeEach(() => {
-        connector = new OpenAlexConnector({
+        connector = new SerpApiConnector({
           httpClient: httpClientMock,
           apiKey: null,
         });

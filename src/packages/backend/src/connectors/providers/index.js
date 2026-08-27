@@ -1,9 +1,12 @@
 import {
+  serpapiApiKey,
+  serpapiMaxPerSecond,
   openAlexApiKey,
   openAlexMaxPerSecond,
   semanticScholarApiKey,
   semanticScholarMaxPerSecond,
 } from '../../config/env.js';
+import { SerpApiConnector } from './serpapi/SerpApiConnector.js';
 import { OpenAlexConnector } from './OpenAlexConnector.js';
 import { SemanticScholarConnector } from './SemanticScholarConnector.js';
 
@@ -21,6 +24,14 @@ const PROVIDER_SPEC_REGISTRY = {
     apiKey: semanticScholarApiKey,
     create: (httpClient) =>
       new SemanticScholarConnector({
+        httpClient: httpClient,
+      }),
+  },
+  serpapi: {
+    requestsPerSecond: serpapiMaxPerSecond,
+    apiKey: serpapiApiKey,
+    create: (httpClient) =>
+      new SerpApiConnector({
         httpClient: httpClient,
       }),
   },

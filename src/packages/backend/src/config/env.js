@@ -34,6 +34,12 @@ export const semanticScholarMaxPerSecond = Number(
   process.env.SEMANTIC_SCHOLAR_MAX_PER_SECOND ?? 1,
 );
 
+export const serpapiBaseUrl = process.env.SERPAPI_BASE_URL ?? 'https://serpapi.com';
+export const serpapiApiKey = process.env.SERPAPI_API_KEY;
+export const serpapiMaxPerSecond = Number(
+  process.env.SERPAPI_MAX_PER_SECOND ?? 5,
+);
+
 export const searchTtlMs = Number(
   process.env.SEARCH_TTL_MS ?? 7 * 24 * 60 * 60 * 1000, // 1 week
 );

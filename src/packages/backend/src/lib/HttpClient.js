@@ -1,8 +1,19 @@
 import { RetryStrategy } from './RetryStrategy.js';
 import { httpMaxRetries, httpRetryBaseMs } from '../config/env.js';
 
-const createCacheKeyFromUrl = (url) => {
+const createCacheKeyFromUrl = (url, query) => {
   const normalised = new URL(url);
+
+  const sanitisedQuery = Object.fromEntries(
+    Object.entries(query)
+      .map(([key, value]) =>
+        !value?.secret
+          ? [key, value]
+          : null)
+      .filter(Boolean),
+  );
+  normalised.search = new URLSearchParams(sanitisedQuery).toString();
+
   normalised.searchParams.sort();
   return normalised.toString();
 };
@@ -65,11 +76,13 @@ export class HttpClient {
    * @param {string|URL} url
    * @param {number|null} [ttl] - cache lifetime in ms; `null` means no cache is needed
    * @param {Object} [headers] - additional headers to inject into the request
+   * @param {Object} [query] - query params; wrap a secret value as
+   *   `{ value, secret: true }` to keep it out of the cache key
    * @returns {Promise<{ data: any, fetchedAt: Date }>}
    * @throws Error
    */
-  async getJson(url, ttl, headers) {
-    const key = createCacheKeyFromUrl(url);
+  async getJson(url, ttl, headers, query = {}) {
+    const key = createCacheKeyFromUrl(url, query);
 
     if (ttl) {
       const hit = this.cacheRepository?.get(key, ttl);
@@ -82,8 +95,17 @@ export class HttpClient {
       }
     }
 
+    // The search string MUST be assigned AFTER the cache key is created
+    // as for some providers there's a chance of having API key in the
+    // query params.
+    const requestUrl = new URL(url);
+    requestUrl.search = new URLSearchParams(
+      Object.entries(query).map(([param, value]) =>
+        [param, value?.value ?? value]),
+    ).toString();
+
     const response = await this.retryStrategy.run(() =>
-      this.runFetch(url, headers));
+      this.runFetch(requestUrl, headers));
 
     const data = await response.json();
     const fetchedAt = this.cacheRepository?.put(key, data) ?? new Date();

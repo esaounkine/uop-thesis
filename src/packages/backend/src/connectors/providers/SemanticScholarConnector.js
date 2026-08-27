@@ -129,15 +129,18 @@ export class SemanticScholarConnector extends ProviderConnector {
    * @returns {Promise<any>} the response body
    */
   async fetchJson(path, params, ttl) {
-    const url = new URL(`${this.baseUrl}${path}`);
+    const url = new URL(path, this.baseUrl);
 
-    url.search = new URLSearchParams(params).toString();
-
-    const { data } = await this.httpClient.getJson(url, ttl, {
-      ...this.apiKey && {
-        'x-api-key': this.apiKey,
+    const { data } = await this.httpClient.getJson(
+      url,
+      ttl,
+      {
+        ...this.apiKey && {
+          'x-api-key': this.apiKey,
+        },
       },
-    });
+      params,
+    );
     return data;
   }
 

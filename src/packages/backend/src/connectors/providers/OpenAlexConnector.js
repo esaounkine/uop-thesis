@@ -145,15 +145,17 @@ export class OpenAlexConnector extends ProviderConnector {
    */
   async fetchJson(path, params, ttl) {
     const url = new URL(path, this.baseUrl);
-    const search = { ...params };
 
-    url.search = new URLSearchParams(search).toString();
-
-    const { data } = await this.httpClient.getJson(url, ttl, {
-      ...this.apiKey && {
-        Authorization: `Bearer ${this.apiKey}`,
+    const { data } = await this.httpClient.getJson(
+      url,
+      ttl,
+      {
+        ...this.apiKey && {
+          Authorization: `Bearer ${this.apiKey}`,
+        },
       },
-    });
+      params,
+    );
     return data;
   }
 

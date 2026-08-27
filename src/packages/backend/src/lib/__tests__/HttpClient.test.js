@@ -122,12 +122,12 @@ describe('HttpClient', () => {
             });
 
             it('serves the cached value', async () => {
-              const result = await client.getJson('https://x/?a=1', 60_000);
+              const result = await client.getJson('https://x/', 60_000, {}, { a: '1' });
               expect(result.data).toEqual({ cached: true });
             });
 
             it('does not fetch', async () => {
-              await client.getJson('https://x/?a=1', 60_000);
+              await client.getJson('https://x/', 60_000, {}, { a: '1' });
               expect(fetchImplMock).not.toHaveBeenCalled();
             });
           });
@@ -138,26 +138,41 @@ describe('HttpClient', () => {
             });
 
             it('fetches from the network', async () => {
-              const result = await client.getJson('https://x/?a=1', 60_000);
+              const result = await client.getJson('https://x/', 60_000, {}, { a: '1' });
               expect(result.data).toEqual({ hello: 'world' });
             });
 
             it('stores the response under the normalised key', async () => {
-              await client.getJson('https://x/?b=2&a=1', 60_000);
+              await client.getJson('https://x/', 60_000, {}, {
+                b: '2',
+                a: '1',
+              });
               expect(cacheRepositoryMock.put)
                 .toHaveBeenCalledWith('https://x/?a=1&b=2', { hello: 'world' });
+            });
+
+            it('keeps the api_key out of the cache key', async () => {
+              await client.getJson('https://x/', 60_000, {}, {
+                a: '1',
+                api_key: {
+                  value: 'secret',
+                  secret: true,
+                },
+              });
+              expect(cacheRepositoryMock.put)
+                .toHaveBeenCalledWith('https://x/?a=1', { hello: 'world' });
             });
           });
         });
 
         describe('and the ttl is null', () => {
           it('skips the cache read', async () => {
-            await client.getJson('https://x/?a=1', null);
+            await client.getJson('https://x/', null, {}, { a: '1' });
             expect(cacheRepositoryMock.get).not.toHaveBeenCalled();
           });
 
           it('fetches live', async () => {
-            const result = await client.getJson('https://x/?a=1', null);
+            const result = await client.getJson('https://x/', null, {}, { a: '1' });
             expect(result.data).toEqual({ hello: 'world' });
           });
         });

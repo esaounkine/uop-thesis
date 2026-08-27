@@ -499,11 +499,12 @@ OpenCitations is a citation index. It has two collections: Index (the citation l
 
 SerpApi is a paid service. It scrapes Google Scholar and returns the results as structured data. It is a way to use the Google Scholar coverage through an API, not directly violating the terms of use.
 
-- **Interface** - Paid REST API. Base endpoint `https://serpapi.com/search`. The engines include `google_scholar` (results), `google_scholar_profiles` (author search), `google_scholar_author` (author details and articles), and `google_scholar_cite` (citation format).
+- **Interface** - Paid REST API. Base endpoint `https://serpapi.com/search`. The engines include `google_scholar` (results), `google_scholar_author` (author details and articles), and `google_scholar_cite` (citation format).
+- **Author search** - The dedicated `google_scholar_profiles` engine is [discontinued](https://serpapi.com/google-scholar-profiles-api). Google Scholar now needs a login to browse author profiles. The `google_scholar` engine still returns the "User profiles for ..." block (`profiles.authors`) for a name query, so `searchAuthors` reads that block instead.
 - **Rate limit** - The limit depends on the paid plan. The Free plan gives about 100 searches each month. The Developer plan gives 5000 searches each month for 75 USD. Each plan caps the rate at 20 percent of the monthly volume each hour. It counts only successful searches.
 - **Response format** - JSON.
 - **Request examples**
-  - searchAuthors - `GET /search?engine=google_scholar_profiles&mauthors=<name>`
+  - searchAuthors - `GET /search?engine=google_scholar&q=<name>`, then read the `profiles.authors` block (the discontinued `google_scholar_profiles` engine is no longer used)
   - getAuthorById - `GET /search?engine=google_scholar_author&author_id=<id>`
   - getAuthorPublications - the `google_scholar_author` engine returns the articles of the author (page with `start` and `num`)
   - getPublication - `GET /search?engine=google_scholar&q=<title>` (there is no DOI lookup)

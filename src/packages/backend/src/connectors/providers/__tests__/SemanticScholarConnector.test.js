@@ -104,6 +104,7 @@ describe('SemanticScholarConnector', () => {
             expect.any(URL),
             directFetchTtlMs,
             expect.anything(),
+            expect.anything(),
           );
         });
       });
@@ -111,8 +112,12 @@ describe('SemanticScholarConnector', () => {
       describe('and cache is disabled', () => {
         it('skips the cache', async () => {
           await connector.getAuthorById('a1', { cache: false });
-          expect(httpClientMock.getJson)
-            .toHaveBeenCalledWith(expect.any(URL), null, expect.anything());
+          expect(httpClientMock.getJson).toHaveBeenCalledWith(
+            expect.any(URL),
+            null,
+            expect.anything(),
+            expect.anything(),
+          );
         });
       });
     });
@@ -141,6 +146,7 @@ describe('SemanticScholarConnector', () => {
             expect.any(URL),
             searchTtlMs,
             expect.anything(),
+            expect.anything(),
           );
         });
       });
@@ -148,8 +154,12 @@ describe('SemanticScholarConnector', () => {
       describe('and the cache is disabled', () => {
         it('skips the cache', async () => {
           await connector.getAuthorPublications('a1', { cache: false });
-          expect(httpClientMock.getJson)
-            .toHaveBeenCalledWith(expect.any(URL), null, expect.anything());
+          expect(httpClientMock.getJson).toHaveBeenCalledWith(
+            expect.any(URL),
+            null,
+            expect.anything(),
+            expect.anything(),
+          );
         });
       });
     });
@@ -228,6 +238,7 @@ describe('SemanticScholarConnector', () => {
             expect.any(URL),
             searchTtlMs,
             expect.anything(),
+            expect.anything(),
           );
         });
       });
@@ -235,8 +246,12 @@ describe('SemanticScholarConnector', () => {
       describe('and the cache is disabled', () => {
         it('skips the cache', async () => {
           await connector.getCitations('p0', { cache: false });
-          expect(httpClientMock.getJson)
-            .toHaveBeenCalledWith(expect.any(URL), null, expect.anything());
+          expect(httpClientMock.getJson).toHaveBeenCalledWith(
+            expect.any(URL),
+            null,
+            expect.anything(),
+            expect.anything(),
+          );
         });
       });
     });
