@@ -4,7 +4,7 @@ The Backend is built using Node.js, written in plain JavaScript.
 
 It follows an MVC architecture.
 
-The services can be accessed via CLI or the RESTful endpoints.
+The services can be accessed via RESTful endpoints.
 
 There's no user authentication.
 
@@ -30,7 +30,6 @@ Run `yarn install`.
 Copy `env.example` to `.env`.
 
 - `yarn start` - serve the API (and the built web, if present) on `PORT` (default 3000).
-- `yarn cli` - run the pipeline from the terminal. Pass `--help` for the flags.
 - `yarn test` - Jest unit and integration tests.
 - `yarn lint` / `yarn lint:fix` - ESLint.
 
@@ -38,7 +37,7 @@ Copy `env.example` to `.env`.
 
 Structurally composed after Spring MVC.
 
-- `server.js` - HTTP entry (Express). `cli.js` - terminal entry.
+- `server.js` - HTTP entry (Express).
 - `app.js` - wiring. `wire()` builds one provider bundle per data source.
 - `controllers/` - HTTP layer, one class per resource.
 - `services/` - the logic: classification, author, publication, jobs, tree.
