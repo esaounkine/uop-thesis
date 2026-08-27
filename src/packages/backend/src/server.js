@@ -5,7 +5,7 @@ import path from 'node:path';
 import express from 'express';
 import { wire } from './app.js';
 import { corsOrigin, dbFile, port, publicDir } from './config/env.js';
-import { DbClient } from './db/DbClient.js';
+import { createDb } from './db/create-db.js';
 import { JobRepository } from './repositories/JobRepository.js';
 import { StatsRepository } from './repositories/StatsRepository.js';
 import { JobService } from './services/jobs/JobService.js';
@@ -129,7 +129,7 @@ export const restoreState = ({ jobRepository }) => {
 
 // Avoid running when imported (needed for unit tests)
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const { db } = new DbClient(dbFile);
+  const db = createDb(dbFile);
   const jobRepository = new JobRepository(db);
 
   restoreState({ jobRepository: jobRepository });

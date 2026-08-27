@@ -3,7 +3,7 @@ import {
   dbFile, migrationsDir, providers as providerIds,
 } from './config/env.js';
 import { listProviders, selectProvider } from './connectors/providers/registry.js';
-import { DbClient } from './db/DbClient.js';
+import { createDb } from './db/create-db.js';
 import { HttpClient } from './lib/HttpClient.js';
 import { RequestQueue } from './lib/RequestQueue.js';
 import { AuthorRepository } from './repositories/AuthorRepository.js';
@@ -68,9 +68,7 @@ const createProvider = ({
 export const wire = ({
   dbPath = dbFile, connector,
 } = {}) => {
-  const { db } = new DbClient(connector
-    ? undefined
-    : dbPath);
+  const db = createDb(dbPath);
   migrate(db, { migrationsFolder: migrationsDir });
 
   const citationGraphService = new CitationGraphService({
