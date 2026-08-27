@@ -2,7 +2,7 @@ import { migrate } from 'drizzle-orm/node-sqlite/migrator';
 import {
   dbFile, migrationsDir, providers as providerIds,
 } from './config/env.js';
-import { listProviders, selectProvider } from './connectors/providers/registry.js';
+import { listProviders, getProviderOrFail } from './connectors/providers/index.js';
 import { createDb } from './db/create-db.js';
 import { HttpClient } from './lib/HttpClient.js';
 import { RequestQueue } from './lib/RequestQueue.js';
@@ -93,7 +93,7 @@ export const wire = ({
   const cacheRepository = new CacheRepository(db);
 
   return (providerIds ?? listProviders()).map((id) => {
-    const spec = selectProvider(id);
+    const spec = getProviderOrFail(id);
     const queue = new RequestQueue({
       requestsPerSecond: spec.requestsPerSecond,
     });

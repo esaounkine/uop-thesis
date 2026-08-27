@@ -38,7 +38,7 @@ export const listProviders = () =>
  * @param {string} id
  * @returns {{ requestsPerSecond: number, apiKey: string | undefined, create: (httpClient: import('../../lib/HttpClient.js').HttpClient) => import('../ProviderConnector.js').ProviderConnector }}
  */
-export const selectProvider = (id) => {
+export const getProviderOrFail = (id) => {
   const spec = REGISTRY[id];
 
   if (!spec) {
