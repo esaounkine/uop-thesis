@@ -6,8 +6,6 @@ import { JobController } from '../JobController.js';
 
 describe('JobController', () => {
   let metricsServiceMock;
-  let citationGraphServiceMock;
-  let classificationServiceMock;
   let jobServiceMock;
   let queueMock;
   let controller;
@@ -15,12 +13,6 @@ describe('JobController', () => {
   beforeEach(() => {
     metricsServiceMock = {
       getAuthorMetrics: jest.fn(),
-    };
-    citationGraphServiceMock = {
-      getAuthorTree: jest.fn(),
-    };
-    classificationServiceMock = {
-      getMetrics: jest.fn(),
     };
     queueMock = {
       add: jest.fn(),
@@ -37,8 +29,6 @@ describe('JobController', () => {
         id: 'openalex',
         queue: queueMock,
         metricsService: metricsServiceMock,
-        citationGraphService: citationGraphServiceMock,
-        classificationService: classificationServiceMock,
       },
     ];
     controller = new JobController(providers, jobServiceMock);
@@ -246,106 +236,6 @@ describe('JobController', () => {
       it('propagates the error', () => {
         expect(() =>
           controller.listJobs()).toThrow('error-4');
-      });
-    });
-  });
-
-  describe('getStoredMetrics', () => {
-    const request = {
-      params: {
-        provider: 'openalex',
-        authorId: 'A1',
-      },
-    };
-
-    describe('when provider is unknown', () => {
-      it('is a 404', () => {
-        expect(() =>
-          controller.getStoredMetrics({
-            params: {
-              provider: 'nope',
-              authorId: 'A1',
-            },
-          }))
-          .toThrow('no stored metrics for this author');
-      });
-    });
-
-    describe('when the citation graph returns the author tree', () => {
-      const tree = {
-        author: { authorId: 'A1' },
-        publications: [
-          {
-            citations: [{ classification: 'external' }],
-          },
-        ],
-      };
-
-      beforeEach(() => {
-        citationGraphServiceMock.getAuthorTree.mockReturnValue(tree);
-      });
-
-      describe('and classification returns metrics', () => {
-        beforeEach(() => {
-          classificationServiceMock.getMetrics.mockReturnValue({ total: 1 });
-        });
-
-        it('aggregates citation classifications', () => {
-          controller.getStoredMetrics(request);
-
-          expect(classificationServiceMock.getMetrics)
-            .toHaveBeenCalledWith(['external']);
-        });
-
-        it('returns author, metrics, and publications', () => {
-          expect(controller.getStoredMetrics(request)).toEqual({
-            author: { authorId: 'A1' },
-            metrics: { total: 1 },
-            publications: [
-              {
-                citations: [{ classification: 'external' }],
-              },
-            ],
-          });
-        });
-      });
-
-      describe('but classification throws', () => {
-        beforeEach(() => {
-          classificationServiceMock.getMetrics.mockImplementation(() => {
-            throw new Error('error-6');
-          });
-        });
-
-        it('propagates the error', () => {
-          expect(() =>
-            controller.getStoredMetrics(request)).toThrow('error-6');
-        });
-      });
-    });
-
-    describe('when the citation graph returns nothing', () => {
-      beforeEach(() => {
-        citationGraphServiceMock.getAuthorTree.mockReturnValue(null);
-      });
-
-      it('is a 404', () => {
-        expect(() =>
-          controller.getStoredMetrics(request))
-          .toThrow('no stored metrics for this author');
-      });
-    });
-
-    describe('when the citation graph throws', () => {
-      beforeEach(() => {
-        citationGraphServiceMock.getAuthorTree.mockImplementation(() => {
-          throw new Error('error-5');
-        });
-      });
-
-      it('propagates the error', () => {
-        expect(() =>
-          controller.getStoredMetrics(request)).toThrow('error-5');
       });
     });
   });

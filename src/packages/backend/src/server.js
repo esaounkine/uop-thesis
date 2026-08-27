@@ -77,7 +77,7 @@ export const buildServer = ({
     res.json(await authorController.getAuthorPapers(req));
   });
   app.get('/authors/:provider/:authorId/metrics', (req, res) => {
-    res.json(jobController.getStoredMetrics(req));
+    res.json(authorController.getStoredMetrics(req));
   });
   app.post('/jobs', (req, res) => {
     res.status(202).json(jobController.submitJob(req));
