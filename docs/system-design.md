@@ -533,15 +533,20 @@ SerpApi is one of many services acting as proxy to Google Scholar for structured
 
 They differ mostly on price (and response format). The table below compares the prices (as of 2026).
 
-| Service                                     | Entry plan                    | Cost per 1k searches      | Free tier     | Notes                                                       |
-|---------------------------------------------|-------------------------------|---------------------------|---------------|-------------------------------------------------------------|
-| SerpApi                                     | 75 USD / month (5k searches)  | 7.50 - 15 USD             | ~100 / month  | The baseline. The most expensive.                           |
-| [Scrapingdog](https://www.scrapingdog.com/) | 40 USD / month (200k credits) | 0.29 - 1 USD              | 1k credits    | The cheapest at scale. Scholar costs 5 credits per request. |
-| [Serper](https://serper.dev/)               | 50 USD / month (50k searches) | ~1 USD                    | 2,500 credits | Low latency. More than 10 results cost 2 credits.           |
-| [SearchApi](https://www.searchapi.io/)      | 40 USD / month (10k searches) | 1 - 4 USD                 | 100 requests  |                                                             |
-| [HasData](https://hasdata.com/)             | 49 USD / month (20k searches) | 0.50 - 2.45 USD           | 100 / month   | Lower concurrency.                                          |
-| [DataForSEO](https://dataforseo.com/)       | pay per use                   | 0.60 USD (Standard Queue) | 1 USD credit  | Async queue. About 5 minutes latency.                       |
-| [ScaleSERP](https://scaleserp.com/)         | 66 USD / month (10k credits)  | -                         | -             | Has a Scholar endpoint.                                     |
+| Service                                     | Entry plan                    | Cost per 1k searches      | Free tier     | Notes                                                                                                      |
+|---------------------------------------------|-------------------------------|---------------------------|---------------|------------------------------------------------------------------------------------------------------------|
+| SerpApi                                     | 75 USD / month (5k searches)  | 7.50 - 15 USD             | ~100 / month  | The baseline. The most expensive.                                                                          |
+| [Scrapingdog](https://www.scrapingdog.com/) | 40 USD / month (200k credits) | 0.29 - 1 USD              | 1k credits    | The cheapest at scale. Scholar costs 5 credits per request.                                                |
+| [Serper](https://serper.dev/)               | 50 USD / month (50k searches) | ~1 USD                    | 2,500 credits | Low latency. More than 10 results cost 2 credits.                                                          |
+| [SearchApi](https://www.searchapi.io/)      | 40 USD / month (10k searches) | 1 - 4 USD                 | 100 requests  |                                                                                                            |
+| [HasData](https://hasdata.com/)             | 49 USD / month (20k searches) | 0.50 - 2.45 USD           | 100 / month   | Lower concurrency.                                                                                         |
+| [DataForSEO](https://dataforseo.com/)       | pay per use                   | 0.60 USD (Standard Queue) | 1 USD credit  | Async queue. About 5 minutes latency.                                                                      |
+| [ScaleSERP](https://scaleserp.com/)         | 66 USD / month (10k credits)  | -                         | -             | Has a Scholar endpoint.                                                                                    |
+| [Oxylabs](https://oxylabs.io/)              | 49 USD / month (~98k results) | 0.50 USD                  | 2k (trial)    | Parsed Scholar search source, no cited-by.                                                                 |
+| [Apify](https://apify.com/)                 | 29 USD / month (29 USD usage) | -                         | 5 USD / month | Actor marketplace; Scholar Actor has no cited-by.                                                          |
+| [Scrapfly](https://scrapfly.io/)            | 30 USD / month (200k credits) | -                         | 1k credits    | General scraper; no Scholar endpoint, requires HTML parsing.                                               |
+| [Just Serp](https://justserpapi.com/)       | 5 USD / month (10k credits)   | ~3 USD                    | 1k credits    | Scholar search (`cites`), author, citations. ~6 credits/search; one author drained the 1000 trial credits. |
+
 
 #### LLM
 
