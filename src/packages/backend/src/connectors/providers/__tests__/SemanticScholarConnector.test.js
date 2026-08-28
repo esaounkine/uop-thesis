@@ -49,6 +49,12 @@ describe('SemanticScholarConnector', () => {
           },
         ]);
       });
+
+      it('keeps the base path in the request url', async () => {
+        await connector.searchAuthors('test');
+        const [url] = httpClientMock.getJson.mock.calls[0];
+        expect(url.pathname).toBe('/graph/v1/author/search');
+      });
     });
 
     describe('when no author matches', () => {

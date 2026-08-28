@@ -129,7 +129,9 @@ export class SemanticScholarConnector extends ProviderConnector {
    * @returns {Promise<any>} the response body
    */
   async fetchJson(path, params, ttl) {
-    const url = new URL(path, this.baseUrl);
+    // Concatenate, not `new URL(path, base)`: the base carries a path
+    // (`/graph/v1`) that a leading-slash `path` would drop.
+    const url = new URL(`${this.baseUrl}${path}`);
 
     const { data } = await this.httpClient.getJson(
       url,
