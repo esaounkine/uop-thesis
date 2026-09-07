@@ -4,3 +4,15 @@
   gap: 0.1rem;
   font-size: 0.9em;
 }
+
+.Breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding-inline-start: 1.5rem;
+}
+
+.External { color: light-dark(#167044, #69cc98); }
+.Self { color: light-dark(#7441a6, #c59aee); }
+.Direct { color: light-dark(#b52b35, #ff8e97); }
+.Coauthor { color: light-dark(#935000, #edb76b); }
