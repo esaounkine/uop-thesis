@@ -1,7 +1,7 @@
 import { directFetchTtlMs, searchTtlMs, serpapiApiKey, serpapiBaseUrl } from '../../../config/env.js';
 import { HttpClient } from '../../../lib/HttpClient.js';
 import { ProviderConnector } from '../../ProviderConnector.js';
-import { serpApiArticleToPublication, serpApiProfileToAuthor, serpApiResultToPublication } from './converters.js';
+import { convertSerpApiArticleToPublication, convertSerpApiProfileToAuthor, convertSerpApiResultToPublication } from './converters.js';
 
 /**
  * SerpApi provider connector.
@@ -36,6 +36,7 @@ export class SerpApiConnector extends ProviderConnector {
    * (`profiles.authors`) containing a PREVIEW of author profiles for a name query.
    *
    * @see https://serpapi.com/google-scholar-api
+   * @param {string} name
    */
   async searchAuthors(name) {
     const data = await this.fetchJson('/search.json', {
@@ -43,7 +44,7 @@ export class SerpApiConnector extends ProviderConnector {
       q: name,
     }, searchTtlMs);
     return (data.profiles?.authors ?? []).map((author) =>
-      serpApiProfileToAuthor(author));
+      convertSerpApiProfileToAuthor(author));
   }
 
   /**
@@ -59,7 +60,7 @@ export class SerpApiConnector extends ProviderConnector {
     }, cache
       ? directFetchTtlMs
       : null);
-    return serpApiProfileToAuthor({
+    return convertSerpApiProfileToAuthor({
       author_id: id,
       ...data.author,
     });
@@ -85,7 +86,7 @@ export class SerpApiConnector extends ProviderConnector {
       (data) =>
         (data.articles ?? []),
       (article, data) =>
-        serpApiArticleToPublication(article, authorId, data.author),
+        convertSerpApiArticleToPublication(article, authorId, data.author),
     );
   }
 
@@ -109,7 +110,7 @@ export class SerpApiConnector extends ProviderConnector {
       (data) =>
         (data.organic_results ?? []),
       (result) =>
-        serpApiResultToPublication(result),
+        convertSerpApiResultToPublication(result),
     );
   }
 
@@ -167,7 +168,7 @@ export class SerpApiConnector extends ProviderConnector {
    *
    * @param {string} path
    * @param {Object} params
-   * @param {number} ttl - cache lifetime in ms
+   * @param {number|null} ttl - cache lifetime in ms
    * @param {number} pageSize
    * @param {(data: any) => any[]} getPageItemsFn - the page's items
    * @param {(item: any, data: any) => any} itemConversionFn

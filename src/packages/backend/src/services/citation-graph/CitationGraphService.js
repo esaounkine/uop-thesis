@@ -1,16 +1,6 @@
 import { normalise } from '../../lib/normalise.js';
 
 /**
- * @typedef {{
- *   publication: import('../../db/schema.js').Publication,
- *   citations: {
- *     publication: import('../../db/schema.js').Publication,
- *     classification: string,
- *   }[],
- * }} ClassifiedTree
- */
-
-/**
  * Saves and restores a classified citation graph.
  */
 export class CitationGraphService {
@@ -37,7 +27,7 @@ export class CitationGraphService {
    * Decomposes the tree and stores it.
    *
    * @param {string} provider
-   * @param {ClassifiedTree} tree
+   * @param {Object} tree
    */
   storePubTree(provider, {
     publication, citations,
@@ -107,7 +97,7 @@ export class CitationGraphService {
    *
    * @param {string} provider
    * @param {string} pubId - the cited publication id
-   * @returns {ClassifiedTree | null} null when the tree was never saved
+   * @returns {Object | null} null when the tree was never saved
    */
   getPubTree(provider, pubId) {
     const publication = this.publicationRepository.findPublication({
@@ -164,7 +154,7 @@ export class CitationGraphService {
    *
    * @param {string} providerId
    * @param {string} authorId
-   * @returns {{ author: import('../../db/schema.js').Author, publications: ClassifiedTree[] } | null}
+   * @returns {Object | null}
    *   null when the author was never saved
    */
   getAuthorTree(providerId, authorId) {

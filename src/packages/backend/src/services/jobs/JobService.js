@@ -18,8 +18,9 @@ export class JobService extends AbstractService {
 
   /**
    * @param {() => Promise<any>} run
-   * @param {string} providerId
    * @param {Object} [meta] - fields stored on the job
+   * @param {string} meta.providerId
+   * @param {string} meta.authorId
    * @returns {string} the requestId
    */
   submitJob(run, {

@@ -1,17 +1,13 @@
-/** @typedef {import('../db/schema.js').Author} Author */
-/** @typedef {import('../db/schema.js').Publication} Publication */
-/** @typedef {import('../db/schema.js').Contribution} Contribution */
-
 /**
  * The contract every provider connector implements.
- * Methods return data that keeps the native identifiers.
+ * Results omit the provider key and include available contributor details.
  */
 export class ProviderConnector {
   id;
 
   /**
    * @param {string} name
-   * @returns {Promise<Author[]>}
+   * @returns {Promise<Object[]>}
    */
   searchAuthors(name) {
     throw new Error('not implemented');
@@ -21,7 +17,7 @@ export class ProviderConnector {
    * @param {string} id
    * @param {Object} [options]
    * @param {boolean} [options.cache] - true = use, false = skip the cache
-   * @returns {Promise<Author>}
+   * @returns {Promise<Object | null>}
    */
   getAuthorById(id, options) {
     throw new Error('not implemented');
@@ -31,7 +27,7 @@ export class ProviderConnector {
    * @param {string} authorId
    * @param {Object} [options]
    * @param {boolean} [options.cache] - true = use, false = skip the cache
-   * @returns {Promise<Publication[]>}
+   * @returns {Promise<Object[]>}
    */
   getAuthorPublications(authorId, options) {
     throw new Error('not implemented');
@@ -41,7 +37,7 @@ export class ProviderConnector {
    * @param {string} pubId
    * @param {Object} [options]
    * @param {boolean} [options.cache] - true = use, false = skip the cache
-   * @returns {Promise<Publication[]>} the publications that cite pubId
+   * @returns {Promise<Object[]>} the publications that cite pubId
    */
   getCitations(pubId, options) {
     throw new Error('not implemented');

@@ -7,8 +7,8 @@ import {
   semanticScholarMaxPerSecond,
 } from '../../config/env.js';
 import { SerpApiConnector } from './serpapi/SerpApiConnector.js';
-import { OpenAlexConnector } from './OpenAlexConnector.js';
-import { SemanticScholarConnector } from './SemanticScholarConnector.js';
+import { OpenAlexConnector } from './openalex/OpenAlexConnector.js';
+import { SemanticScholarConnector } from './semantic-scholar/SemanticScholarConnector.js';
 
 const PROVIDER_SPEC_REGISTRY = {
   openalex: {

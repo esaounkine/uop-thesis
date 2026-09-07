@@ -1,5 +1,3 @@
-/** @typedef {import('../../db/schema.js').Publication} Publication */
-
 import { AbstractService } from '../AbstractService.js';
 
 export class PublicationService extends AbstractService {
@@ -15,7 +13,7 @@ export class PublicationService extends AbstractService {
    * @param {string} pubId
    * @param {Object} [options]
    * @param {boolean} [options.cache] - true = use, false = skip the cache
-   * @returns {Promise<Publication[]>} the publications that cite pubId
+   * @returns {Promise<Object[]>} the publications that cite pubId
    */
   async getCitations(providerId, pubId, { cache = true } = {}) {
     const provider = this.getProviderOrFail(providerId);

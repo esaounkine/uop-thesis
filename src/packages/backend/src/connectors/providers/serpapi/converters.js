@@ -4,9 +4,8 @@ import { stripMarkup } from '../../../lib/strip-markup.js';
 /**
  * @see https://serpapi.com/google-scholar-api
  * @param {Object} profile
- * @returns {import('../../../db/schema.js').Author}
  */
-export const serpApiProfileToAuthor = (profile) => {
+export const convertSerpApiProfileToAuthor = (profile) => {
   return {
     authorId: profile.author_id,
     originalName: profile.name,
@@ -21,7 +20,7 @@ export const serpApiProfileToAuthor = (profile) => {
  * @param {string} pubId
  * @param {number} position
  */
-export const serpApiAuthorToContribution = (author, pubId, position) => {
+export const convertSerpApiAuthorToContribution = (author, pubId, position) => {
   return {
     pubId: pubId,
     authorId: author.author_id ?? (normalise(author.name) || null),
@@ -35,9 +34,12 @@ export const serpApiAuthorToContribution = (author, pubId, position) => {
  * @param {Object} article
  * @param {string} authorId
  * @param {Object} [author]
- * @returns {import('../../../db/schema.js').Publication}
  */
-export const serpApiArticleToPublication = (article, authorId, author) => {
+export const convertSerpApiArticleToPublication = (
+  article,
+  authorId,
+  author,
+) => {
   const title = stripMarkup(article.title);
   const pubId = article.cited_by?.cites_id ?? article.citation_id;
 
@@ -65,9 +67,8 @@ export const serpApiArticleToPublication = (article, authorId, author) => {
 /**
  * @see https://serpapi.com/google-scholar-organic-results
  * @param {Object} result
- * @returns {import('../../../db/schema.js').Publication}
  */
-export const serpApiResultToPublication = (result) => {
+export const convertSerpApiResultToPublication = (result) => {
   const title = stripMarkup(result.title);
   const pubId = result.result_id;
 
@@ -80,7 +81,7 @@ export const serpApiResultToPublication = (result) => {
     citationCount: result.inline_links?.cited_by?.total ?? null,
     contributions: (result.publication_info?.authors ?? [])
       .map((author, index) =>
-        serpApiAuthorToContribution(author, pubId, index + 1))
+        convertSerpApiAuthorToContribution(author, pubId, index + 1))
       // authorId (substituted by name if absent) might be null in which case we just drop the contribution
       .filter((contribution) =>
         contribution.authorId != null),

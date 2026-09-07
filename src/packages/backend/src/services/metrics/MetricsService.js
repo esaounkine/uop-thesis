@@ -1,5 +1,3 @@
-/** @typedef {import('../../db/schema.js').Publication} Publication */
-
 /**
  * Composition of the citation metrics pipeline.
  */
@@ -24,18 +22,11 @@ export class MetricsService {
   }
 
   /**
-   * Get citation metrics of an author.
-   *
    * @param {string} providerId
    * @param {string} authorId
    * @param {Object} [options]
    * @param {boolean} [options.cache] - true = use, false = skip the cache
-   * @returns {Promise<null | {
-   *   author: import('../../db/schema.js').Author,
-   *   metrics: ReturnType<import('../classification/ClassificationService.js').ClassificationService['getMetrics']>,
-   *   publications: Awaited<ReturnType<MetricsService['getProviderPublicationMetrics']>>[],
-   *   stats: { total: number, fetched: number, failed: number },
-   * }>} null when the author is not found
+   * @returns {Promise<Object|null>} null when the author is not found
    */
   async getAuthorMetrics(providerId, authorId, { cache = true } = {}) {
     const author = await this.authorService
@@ -81,17 +72,11 @@ export class MetricsService {
   }
 
   /**
-   * Get citation metrics of a publication.
-   *
    * @param {string} providerId
-   * @param {Publication} publication
+   * @param {Object} publication
    * @param {Object} [options]
    * @param {boolean} [options.cache] - true = use, false = skip the cache
-   * @returns {Promise<{
-   *   publication: Publication,
-   *   metrics: ReturnType<import('../classification/ClassificationService.js').ClassificationService['getMetrics']>,
-   *   citations: { publication: Publication, classification: string }[],
-   * }>}
+   * @returns {Promise<Object>}
    */
   async getProviderPublicationMetrics(
     providerId,

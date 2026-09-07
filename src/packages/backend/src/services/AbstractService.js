@@ -6,10 +6,9 @@ export class AbstractService {
   }
 
   /**
-   * Match the requested provider by ID or fail with and error 404.
-   *
    * @param {string} providerId
-   * @returns {import('../../connectors/ProviderConnector.js').ProviderConnector} provider
+   * @returns {import('../connectors/ProviderConnector.js').ProviderConnector}
+   * @throws {ApiError} When the provider is unknown.
    */
   getProviderOrFail(providerId) {
     const provider = this.providers.find((p) =>

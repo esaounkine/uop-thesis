@@ -1,7 +1,5 @@
 import { CITATION_TYPE } from '../../constants/citation-type.js';
 
-/** @typedef {import('../../db/schema.js').Contribution} Contribution */
-
 const getLeadAuthorId = (contributions) =>
   contributions.find((contribution) =>
     contribution.position === 1)?.authorId ?? null;
@@ -15,8 +13,8 @@ const getUniqueAuthorIds = (contributions) =>
  */
 export class ClassificationService {
   /**
-   * @param {Contribution[]} cited - authors of the cited paper
-   * @param {Contribution[]} citing - authors of one citing paper
+   * @param {Object[]} cited - authors of the cited paper
+   * @param {Object[]} citing - authors of one citing paper
    * @returns {string} one of CITATION_TYPE
    */
   getCitationType(cited, citing) {

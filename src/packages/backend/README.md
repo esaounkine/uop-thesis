@@ -38,10 +38,11 @@ Copy `env.example` to `.env`.
 Structurally composed after Spring MVC.
 
 - `server.js` - HTTP entry (Express).
-- `app.js` - wiring. `wire()` builds one provider bundle per data source.
+- `app.js` - wiring. `wire()` builds provider connectors and shared services.
 - `controllers/` - HTTP layer, one class per resource.
 - `services/` - the logic: classification, author, publication, jobs, tree.
-- `connectors/` - one per provider (OpenAlex, Semantic Scholar) behind a shared interface.
+- `connectors/ProviderConnector.js` - shared contract.
+- `connectors/providers/<provider>` - each provider folder contains its connector class, converters and tests.
 - `repositories/` - data access over the DB.
 - `db/` - schema, client, migrations.
 - `config/` env, `constants/` shared enums, `lib/` helpers.

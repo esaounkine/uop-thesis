@@ -1,8 +1,7 @@
-import { directFetchTtlMs, openAlexApiKey, openAlexBaseUrl, searchTtlMs } from '../../config/env.js';
-import { HttpClient } from '../../lib/HttpClient.js';
-import { normalise } from '../../lib/normalise.js';
-import { ProviderConnector } from '../ProviderConnector.js';
-import { stripMarkup } from '../../lib/strip-markup.js';
+import { directFetchTtlMs, openAlexApiKey, openAlexBaseUrl, searchTtlMs } from '../../../config/env.js';
+import { HttpClient } from '../../../lib/HttpClient.js';
+import { ProviderConnector } from '../../ProviderConnector.js';
+import { convertOpenAlexAuthorToAuthor, convertOpenAlexWorkToPublication } from './converters.js';
 
 /**
  * OpenAlex provider connector.
@@ -11,35 +10,6 @@ export class OpenAlexConnector extends ProviderConnector {
   id = 'openalex';
 
   static PER_PAGE = 200; // OpenAlex maximum
-
-  // 'https://openalex.org/W123' -> 'W123'
-  static extractShortId = (id) =>
-    (id
-      ? id.split('/').pop()
-      : id);
-
-  static toContributions = (work) =>
-    (work.authorships ?? [])
-      .map((entry, index) => {
-        return {
-          pubId: OpenAlexConnector.extractShortId(work.id),
-          authorId: OpenAlexConnector.extractShortId(entry.author?.id),
-          authorName: entry.author?.display_name ?? null,
-          organisation: entry.institutions?.[0]?.display_name ?? null,
-          position: index + 1, // OpenAlex returns them in the order of appearance
-        };
-      })
-      // author.id might be null if:
-      // - there's raw_author_name, but no id, when the author is unmatched
-      // - new records that have not assigned an author id yet
-      // - group authors publishing as a collective
-      // - maybe other cases of missing or low quality data
-      // We just drop these contribution records
-      // Currently, it is required to drop unmatched names,
-      // to avoid `null` skewing the stats.
-      // TODO fix to use normalised-lemmatised-enriched name instead of the id
-      .filter((contribution) =>
-        contribution.authorId != null);
 
   /**
    * @param {Object} [args]
@@ -60,13 +30,14 @@ export class OpenAlexConnector extends ProviderConnector {
 
   /**
    * @see https://github.com/ourresearch/openalex-docs/blob/main/api-entities/authors/search-authors.md
+   * @param {string} name
    */
   async searchAuthors(name) {
     const data = await this.fetchJson('/authors', {
       search: name,
     }, searchTtlMs);
     return data.results.map((author) =>
-      this.toAuthor(author));
+      convertOpenAlexAuthorToAuthor(author));
   }
 
   /**
@@ -79,7 +50,7 @@ export class OpenAlexConnector extends ProviderConnector {
     const author = await this.fetchJson(`/authors/${id}`, {}, cache
       ? directFetchTtlMs
       : null);
-    return this.toAuthor(author);
+    return convertOpenAlexAuthorToAuthor(author);
   }
 
   /**
@@ -94,7 +65,7 @@ export class OpenAlexConnector extends ProviderConnector {
     }, cache
       ? searchTtlMs
       : null, (work) =>
-      this.toPublication(work));
+      convertOpenAlexWorkToPublication(work));
   }
 
   /**
@@ -109,7 +80,7 @@ export class OpenAlexConnector extends ProviderConnector {
     }, cache
       ? searchTtlMs
       : null, (work) =>
-      this.toPublication(work));
+      convertOpenAlexWorkToPublication(work));
   }
 
   /**
@@ -164,7 +135,7 @@ export class OpenAlexConnector extends ProviderConnector {
    *
    * @param {string} path
    * @param {Object} params
-   * @param {number} ttl - cache lifetime in ms
+   * @param {number|null} ttl - cache lifetime in ms
    * @param {(item: any) => any} map
    * @returns {Promise<any[]>}
    */
@@ -185,28 +156,5 @@ export class OpenAlexConnector extends ProviderConnector {
     }
 
     return items;
-  }
-
-  toPublication(work) {
-    const title = stripMarkup(work.title);
-
-    return {
-      pubId: OpenAlexConnector.extractShortId(work.id),
-      title: title,
-      normalisedTitle: normalise(title),
-      externalId: work.doi ?? null,
-      year: work.publication_year ?? null,
-      citationCount: work.cited_by_count ?? null,
-      contributions: OpenAlexConnector.toContributions(work),
-    };
-  }
-
-  toAuthor(author) {
-    return {
-      authorId: OpenAlexConnector.extractShortId(author.id),
-      originalName: author.display_name,
-      normalisedName: normalise(author.display_name),
-      organisation: author.last_known_institutions?.[0]?.display_name ?? null,
-    };
   }
 }

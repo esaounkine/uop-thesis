@@ -1,8 +1,7 @@
-import { directFetchTtlMs, searchTtlMs, semanticScholarApiKey, semanticScholarBaseUrl } from '../../config/env.js';
-import { HttpClient } from '../../lib/HttpClient.js';
-import { normalise } from '../../lib/normalise.js';
-import { ProviderConnector } from '../ProviderConnector.js';
-import { stripMarkup } from '../../lib/strip-markup.js';
+import { directFetchTtlMs, searchTtlMs, semanticScholarApiKey, semanticScholarBaseUrl } from '../../../config/env.js';
+import { HttpClient } from '../../../lib/HttpClient.js';
+import { ProviderConnector } from '../../ProviderConnector.js';
+import { convertSemanticScholarAuthorToAuthor, convertSemanticScholarPaperToPublication } from './converters.js';
 
 /**
  * Semantic Scholar provider connector.
@@ -17,28 +16,6 @@ export class SemanticScholarConnector extends ProviderConnector {
   static PAPER_FIELDS = 'title,year,externalIds,authors,citationCount';
 
   static AUTHOR_FIELDS = 'name,externalIds,homepage,paperCount,affiliations,papers';
-
-  static toContributions = (paper) =>
-    (paper.authors ?? [])
-      .map((author, index) => {
-        return {
-          pubId: paper.paperId,
-          authorId: author.authorId,
-          authorName: author.name ?? null,
-          position: index + 1, // Semantic Scholar returns them in the order of appearance
-        };
-      })
-      // authorId might be null if:
-      // - no id, when the author is unmatched
-      // - new records that have not assigned an author id yet
-      // - group authors publishing as a collective
-      // - maybe other cases of missing or low quality data
-      // We just drop these contribution records
-      // Currently, it is required to drop unmatched names,
-      // to avoid `null` skewing the stats.
-      // TODO fix to use normalised-lemmatised-enriched name instead of the id
-      .filter((contribution) =>
-        contribution.authorId != null);
 
   /**
    * @param {Object} [args]
@@ -59,6 +36,7 @@ export class SemanticScholarConnector extends ProviderConnector {
 
   /**
    * @see https://api.semanticscholar.org/api-docs/#tag/Author-Data/operation/get_graph_get_author_search
+   * @param {string} name
    */
   async searchAuthors(name) {
     const data = await this.fetchJson('/author/search', {
@@ -67,7 +45,7 @@ export class SemanticScholarConnector extends ProviderConnector {
       limit: SemanticScholarConnector.SEARCH_LIMIT,
     }, searchTtlMs);
     return (data.data ?? []).map((author) =>
-      this.toAuthor(author));
+      convertSemanticScholarAuthorToAuthor(author));
   }
 
   /**
@@ -82,7 +60,7 @@ export class SemanticScholarConnector extends ProviderConnector {
     }, cache
       ? directFetchTtlMs
       : null);
-    return this.toAuthor(author);
+    return convertSemanticScholarAuthorToAuthor(author);
   }
 
   /**
@@ -97,7 +75,7 @@ export class SemanticScholarConnector extends ProviderConnector {
     }, cache
       ? searchTtlMs
       : null, (paper) =>
-      this.toPublication(paper));
+      convertSemanticScholarPaperToPublication(paper));
   }
 
   /**
@@ -119,13 +97,13 @@ export class SemanticScholarConnector extends ProviderConnector {
       .filter((paper) =>
         paper?.paperId != null)
       .map((paper) =>
-        this.toPublication(paper));
+        convertSemanticScholarPaperToPublication(paper));
   }
 
   /**
    * @param {string} path
    * @param {Object} params
-   * @param {number} ttl - cache lifetime in ms
+   * @param {number|null} ttl - cache lifetime in ms
    * @returns {Promise<any>} the response body
    */
   async fetchJson(path, params, ttl) {
@@ -151,7 +129,7 @@ export class SemanticScholarConnector extends ProviderConnector {
    *
    * @param {string} path
    * @param {Object} params
-   * @param {number} ttl - cache lifetime in ms
+   * @param {number|null} ttl - cache lifetime in ms
    * @param {(item: any) => any} map
    * @returns {Promise<any[]>}
    */
@@ -175,28 +153,5 @@ export class SemanticScholarConnector extends ProviderConnector {
     }
 
     return items;
-  }
-
-  toPublication(paper) {
-    const title = stripMarkup(paper.title);
-
-    return {
-      pubId: paper.paperId,
-      title: title,
-      normalisedTitle: normalise(title),
-      externalId: paper.externalIds?.DOI ?? null,
-      year: paper.year ?? null,
-      citationCount: paper.citationCount ?? null,
-      contributions: SemanticScholarConnector.toContributions(paper),
-    };
-  }
-
-  toAuthor(author) {
-    return {
-      authorId: author.authorId,
-      originalName: author.name,
-      normalisedName: normalise(author.name),
-      organisation: author.affiliations?.[0] ?? null,
-    };
   }
 }

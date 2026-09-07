@@ -5,10 +5,9 @@ import { ApiError } from '../lib/api.js';
  */
 export class AuthorController {
   /**
-   *
-   * @param {import('../services/AuthorService.js').AuthorService} authorService
-   * @param {import('../service/CitationGraphService.js').CitationGraphService} citationGraphService
-   * @param {import('../service/ClassificationService.js').ClassificationService} classificationService
+   * @param {import('../services/author/AuthorService.js').AuthorService} authorService
+   * @param {import('../services/citation-graph/CitationGraphService.js').CitationGraphService} citationGraphService
+   * @param {import('../services/classification/ClassificationService.js').ClassificationService} classificationService
    */
   constructor(
     authorService,
@@ -21,11 +20,12 @@ export class AuthorController {
   }
 
   /**
-   *
-   * @param {Object} params
-   * @param {string} params.provider
-   * @param {string} params.authorId
-   * @returns {Promise<{papers: Publication[]}>}
+   * @param {Object} request
+   * @param {Object} request.params
+   * @param {string} request.params.provider
+   * @param {string} request.params.authorId
+   * @returns {Promise<Object>}
+   * @throws {ApiError} When the author is not found.
    */
   async getAuthorPapers({ params }) {
     const result = await this.authorService
@@ -41,11 +41,12 @@ export class AuthorController {
   }
 
   /**
-   * Get stored metrics graph for an author.
-   *
-   * @param {Object} params
-   * @param {string} params.provider
-   * @param {string} params.authorId
+   * @param {Object} request
+   * @param {Object} request.params
+   * @param {string} request.params.provider
+   * @param {string} request.params.authorId
+   * @returns {Object}
+   * @throws {ApiError} When no stored author graph exists.
    */
   getStoredMetrics({ params }) {
     const tree = this.citationGraphService

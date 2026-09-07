@@ -1,5 +1,3 @@
-/** @typedef {import('../../db/schema.js').Publication} Publication */
-
 import { AbstractService } from '../AbstractService.js';
 
 export class AuthorService extends AbstractService {
@@ -17,7 +15,7 @@ export class AuthorService extends AbstractService {
    * Authors with name matching the search term under all enabled providers.
    *
    * @param {string} name
-   * @returns {Promise<import('../../db/schema.js').Author[]>}
+   * @returns {Promise<Object[]>} Results grouped by provider.
    */
   async searchByName(name) {
     return Promise.all(
@@ -53,10 +51,7 @@ export class AuthorService extends AbstractService {
    * @param {string} authorId
    * @param {Object} [options]
    * @param {boolean} [options.cache] - true = use, false = skip the cache
-   * @returns {Promise<null | {
-   *   author: Author,
-   *   publications: Publication[],
-   * }>} null when the author is not found
+   * @returns {Promise<Object|null>} null when the author is not found
    */
   async getProviderPublications(
     providerId,
