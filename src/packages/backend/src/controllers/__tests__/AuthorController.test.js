@@ -18,6 +18,7 @@ describe('AuthorController', () => {
 
   beforeEach(() => {
     authorServiceMock = {
+      getProviderAuthor: jest.fn(),
       getProviderPublications: jest.fn(),
     };
     citationGraphServiceMock = {
@@ -31,6 +32,47 @@ describe('AuthorController', () => {
       citationGraphServiceMock,
       classificationServiceMock,
     );
+  });
+
+  describe('getAuthor', () => {
+    describe('when the author service returns an author', () => {
+      beforeEach(() => {
+        authorServiceMock.getProviderAuthor.mockResolvedValue({ authorId: 'A1' });
+      });
+
+      it('returns the author', async () => {
+        expect(await controller.getAuthor(request)).toEqual({
+          author: { authorId: 'A1' },
+        });
+      });
+
+      it('uses the provider and author id', async () => {
+        await controller.getAuthor(request);
+        expect(authorServiceMock.getProviderAuthor)
+          .toHaveBeenCalledWith('openalex', 'A1');
+      });
+    });
+
+    describe('when the author service returns nothing', () => {
+      beforeEach(() => {
+        authorServiceMock.getProviderAuthor.mockResolvedValue(null);
+      });
+
+      it('returns a 404', async () => {
+        await expect(controller.getAuthor(request))
+          .rejects.toMatchObject({ status: 404 });
+      });
+    });
+
+    describe('when the author service rejects', () => {
+      beforeEach(() => {
+        authorServiceMock.getProviderAuthor.mockRejectedValue(new Error('error-4'));
+      });
+
+      it('propagates the error', async () => {
+        await expect(controller.getAuthor(request)).rejects.toThrow('error-4');
+      });
+    });
   });
 
   describe('getAuthorPapers', () => {

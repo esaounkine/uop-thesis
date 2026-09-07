@@ -138,6 +138,103 @@ describe('AuthorService', () => {
     });
   });
 
+  describe('getProviderAuthor', () => {
+    describe('when the provider is unknown', () => {
+      it('returns a 404', async () => {
+        await expect(authorService.getProviderAuthor('nope', 'A1'))
+          .rejects.toMatchObject({ status: 404 });
+      });
+    });
+
+    describe('when the provider is known', () => {
+      describe('but the author is not found', () => {
+        beforeEach(() => {
+          connectorMock.getAuthorById.mockResolvedValue(null);
+        });
+
+        it('returns null', async () => {
+          expect(await authorService.getProviderAuthor('openalex', 'A1')).toBeNull();
+        });
+
+        it('does not look up a job', async () => {
+          await authorService.getProviderAuthor('openalex', 'A1');
+          expect(jobServiceMock.getLastUpdateJob).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('but the author lookup rejects', () => {
+        beforeEach(() => {
+          connectorMock.getAuthorById.mockRejectedValue(new Error('error-5'));
+        });
+
+        it('propagates the error', async () => {
+          await expect(authorService.getProviderAuthor('openalex', 'A1'))
+            .rejects.toThrow('error-5');
+        });
+      });
+
+      describe('and the author is found', () => {
+        beforeEach(() => {
+          connectorMock.getAuthorById.mockResolvedValue(Object.freeze({ authorId: 'A1' }));
+        });
+
+        it('looks up the author by id', async () => {
+          await authorService.getProviderAuthor('openalex', 'A1');
+          expect(connectorMock.getAuthorById).toHaveBeenCalledWith('A1');
+        });
+
+        it('does not fetch papers', async () => {
+          await authorService.getProviderAuthor('openalex', 'A1');
+          expect(connectorMock.getAuthorPublications).not.toHaveBeenCalled();
+        });
+
+        it('looks up the job using both keys', async () => {
+          await authorService.getProviderAuthor('openalex', 'A1');
+          expect(jobServiceMock.getLastUpdateJob).toHaveBeenCalledWith('openalex', 'A1');
+        });
+
+        describe('and no stored job exists', () => {
+          beforeEach(() => {
+            jobServiceMock.getLastUpdateJob.mockReturnValue(null);
+          });
+
+          it('returns the author without a stored date', async () => {
+            expect(await authorService.getProviderAuthor('openalex', 'A1')).toEqual({
+              authorId: 'A1',
+              storedAt: null,
+            });
+          });
+        });
+
+        describe('and a stored job exists', () => {
+          beforeEach(() => {
+            jobServiceMock.getLastUpdateJob.mockReturnValue({ updatedAt: '2026-09-07' });
+          });
+
+          it('returns the author with the stored date', async () => {
+            expect(await authorService.getProviderAuthor('openalex', 'A1')).toEqual({
+              authorId: 'A1',
+              storedAt: '2026-09-07',
+            });
+          });
+        });
+
+        describe('but the job lookup throws', () => {
+          beforeEach(() => {
+            jobServiceMock.getLastUpdateJob.mockImplementation(() => {
+              throw new Error('error-6');
+            });
+          });
+
+          it('propagates the error', async () => {
+            await expect(authorService.getProviderAuthor('openalex', 'A1'))
+              .rejects.toThrow('error-6');
+          });
+        });
+      });
+    });
+  });
+
   describe('getProviderPublications', () => {
     describe('when the provider is unknown', () => {
       it('is a 404', async () => {

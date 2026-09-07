@@ -21,6 +21,22 @@ export class AuthorController {
 
   /**
    * @param {Object} request
+   * @returns {Promise<Object>}
+   * @throws {ApiError} When the author is not found.
+   */
+  async getAuthor({ params }) {
+    const author = await this.authorService
+      .getProviderAuthor(params.provider, params.authorId);
+
+    if (!author) {
+      throw new ApiError(404, `author not found: ${params.authorId}`);
+    }
+
+    return { author: author };
+  }
+
+  /**
+   * @param {Object} request
    * @param {Object} request.params
    * @param {string} request.params.provider
    * @param {string} request.params.authorId
