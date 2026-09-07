@@ -45,16 +45,7 @@ export const AuthorCandidate = ({ provider, author, showPapers }) => {
       {!author.organisation?.trim() && !showPapers &&
         <div className={styles.Identify}>
           <Toggle
-            options={[
-              {
-                label: 'Hide papers for this author',
-                value: false,
-              },
-              {
-                label: 'Show papers for this author',
-                value: true,
-              },
-            ]}
+            label="Show papers for this author"
             value={papersRequested}
             onChange={setPapersRequested} />
         </div>

@@ -1,6 +1,20 @@
 import styles from './Toggle.module.css';
 
-export const Toggle = ({ options, value, onChange }) => {
+export const Toggle = ({ label, options, value, onChange }) => {
+  if (label) {
+    return (
+      <label className={styles.Switch}>
+        <input
+          type="checkbox"
+          role="switch"
+          checked={value}
+          onChange={(event) =>
+            onChange(event.target.checked)} />
+        <span>{label}</span>
+      </label>
+    );
+  }
+
   const selected = options.findIndex((option) =>
     option.value === value);
 

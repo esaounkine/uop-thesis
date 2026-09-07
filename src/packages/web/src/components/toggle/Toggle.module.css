@@ -13,11 +13,22 @@
     --toggle-border-radius: calc(var(--toggle-height) / 2);
 }
 
-.Container {
+.Container,
+.Switch {
     display: flex;
     flex-direction: row;
     gap: 0.5rem;
     align-items: center;
+}
+
+.Switch {
+    margin: 0;
+    font-size: 11pt;
+}
+
+.Switch input {
+    margin: 0;
+    flex-shrink: 0;
 }
 
 .OptionLabel {
