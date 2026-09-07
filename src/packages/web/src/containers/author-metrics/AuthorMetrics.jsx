@@ -27,6 +27,7 @@ export const AuthorMetrics = ({ provider, authorId, storedAt }) => {
   const [fetchedAt, setFetchedAt] = useState(storedAt ?? null);
   const [requestId, setRequestId] = useState(null);
   const [progress, setProgress] = useState(null);
+  const [graphOpened, setGraphOpened] = useState(false);
 
   useEffect(() => {
     if (!storedAt) {
@@ -148,13 +149,17 @@ export const AuthorMetrics = ({ provider, authorId, storedAt }) => {
           <Metrics
             metrics={state.result.metrics}
             stats={state.result.stats} />
-          <details className={styles.DebugDetails}>
+          <details className={styles.DebugDetails} onToggle={(event) => {
+            if (event.currentTarget.open) {
+              setGraphOpened(true);
+            }
+          }}>
             <summary>Citation graph</summary>
-            <Suspense fallback={<Loader label="Loading graph..." />}>
+            {graphOpened && <Suspense fallback={<Loader label="Loading graph..." />}>
               <CitationGraph
                 author={state.result.author}
                 publications={state.result.publications} />
-            </Suspense>
+            </Suspense>}
           </details>
           <details className={styles.DebugDetails}>
             <summary>Raw data</summary>

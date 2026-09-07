@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as echarts from 'echarts/core';
 import { GraphChart } from 'echarts/charts';
 import { LegendComponent, TooltipComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import styles from './CitationGraph.module.css';
+import { GraphHelp } from './GraphHelp.jsx';
 
 echarts.use([GraphChart, LegendComponent, TooltipComponent, CanvasRenderer]);
 
@@ -15,6 +16,14 @@ const CLASSIFICATION_COLOR = {
 
 const AUTHOR_COLOR = '#212121';
 const PAPER_COLOR = '#0172ad';
+
+const LEGEND_LABELS = {
+  author: 'Selected author',
+  paper: 'Author’s paper',
+  'self-direct': 'Citing paper: direct',
+  'self-coauthor': 'Citing paper: co-author',
+  external: 'Citing paper: external',
+};
 
 const toAuthorNames = (publication) => {
   return (publication.contributions ?? [])
@@ -118,7 +127,7 @@ const buildData = (author, publications) => {
   };
 };
 
-const buildOption = (author, publications) => {
+const buildOption = (author, publications, textColor) => {
   const { nodes, links } = buildData(author, publications);
 
   return {
@@ -133,15 +142,36 @@ const buildOption = (author, publications) => {
       },
     },
     legend: {
-      data: Object.keys(CLASSIFICATION_COLOR),
+      data: [
+        {
+          name: 'author',
+          icon: 'diamond',
+        },
+        {
+          name: 'paper',
+          icon: 'triangle',
+        },
+        ...Object.keys(CLASSIFICATION_COLOR).map((classification) => {
+          return {
+            name: classification,
+            icon: 'circle',
+          };
+        }),
+      ],
+      formatter: (name) =>
+        LEGEND_LABELS[name],
       bottom: 0,
       itemWidth: 10,
       itemHeight: 10,
-      textStyle: { fontSize: 10 },
+      textStyle: {
+        fontSize: 12,
+        color: textColor,
+      },
     },
     series: [
       {
         type: 'graph',
+        bottom: 80,
         layout: 'force',
         circular: { rotateLabel: false },
         roam: true,
@@ -171,35 +201,48 @@ const buildOption = (author, publications) => {
 
 export const CitationGraph = ({ author, publications }) => {
   const containerRef = useRef(null);
+  const helpButtonRef = useRef(null);
+  const [showHelp, setShowHelp] = useState(true);
 
   useEffect(() => {
     const chart = echarts.init(containerRef.current);
 
-    chart.setOption(buildOption(author, publications));
+    const textColor = getComputedStyle(containerRef.current).color;
+    chart.setOption(buildOption(author, publications, textColor));
 
-    return () =>
+    const observer = new ResizeObserver(() => {
+      if (containerRef.current.clientWidth > 0) {
+        chart.resize();
+      }
+    });
+    observer.observe(containerRef.current);
+
+    return () => {
+      observer.disconnect();
       chart.dispose();
+    };
   }, [author, publications]);
 
   return (
-    <div>
-      <div className={styles.Graph}>
-        <div ref={containerRef} className={styles.Canvas} />
-      </div>
-      <div className={styles.Legend}>
-        <span className={styles.LegendItem}>
-          <span className={`${styles.Shape} ${styles.Diamond}`} />
-          author
-        </span>
-        <span className={styles.LegendItem}>
-          <span className={`${styles.Shape} ${styles.Triangle}`} />
-          paper
-        </span>
-        <span className={styles.LegendItem}>
-          <span className={`${styles.Shape} ${styles.Circle}`} />
-          citing paper
-        </span>
-      </div>
+    <div className={styles.Graph} style={{
+      '--author-color': AUTHOR_COLOR,
+      '--paper-color': PAPER_COLOR,
+      '--direct-color': CLASSIFICATION_COLOR['self-direct'],
+      '--coauthor-color': CLASSIFICATION_COLOR['self-coauthor'],
+      '--external-color': CLASSIFICATION_COLOR.external,
+    }}>
+      <div ref={containerRef} className={styles.Canvas} />
+      <button
+        ref={helpButtonRef}
+        type="button"
+        className={styles.HelpButton}
+        title="How to read the graph"
+        onClick={() =>
+          setShowHelp(!showHelp)}>?</button>
+      {showHelp && <GraphHelp onClose={() => {
+        setShowHelp(false);
+        helpButtonRef.current.focus();
+      }} />}
     </div>
   );
 };
