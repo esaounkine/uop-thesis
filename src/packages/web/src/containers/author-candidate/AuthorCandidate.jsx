@@ -8,7 +8,7 @@ import { AuthorPapers } from '../author-papers/AuthorPapers.jsx';
 import { AuthorMetrics } from '../author-metrics/AuthorMetrics.jsx';
 import { Toggle } from '../../components/toggle/Toggle.jsx';
 
-export const AuthorCandidate = ({ provider, author, showPapers }) => {
+export const AuthorCandidate = ({ provider, author, showPapers, standalone = false }) => {
   const [papers, setPapers] = useState({ status: 'idle' });
   const [papersRequested, setPapersRequested] = useState(false);
   const wantsPapers = showPapers || papersRequested;
@@ -38,11 +38,14 @@ export const AuthorCandidate = ({ provider, author, showPapers }) => {
   return (
     <li className={styles.Candidate}>
       <Author
+        href={standalone
+          ? undefined
+          : `/author/${encodeURIComponent(provider)}/${encodeURIComponent(author.authorId)}`}
         authorId={author.authorId}
         organisation={author.organisation}
         originalName={author.originalName} />
 
-      {!author.organisation?.trim() && !showPapers &&
+      {(standalone || !author.organisation?.trim()) && !showPapers &&
         <div className={styles.Identify}>
           <Toggle
             label="Show papers for this author"
