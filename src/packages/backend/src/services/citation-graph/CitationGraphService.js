@@ -1,4 +1,4 @@
-import { normalise } from '../../lib/normalise.js';
+import { convertCitationTreeToDbRows, convertDbRowsToCitationTree } from './converters.js';
 
 /**
  * Saves and restores a classified citation graph.
@@ -29,66 +29,15 @@ export class CitationGraphService {
    * @param {string} provider
    * @param {Object} tree
    */
-  storePubTree(provider, {
-    publication, citations,
-  }) {
-    const publications = [
-      publication,
-      ...citations.map((citation) =>
-        citation.publication),
-    ];
-    const contributions = publications.flatMap((row) =>
-      row.contributions ?? []);
+  storePubTree(provider, tree) {
+    const rows = convertCitationTreeToDbRows(provider, tree);
 
-    const publicationRows = publications.map((row) => {
-      return {
-        provider: provider,
-        pubId: row.pubId,
-        title: row.title,
-        normalisedTitle: row.normalisedTitle,
-        externalId: row.externalId,
-        year: row.year ?? null,
-      };
-    });
-    const contributionRows = contributions.map((contribution) => {
-      return {
-        provider: provider,
-        pubId: contribution.pubId,
-        authorId: contribution.authorId,
-        position: contribution.position,
-      };
-    });
-    const authorRows = [
-      ...new Map(contributions.map((contribution) =>
-        [contribution.authorId, contribution])),
-    ].map(([authorId, contribution]) => {
-      const name = contribution.authorName ?? null;
+    this.publicationRepository.saveAll(rows.publications);
+    this.authorRepository.saveAll(rows.authors);
+    this.contributionRepository.saveAll(rows.contributions);
 
-      return {
-        provider: provider,
-        authorId: authorId,
-        originalName: name,
-        normalisedName: name == null
-          ? null
-          : normalise(name),
-        organisation: contribution.organisation ?? null,
-      };
-    });
-    const citationRows = citations.map((citation) => {
-      return {
-        provider: provider,
-        sourcePubId: citation.publication.pubId,
-        targetPubId: publication.pubId,
-        classification: citation.classification,
-      };
-    });
-
-    this.publicationRepository.saveAll(publicationRows);
-    this.authorRepository.saveAll(authorRows);
-    this.contributionRepository.saveAll(contributionRows);
-
-    if (citationRows.length > 0) {
-      this.citationRepository.saveAll(citationRows);
+    if (rows.citations.length > 0) {
+      this.citationRepository.saveAll(rows.citations);
     }
   }
 
@@ -115,38 +64,21 @@ export class CitationGraphService {
     });
     const citingIds = edges.map((edge) =>
       edge.sourcePubId);
-    const publicationById = new Map(
-      this.publicationRepository
-        .findPublications({
-          provider: provider,
-          pubId: citingIds,
-        })
-        .map((row) =>
-          [row.pubId, row]));
-    const contributionsByPub = Map.groupBy(
-      this.contributionRepository.findContributions({
-        provider: provider,
-        pubId: [pubId, ...citingIds],
-      }),
-      (contribution) =>
-        contribution.pubId,
-    );
-    const withContributions = (row) => {
-      return {
-        ...row,
-        contributions: contributionsByPub.get(row.pubId) ?? [],
-      };
-    };
+    const citingPublications = this.publicationRepository.findPublications({
+      provider: provider,
+      pubId: citingIds,
+    });
+    const contributions = this.contributionRepository.findContributions({
+      provider: provider,
+      pubId: [pubId, ...citingIds],
+    });
 
-    return {
-      publication: withContributions(publication),
-      citations: edges.map((edge) => {
-        return {
-          publication: withContributions(publicationById.get(edge.sourcePubId)),
-          classification: edge.classification,
-        };
-      }),
-    };
+    return convertDbRowsToCitationTree({
+      publication: publication,
+      citingPublications: citingPublications,
+      contributions: contributions,
+      citations: edges,
+    });
   }
 
   /**
