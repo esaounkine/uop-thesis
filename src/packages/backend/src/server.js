@@ -76,6 +76,9 @@ const buildServer = ({
   app.get('/authors/:provider/:authorId/papers', async (req, res) => {
     res.json(await authorController.getAuthorPapers(req));
   });
+  app.get('/authors/:provider/:authorId', async (req, res) => {
+    res.json(await authorController.getAuthor(req));
+  });
   app.get('/authors/:provider/:authorId/metrics', (req, res) => {
     res.json(authorController.getStoredMetrics(req));
   });

@@ -49,6 +49,27 @@ export class AuthorService extends AbstractService {
   /**
    * @param {string} providerId
    * @param {string} authorId
+   * @returns {Promise<Object|null>}
+   */
+  async getProviderAuthor(providerId, authorId) {
+    const provider = this.getProviderOrFail(providerId);
+    const author = await provider.getAuthorById(authorId);
+
+    if (!author) {
+      return null;
+    }
+
+    const stored = this.jobService.getLastUpdateJob(providerId, authorId);
+
+    return {
+      ...author,
+      storedAt: stored?.updatedAt ?? null,
+    };
+  }
+
+  /**
+   * @param {string} providerId
+   * @param {string} authorId
    * @param {Object} [options]
    * @param {boolean} [options.cache] - true = use, false = skip the cache
    * @returns {Promise<Object|null>} null when the author is not found
