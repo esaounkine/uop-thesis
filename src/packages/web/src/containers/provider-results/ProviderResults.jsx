@@ -40,7 +40,16 @@ export const ProviderResults = ({ results }) => {
           : <>
             <div className={styles.Controls}>
               <Toggle
-                options={[{ label: 'Hide papers', value: false }, { label: 'Show papers', value: true }]}
+                options={[
+                  {
+                    label: 'Hide papers for all',
+                    value: false,
+                  },
+                  {
+                    label: 'Show papers for all',
+                    value: true,
+                  },
+                ]}
                 value={!!papersRequested[activeEntry.provider]}
                 onChange={() => togglePapers(activeEntry.provider)}
               />

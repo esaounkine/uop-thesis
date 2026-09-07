@@ -6,7 +6,9 @@ export const Author = ({ originalName, organisation, authorId }) => {
   return (
     <div className={styles.Header}>
       {originalName}
-      <Chip label={organisation} />
+      {organisation?.trim()
+        ? <Chip label={organisation} />
+        : <Chip label="Unknown affiliation" muted />}
       <IdBox value={authorId} />
     </div>
   );

@@ -15,6 +15,7 @@ export const Toggle = ({ options, value, onChange }) => {
           <button
             key={option.value}
             type="button"
+            title={option.label}
             className={option.value === value
               ? `${styles.Option} ${styles.Active}`
               : styles.Option}

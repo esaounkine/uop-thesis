@@ -6,12 +6,15 @@ import { Loader } from '../../components/loader/Loader.jsx';
 import { ErrorMessage } from '../../components/error-message/ErrorMessage.jsx';
 import { AuthorPapers } from '../author-papers/AuthorPapers.jsx';
 import { AuthorMetrics } from '../author-metrics/AuthorMetrics.jsx';
+import { Toggle } from '../../components/toggle/Toggle.jsx';
 
 export const AuthorCandidate = ({ provider, author, showPapers }) => {
   const [papers, setPapers] = useState({ status: 'idle' });
+  const [papersRequested, setPapersRequested] = useState(false);
+  const wantsPapers = showPapers || papersRequested;
 
   useEffect(() => {
-    if (!showPapers || papers.status !== 'idle') {
+    if (!wantsPapers || papers.status !== 'idle') {
       return undefined;
     }
 
@@ -30,7 +33,7 @@ export const AuthorCandidate = ({ provider, author, showPapers }) => {
           error: error.message,
         });
       });
-  }, [provider, author.authorId, showPapers, papers.status]);
+  }, [provider, author.authorId, wantsPapers, papers.status]);
 
   return (
     <li className={styles.Candidate}>
@@ -39,18 +42,42 @@ export const AuthorCandidate = ({ provider, author, showPapers }) => {
         organisation={author.organisation}
         originalName={author.originalName} />
 
+      {!author.organisation?.trim() && !showPapers &&
+        <div className={styles.Identify}>
+          <Toggle
+            options={[
+              {
+                label: 'Hide papers for this author',
+                value: false,
+              },
+              {
+                label: 'Show papers for this author',
+                value: true,
+              },
+            ]}
+            value={papersRequested}
+            onChange={setPapersRequested} />
+        </div>
+      }
+
       <AuthorMetrics
         provider={provider}
         authorId={author.authorId}
         storedAt={author.storedAt} />
 
-      {showPapers &&
+      {wantsPapers &&
         <>
           {papers.status === 'loading' &&
             <Loader label="Fetching papers..." />
           }
           {papers.status === 'error' &&
-            <ErrorMessage title="Fetching papers failed" message={papers.error} />
+            <>
+              <ErrorMessage title="Fetching papers failed" message={papers.error} />
+              <button type="button" onClick={() =>
+                setPapers({ status: 'idle' })}>
+                Retry papers
+              </button>
+            </>
           }
           {papers.status === 'done' &&
             <AuthorPapers papers={papers.papers} />

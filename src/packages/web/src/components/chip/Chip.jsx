@@ -8,7 +8,7 @@ const hueOf = (text) => {
       0);
 };
 
-export const Chip = ({ label }) => {
+export const Chip = ({ label, muted = false }) => {
   if (!label) {
     return null;
   }
@@ -19,9 +19,9 @@ export const Chip = ({ label }) => {
     <span
       className={styles.Chip}
       style={{
-        backgroundColor: `hsl(${hue} 70% 88%)`,
-        borderColor: `hsl(${hue} 45% 60%)`,
-        color: `hsl(${hue} 55% 25%)`,
+        backgroundColor: `hsl(${hue} ${muted ? 0 : 70}% 88%)`,
+        borderColor: `hsl(${hue} ${muted ? 0 : 45}% 60%)`,
+        color: `hsl(${hue} ${muted ? 0 : 55}% 25%)`,
       }}
     >
       {label}
