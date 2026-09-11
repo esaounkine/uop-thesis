@@ -51,4 +51,11 @@ The two components making up this project are:
 
 The documentation is built automatically on every push to the `master` branch and the resulting PDF is uploaded as an artifact of the GitHub Actions workflow.
 
+### Next steps
+
+Possible later features:
+
+- Paper search and paper-level citation metrics in the web UI.
+- Job history (under current user session).
+
 
