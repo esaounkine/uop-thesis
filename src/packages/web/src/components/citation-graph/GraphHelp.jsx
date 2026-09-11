@@ -37,7 +37,7 @@ export const GraphHelp = ({ onClose }) => {
           <text x="180" y="80">Co-author</text>
           <text x="300" y="80">External</text>
         </svg>
-        <p>Direct: same first author. Co-author: other shared authors. External: no shared authors.</p>
+        <p>Direct: the selected author also wrote the citing publication. Co-author: only other authors are shared. External: no shared authors.</p>
       </>}
       {step === 2 && <>
         <svg viewBox="0 0 360 110" role="img">
