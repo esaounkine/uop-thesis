@@ -10,17 +10,20 @@ export class CitationGraphService {
    * @param {import('../../repositories/AuthorRepository.js').AuthorRepository} args.authorRepository
    * @param {import('../../repositories/ContributionRepository.js').ContributionRepository} args.contributionRepository
    * @param {import('../../repositories/CitationRepository.js').CitationRepository} args.citationRepository
+   * @param {ClassificationService} args.classificationService
    */
   constructor({
     publicationRepository,
     authorRepository,
     contributionRepository,
     citationRepository,
+    classificationService,
   }) {
     this.publicationRepository = publicationRepository;
     this.authorRepository = authorRepository;
     this.contributionRepository = contributionRepository;
     this.citationRepository = citationRepository;
+    this.classificationService = classificationService;
   }
 
   /**
@@ -114,7 +117,22 @@ export class CitationGraphService {
       publications: pubIds
         .map((pubId) =>
           this.getPubTree(providerId, pubId))
-        .filter(Boolean),
+        .filter(Boolean)
+        .map((entry) => {
+          return {
+            ...entry,
+            citations: entry.citations.map((citation) => {
+              return {
+                ...citation,
+                classification: this.classificationService.getCitationType(
+                  entry.publication.contributions,
+                  citation.publication.contributions,
+                  authorId,
+                ),
+              };
+            }),
+          };
+        }),
     };
   }
 }

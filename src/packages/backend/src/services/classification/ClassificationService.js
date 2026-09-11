@@ -1,12 +1,9 @@
 import { CITATION_TYPE } from '../../constants/citation-type.js';
 
-const getLeadAuthorId = (contributions) =>
-  contributions.find((contribution) =>
-    contribution.position === 1)?.authorId ?? null;
-
 const getUniqueAuthorIds = (contributions) =>
   new Set(contributions.map((contribution) =>
-    contribution.authorId));
+    contribution.authorId).filter((authorId) =>
+    authorId != null));
 
 /**
  * Classifies the citations of a paper.
@@ -15,20 +12,23 @@ export class ClassificationService {
   /**
    * @param {Object[]} cited - authors of the cited paper
    * @param {Object[]} citing - authors of one citing paper
+   * @param {string} authorId - researcher being analyzed
    * @returns {string} one of CITATION_TYPE
    */
-  getCitationType(cited, citing) {
-    if (getUniqueAuthorIds(cited).isDisjointFrom(getUniqueAuthorIds(citing))) {
-      return CITATION_TYPE.EXTERNAL;
+  getCitationType(cited, citing, authorId) {
+    if (typeof authorId !== 'string' || authorId.trim() === '') {
+      throw new TypeError('authorId is required for citation classification');
     }
 
-    const citedLead = getLeadAuthorId(cited);
+    const citingAuthors = getUniqueAuthorIds(citing);
 
-    if (citedLead != null && citedLead === getLeadAuthorId(citing)) {
+    if (citingAuthors.has(authorId)) {
       return CITATION_TYPE.SELF_DIRECT;
     }
 
-    return CITATION_TYPE.SELF_COAUTHOR;
+    return getUniqueAuthorIds(cited).isDisjointFrom(citingAuthors)
+      ? CITATION_TYPE.EXTERNAL
+      : CITATION_TYPE.SELF_COAUTHOR;
   }
 
   /**

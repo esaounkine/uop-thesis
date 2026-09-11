@@ -18,39 +18,75 @@ describe('ClassificationService', () => {
   });
 
   describe('getCitationType', () => {
-    describe('when the papers share no author', () => {
-      it('is external', () => {
-        expect(service.getCitationType(
-          [contribution('A1', 1)],
-          [contribution('B1', 1)],
-        )).toBe('external');
-      });
-    });
-
-    describe('when both lead authors are the same', () => {
-      it('is a direct self citation', () => {
+    describe('when the selected author appears in both publications', () => {
+      it('is direct regardless of author position', () => {
         expect(service.getCitationType(
           [contribution('A1', 1), contribution('A2', 2)],
-          [contribution('A1', 1), contribution('C1', 2)],
+          [contribution('C1', 1), contribution('A2', 2)],
+          'A2',
+        )).toBe('self-direct');
+      });
+
+      it('is direct when author positions differ', () => {
+        expect(service.getCitationType(
+          [contribution('A1', 1), contribution('A2', 2)],
+          [contribution('A2', 1), contribution('C1', 2)],
+          'A2',
         )).toBe('self-direct');
       });
     });
 
-    describe('when the cited lead is a co-author of the citing paper', () => {
-      it('is a co-author self citation', () => {
+    describe('when only another author is shared', () => {
+      it('is co-author even when first authors match', () => {
         expect(service.getCitationType(
-          [contribution('A1', 1)],
-          [contribution('C1', 1), contribution('A1', 2)],
+          [contribution('A1', 1), contribution('A2', 2)],
+          [contribution('A1', 1), contribution('C1', 2)],
+          'A2',
+        )).toBe('self-coauthor');
+      });
+
+      it('is co-author when the shared author is not first', () => {
+        expect(service.getCitationType(
+          [contribution('A1', 1), contribution('A2', 2)],
+          [contribution('C1', 1), contribution('A2', 2)],
+          'A1',
         )).toBe('self-coauthor');
       });
     });
 
-    describe('when only a non-lead author is shared', () => {
-      it('is a co-author self citation', () => {
+    describe('when no author is shared', () => {
+      it('is external', () => {
         expect(service.getCitationType(
-          [contribution('A1', 1), contribution('B1', 2)],
-          [contribution('C1', 1), contribution('B1', 2)],
-        )).toBe('self-coauthor');
+          [contribution('A1', 1)],
+          [contribution('B1', 1)],
+          'A1',
+        )).toBe('external');
+      });
+
+      describe('and both lists contain unknown authors', () => {
+        it('does not match missing identifiers', () => {
+          expect(service.getCitationType(
+            [contribution('A1', 1), contribution(null, 2)],
+            [contribution('B1', 1), contribution(null, 2)],
+            'A1',
+          )).toBe('external');
+        });
+      });
+    });
+
+    describe('when no researcher is selected', () => {
+      it('rejects the missing context', () => {
+        expect(() =>
+          service.getCitationType([], []))
+          .toThrow('authorId is required');
+      });
+
+      describe('and the identifier is blank', () => {
+        it('rejects the blank identifier', () => {
+          expect(() =>
+            service.getCitationType([], [], ' '))
+            .toThrow('authorId is required');
+        });
       });
     });
   });
