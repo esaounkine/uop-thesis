@@ -102,7 +102,7 @@ const buildData = (author, publications) => {
     });
 
     entry.citations.forEach((citation) => {
-      const citingId = `citing:${citation.publication.pubId}`;
+      const citingId = `citing:${citation.publication.pubId}:${citation.classification}`;
 
       if (!nodes.has(citingId)) {
         nodes.set(citingId, {
