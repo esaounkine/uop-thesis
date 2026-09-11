@@ -1,0 +1,63 @@
+% !TEX encoding = UTF-8 Unicode
+% !TEX root = ../Saunkin.tex
+
+\chapter{Implementation and evaluation} \label{c4:implementation-evaluation}
+
+\section{Implementation} \label{sec:implementation}
+
+The system implements the citation analysis described in Chapter 3.
+It takes an author name as input and returns citation counts, broken down into direct, co-author or external citations.
+This section describes the component structure, data handling and processing steps to produce the results.
+
+\subsection{System overview} \label{sec:system-overview}
+
+The system is intended to run on a low-end machine.
+It provides a web interface for the user (frontend) and a backend service, encapsulating the business logic, that collects and processes all data.
+Both parts are written in \textsf{JavaScript}: the interface is built on \textsf{React}, and the backend targets \textsf{Node.js}.
+The frontend sends requests and displays results, while the backend communicates with the publication services to perform citation analysis.
+
+The first use case is to identify the author whose citations user wants to examine.
+The search returns matching profiles, with affiliations where available, and lets the user inspect their publications before requesting metrics for a specific author.
+The profiles are grouped by provider as each source uses identifiers not fully compatible with other sources.
+Matching a profile from one source to a profile from another would require a separate identity matching process, which is out of scope for this work.
+
+The second use case, having selected an author, is for the backend to collect publications and incoming citations.
+It compares the author lists of each citing publication to classify citations and, finally, calculate totals.
+The results, returned to the frontend, contain both the aggregate counts and the raw data.
+
+Collecting these data can take time, especially for sources with low throughput and for authors with many publications.
+The backend performs the retrieval as a background job, while the UI polls and displays its progress.
+To avoid repeating the same work on every visit, the system keeps the collected author/publication/contribution/citation data, as well as caches provider responses in an \textsf{SQLite} database.
+This keeps storage local, without a separate database server, and reduces the number of requests needed for later searches and calculations.
+
+The architecture of the backend follows the Model-View-Controller (MVC) pattern.
+Controllers receive user requests and pass them to services, which coordinate the collection and analysis.
+Provider connectors handle the different external sources fetching and processing caveats.
+Repositories read from and write to the database tables.
+This separation keeps provider-specific details and storage operations apart from the citation classification rules.
+
+The frontend serves the purpose of UI alone, and follows a different structure.
+Components display individual parts of the interface, containers combine them and manage data requests, and pages arrange the views around navigation paths.
+This gives the interface a maintainable structure while keeping citation analysis in the backend.
+
+The following sections describe the provider choices, data model and processing steps in more detail.
+
+\subsection{Providers and limitations} \label{sec:providers}
+
+\subsection{Data} \label{sec:data}
+
+\subsection{Storage and caching} \label{sec:storage-caching}
+
+\subsection{Processing pipeline} \label{sec:processing-pipeline}
+
+\subsection{User interface} \label{sec:user-interface}
+
+\subsection{Testing} \label{sec:testing}
+
+\section{Evaluation} \label{sec:evaluation}
+
+\subsection{Citation classification} \label{sec:classification-checks}
+
+\subsection{Results for selected researchers} \label{sec:author-case-studies}
+
+\subsection{Comparison of data sources} \label{sec:data-source-comparison}
