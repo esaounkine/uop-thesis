@@ -41,6 +41,7 @@ export class MetricsService {
         this.getProviderPublicationMetrics(
           providerId,
           publication,
+          authorId,
           { cache: cache },
         )),
     );
@@ -74,6 +75,7 @@ export class MetricsService {
   /**
    * @param {string} providerId
    * @param {Object} publication
+   * @param {string} authorId
    * @param {Object} [options]
    * @param {boolean} [options.cache] - true = use, false = skip the cache
    * @returns {Promise<Object>}
@@ -81,6 +83,7 @@ export class MetricsService {
   async getProviderPublicationMetrics(
     providerId,
     publication,
+    authorId,
     { cache = true } = {},
   ) {
     const citations = await this.publicationService
@@ -92,6 +95,7 @@ export class MetricsService {
         classification: this.classificationService.getCitationType(
           publication.contributions,
           citation.contributions,
+          authorId,
         ),
       };
     });

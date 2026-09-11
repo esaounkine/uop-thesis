@@ -49,4 +49,6 @@ Structurally composed after Spring MVC.
 
 Providers run side by side. Their data are stored tagged per provider and never merge.
 
+Citation classification uses the selected researcher, regardless of author position. Direct means that researcher also appears in the citing publication; co-author means only other authors are shared; external means no authors are shared. Stored author graphs are reclassified from their contribution records when loaded, so old classification labels are not reused. No provider refresh is needed for this recalculation.
+
 Fast calls (search) answer inline. Slow calls (fetching citation metrics) run as a async jobs: `POST /jobs` returns a `requestId`, `GET /jobs/:id` reports progress and the result (can be polled regularly).

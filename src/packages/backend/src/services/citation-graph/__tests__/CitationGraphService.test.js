@@ -10,6 +10,7 @@ describe('CitationGraphService', () => {
   let authorRepositoryMock;
   let contributionRepositoryMock;
   let citationRepositoryMock;
+  let classificationServiceMock;
   let citationGraphService;
 
   beforeEach(() => {
@@ -30,7 +31,11 @@ describe('CitationGraphService', () => {
       saveAll: jest.fn(),
       findCitations: jest.fn().mockReturnValue([]),
     };
+    classificationServiceMock = {
+      getCitationType: jest.fn(),
+    };
     citationGraphService = new CitationGraphService({
+      classificationService: classificationServiceMock,
       publicationRepository: publicationRepositoryMock,
       authorRepository: authorRepositoryMock,
       contributionRepository: contributionRepositoryMock,
@@ -469,6 +474,54 @@ describe('CitationGraphService', () => {
             expect(citationGraphService.getAuthorTree(provider, authorId)
               .publications.map((entry) =>
                 entry.publication.pubId)).toEqual(['W1', 'W2']);
+          });
+
+          describe('and stored citations exist', () => {
+            beforeEach(() => {
+              citationRepositoryMock.findCitations.mockReturnValue([
+                {
+                  sourcePubId: 'W3',
+                  classification: 'self-direct',
+                },
+              ]);
+              publicationRepositoryMock.findPublications.mockReturnValue([{ pubId: 'W3' }]);
+            });
+
+            describe('and classification returns a new label', () => {
+              beforeEach(() => {
+                classificationServiceMock.getCitationType
+                  .mockReturnValue('self-coauthor');
+              });
+
+              it('replaces the stored label for the selected researcher', () => {
+                const tree = citationGraphService
+                  .getAuthorTree(provider, authorId);
+                expect(tree.publications[0].citations[0].classification)
+                  .toBe('self-coauthor');
+              });
+
+              it('passes the selected researcher to classification', () => {
+                citationGraphService.getAuthorTree(provider, authorId);
+                expect(classificationServiceMock.getCitationType)
+                  .toHaveBeenCalledWith(expect.any(Array), [], authorId);
+              });
+            });
+
+            describe('but classification fails on a later publication', () => {
+              beforeEach(() => {
+                classificationServiceMock.getCitationType
+                  .mockReturnValueOnce('external')
+                  .mockImplementationOnce(() => {
+                    throw new Error('error-7');
+                  });
+              });
+
+              it('propagates the error', () => {
+                expect(() =>
+                  citationGraphService.getAuthorTree(provider, authorId))
+                  .toThrow('error-7');
+              });
+            });
           });
         });
       });

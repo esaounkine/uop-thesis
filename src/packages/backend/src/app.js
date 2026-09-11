@@ -66,14 +66,15 @@ export const wire = ({
 
   const statsRepository = new StatsRepository(db);
 
+  const classificationService = new ClassificationService();
+
   const citationGraphService = new CitationGraphService({
+    classificationService: classificationService,
     publicationRepository: new PublicationRepository(db),
     authorRepository: new AuthorRepository(db),
     contributionRepository: new ContributionRepository(db),
     citationRepository: new CitationRepository(db),
   });
-
-  const classificationService = new ClassificationService();
 
   const metricsService = new MetricsService({
     authorService: authorService,

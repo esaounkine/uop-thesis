@@ -77,7 +77,7 @@ describe('MetricsService', () => {
 
       it('returns the publication', async () => {
         const result = await metricsService
-          .getProviderPublicationMetrics('openalex', paper);
+          .getProviderPublicationMetrics('openalex', paper, 'A1');
 
         expect(result.publication).toBe(paper);
       });
@@ -85,23 +85,25 @@ describe('MetricsService', () => {
       it('compares the cited paper to each citing paper', async () => {
         const { getCitationType } = classificationServiceMock;
 
-        await metricsService.getProviderPublicationMetrics('openalex', paper);
+        await metricsService.getProviderPublicationMetrics('openalex', paper, 'A1');
 
         expect(getCitationType).toHaveBeenNthCalledWith(
           1,
           paper.contributions,
           citations[0].contributions,
+          'A1',
         );
         expect(getCitationType).toHaveBeenNthCalledWith(
           2,
           paper.contributions,
           citations[1].contributions,
+          'A1',
         );
       });
 
       it('labels each citation with the classification', async () => {
         const result = await metricsService
-          .getProviderPublicationMetrics('openalex', paper);
+          .getProviderPublicationMetrics('openalex', paper, 'A1');
 
         expect(result.citations).toEqual([
           {
@@ -116,7 +118,7 @@ describe('MetricsService', () => {
       });
 
       it('aggregates the classifications', async () => {
-        await metricsService.getProviderPublicationMetrics('openalex', paper);
+        await metricsService.getProviderPublicationMetrics('openalex', paper, 'A1');
 
         expect(classificationServiceMock.getMetrics)
           .toHaveBeenCalledWith(['self-direct', 'external']);
@@ -124,14 +126,14 @@ describe('MetricsService', () => {
 
       it('returns the aggregate', async () => {
         const result = await metricsService
-          .getProviderPublicationMetrics('openalex', paper);
+          .getProviderPublicationMetrics('openalex', paper, 'A1');
 
         expect(result.metrics).toBe(aggregate);
       });
 
       describe('and the cache is enabled (default)', () => {
         it('uses the cache for the citations fetch', async () => {
-          await metricsService.getProviderPublicationMetrics('openalex', paper);
+          await metricsService.getProviderPublicationMetrics('openalex', paper, 'A1');
 
           expect(publicationServiceMock.getCitations)
             .toHaveBeenCalledWith('openalex', 'W1', { cache: true });
@@ -141,7 +143,7 @@ describe('MetricsService', () => {
       describe('and the cache is disabled', () => {
         it('skips the cache for the citations fetch', async () => {
           await metricsService
-            .getProviderPublicationMetrics('openalex', paper, { cache: false });
+            .getProviderPublicationMetrics('openalex', paper, 'A1', { cache: false });
 
           expect(publicationServiceMock.getCitations)
             .toHaveBeenCalledWith('openalex', 'W1', { cache: false });
@@ -157,13 +159,13 @@ describe('MetricsService', () => {
 
       it('has no citations', async () => {
         const result = await metricsService
-          .getProviderPublicationMetrics('openalex', paper);
+          .getProviderPublicationMetrics('openalex', paper, 'A1');
 
         expect(result.citations).toEqual([]);
       });
 
       it('aggregates an empty classification list', async () => {
-        await metricsService.getProviderPublicationMetrics('openalex', paper);
+        await metricsService.getProviderPublicationMetrics('openalex', paper, 'A1');
 
         expect(classificationServiceMock.getMetrics).toHaveBeenCalledWith([]);
       });
@@ -176,7 +178,7 @@ describe('MetricsService', () => {
       });
 
       it('propagates the error', async () => {
-        await expect(metricsService.getProviderPublicationMetrics('openalex', paper))
+        await expect(metricsService.getProviderPublicationMetrics('openalex', paper, 'A1'))
           .rejects.toThrow('error-1');
       });
     });
@@ -278,6 +280,17 @@ describe('MetricsService', () => {
               'external',
               'external',
             ]);
+        });
+
+        it('passes the selected researcher for every citation', async () => {
+          await metricsService.getAuthorMetrics('openalex', 'A1');
+          expect(classificationServiceMock.getCitationType.mock.calls
+            .map((args) =>
+              args[2])).toEqual([
+            'A1',
+            'A1',
+            'A1',
+          ]);
         });
 
         it('returns the aggregate', async () => {

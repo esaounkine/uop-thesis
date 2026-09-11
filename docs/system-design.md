@@ -11,8 +11,8 @@ In summary, we classify the bibliography citations of a publication as
 
 The self citations are further distinguished per paper, as
 
-- *direct* - where the lead author is same as the cited lead author, and
-- *co-author* - where the lead author is listed as author, but the name appear in positions greater than 1.
+- *direct* - where the selected researcher appears in both publications, and
+- *co-author* - where another author is shared, but the selected researcher is absent from the citing publication.
 
 Collectively, the distinction of citations into self/external and the further break down of the self citations into direct and co-author, is called *citation metrics*.
 
