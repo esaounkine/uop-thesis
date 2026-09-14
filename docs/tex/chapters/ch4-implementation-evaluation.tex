@@ -44,6 +44,23 @@ The following sections describe the provider choices, data model and processing 
 
 \subsection{Providers and limitations} \label{sec:providers}
 
+The sources were analyzed in Section~\ref{sec:data-sources}.
+This section describes aspects related to the implementation.
+
+The system does not rely on a single source of citation data.
+Each source is reached through its own connector, to isolate the differences in access and the structure of data it returns.
+Every connector offers implements the interface \textsf{ProviderConnector}, providing the same operations: find an author (\textsf{searchAuthors}), list author publications (\textsf{getAuthorPublications}), list paper citations (\textsf{getCitations}).
+The remaining system builds on top of these operations, treating all sources in the same way and not depending on the implementation details of any specific one.
+Because the connectors are interchangeable, a source can be added or replaced without changing the analysis, and forensic bug investigation in a source stays within its own connector, making it easier to locate problems and test behavior.
+
+Each source limits how much can be requested over time, so the data collection process is asynchronous.
+Coverage also differs between sources, so the same author can produce different counts depending on the source.
+The sources do not share author identifiers, so an author profile from one source cannot be reliably matched to the respective profile from another; the profiles are kept separate and shown side by side, as described in Section~\ref{sec:system-overview}.
+
+The paid source is the most restrictive in practice.
+Collecting the citations of an author with $N$ publications requires at least $N$ requests, growing the cost proportionally to the volume of data retrieved.
+The free sources are used by default, while the paid source is enabled only for reference.
+
 \subsection{Data} \label{sec:data}
 
 \subsection{Storage and caching} \label{sec:storage-caching}
