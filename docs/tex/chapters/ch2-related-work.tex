@@ -10,17 +10,66 @@ This chapter presents an overview of the fundamental concepts and existing syste
 
 \section{Data sources} \label{sec:data-sources}
 
-Citation data is typically obtained from specialized academic search systems that index scientific publications and their references. 
-Widely used platforms, for this task, are \textsf{Google Scholar}~\footnote{\url{https://scholar.google.com}} and \textsf{Semantic Scholar}~\footnote{\url{https://www.semanticscholar.org}}, which provide large-scale coverage of scientific literature and citation relationships.
-\scor{\cite{googlescholar}}{Αν είναι μόνο URL βάζε το footnote, όπως το έκανα πριν γιατί αν το κάνεις cite πρέπει να βάλεις και authors κλπ. }
+Citation data is obtained from specialized search services that index scientific publications and their references.
 These systems allow users to search for publications, track citation counts, and explore connections between works.
 
-\snote{Επίσης, συστήματα, γλώσσες προγραμματισμού τα βάζουμε με διαφορετικό font, π.χ.,} \textsf{Google Scholar},  \textsf{Semantic Scholar}, \textsf{OpenAlex}
-
-A recent initiative, \textsf{OpenAlex}~\footnote{\url{https://openalex.org}}, provides structured access to scholarly metadata, including citation graphs, through publicly available Application Programming Interface (API)\scor{API}{μην χρησιμοποιείς αρχικά χωρίς να τα ορίζεις, εδώ applications programming interface (API). Αφού το ορίσεις μπορείς να το χρησιμοποιείς σε όλο το κεφάλαιο. Σε άλλο πρέπει να το ξαναορίσεις}.
-
-These systems present several limitations.
+At the same time, these systems present several limitations.
 Access to data is often restricted or rate limited, metadata is inconsistent across articles, and authors are not uniquely defined across data sources and publications.
+
+To compare the sources, we can define a few aspects that matter for citation analysis: method of access, cost, extent and scope of coverage, data structure (especially whether the citing publications are treated as a first-class citizen), author identification.
+
+Table~\ref{tab:data-sources} summarizes a few sources along these aspects.
+
+\begin{itemize}
+    \item \textsf{Google Scholar}~\footnote{\url{https://scholar.google.com}} has the widest coverage of all sources across every domain.
+    It offers no structured interface and actively blocks automated access.
+    \item There is a number of third-party services, such as \textsf{SerpApi}~\footnote{\url{https://serpapi.com}}, that scrape \textsf{Google Scholar} pages on demand to provide an interface to return structured data.
+    These services supply a fleet of devices to automatically handle robot detection, IP rotation, solve Captcha challenges, and avoid other traps, to reliably extract data from the pages.
+    They charge a fee per request.
+    These services inherit the coverage and specifics of \textsf{Google Scholar} (identify authors by profile page and expose contribution lists as plain comma-separated text).
+    Some of these services provide an interface to collect the citing publications (exposed by \textsf{Google Scholar}).
+    \item \textsf{OpenAlex}~\footnote{\url{https://openalex.org}} indexes about 271 million works and 213 million authors, and returns each publication together with its author list and its citing publications, so a single source can satisfy every kind of request.
+    The access is provided via Application Programming Interface (API).
+    The throughput is limited to ten requests per second.
+    \item \textsf{Semantic Scholar}~\footnote{\url{https://www.semanticscholar.org}} holds more than 200 million papers and over two billion citations with a similar structure.
+    The access is provided via Application Programming Interface (API).
+    The throughput is limited to one request per second, while retrieving long citation lists requires many sequential requests.
+    \item \textsf{CrossRef}~\footnote{\url{https://www.crossref.org}} provides high-quality metadata and author order for any publication that has a registered Digital Object Identifier (\textsf{DOI}).
+    It reports only the number of citations rather than the list of citing publications, and exposes no author identifier.
+    \item \textsf{OpenCitations}~\footnote{\url{https://opencitations.net}} aggregates more than two billion open citation links and can be downloaded in full.
+    It can be queried only by identifier and offers no search by author name.
+    \item \textsf{DBLP}~\footnote{\url{https://dblp.org}} provides accurate author disambiguation.
+    It is limited to computer science and holds no citation links of its own.
+    \item \textsf{Scopus}~\footnote{\url{https://www.scopus.com}} is a curated commercial database with high-quality metadata, stable author identifiers, and native citation retrieval.
+    It requires a paid institutional subscription and covers a narrower set of journals.
+    \item Large Language Models (LLM) can also be asked to list the publications of an author or the citations of a paper.
+    These answers are not reliable, and they provide no stable author identifiers.
+\end{itemize}
+
+The largest source is the hardest to access, the open sources differ in coverage and in the data they expose, and the most curated source is not freely available.
+The sources selected for this work, and the reasons for the selection, are discussed with the implementation in Section~\ref{sec:providers}.
+
+\begin{table}[htbp]
+\label{tab:data-sources}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{p{2.3cm} p{2.4cm} p{3.0cm} p{2.0cm} p{2.8cm}}
+\hline
+Source & Access & Coverage & Citations & Author data \\
+\hline
+\textsf{Google Scholar} & No public API; via paid proxy & Largest; all disciplines & Yes, via proxy & Profile ID; names as text \\
+\textsf{OpenAlex} & Open API, free key & About 271M works & Yes & Author IDs; name search \\
+\textsf{Semantic Scholar} & Open API, free key (1 req/s) & Over 200M papers; 2B citations & Yes & Author IDs; name search \\
+\textsf{CrossRef} & Open API, free & Over 180M \textsf{DOI} records & Count only & No author IDs \\
+\textsf{OpenCitations} & Open API and dumps, free & Over 2B citation links & Yes & \textsf{ORCID} only \\
+\textsf{DBLP} & Open API and dump, free & 6.6M works; CS only & No & Strong disambiguation \\
+\textsf{Scopus} & Paid subscription & About 90M curated records & Yes & Scopus author IDs \\
+LLM & Model query & Broad but unverifiable & Unreliable & No identifiers \\
+\hline
+\end{tabular}
+\caption{Comparison of the main citation data sources}
+\end{table}
 
 \snote{The above might be true, but why they affect us. Remember the problem is self/external citation distinction. In any case you do not provide solutions for inconsistent data. You use existing meta data, right?}
 \enote{I just present the existing systems. It's the current state of things, data sources are not all equal.}
