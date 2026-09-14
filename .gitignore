@@ -45,4 +45,7 @@ coverage/
 *.synctex.gz
 *.toc
 *.xdv
+*.pdf
+*.aux
+*.bbl
 
