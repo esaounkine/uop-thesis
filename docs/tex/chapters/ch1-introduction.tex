@@ -24,7 +24,7 @@ In particular, citations can be divided into two main categories:
 
 
 This distinction is important because external citations are typically considered a stronger indicator of influence, as they reflect recognition from independent researchers.
-In contrast, self-citations may arise naturally in cumulative research but can also inflate citation-based metrics if used excessively.
+While self-citations are not inherently bad, and may occur naturally in continuous cumulative research, they can inflate citation-based metrics if used excessively.
 
 
 \section{Problem statement} \label{sec:problem-statement}
@@ -42,9 +42,10 @@ compute the total number of citations received by these publications
 distinguish between self-citations and external citations
 \end{enumerate}
 
-The most important step of the above process is the distinction between self-citations and external citations (Item 3). In our work, we focus on the identification and classification of citations based on author overlap, providing a more clear interpretation of citation metrics.
+The most important step of the above process is the distinction between self-citations and external citations (Item 3).
+In our work, we focus on the identification and classification of citations based on author overlap, providing a more clear interpretation of citation metrics.
 
-Let us clarify, our idea with the help of the example presented in Section \ref{sec:intro-example}.
+Let us clarify, our idea with the help of the example presented in Section~\ref{sec:intro-example}.
 
 \section{Self and external citations} \label{sec:intro-example}
 
@@ -83,9 +84,8 @@ Panos Kalnis, a co-author of [GPK2007], later in the same year published article
 \emph{Preventing Location-Based Identity Inference in Anonymous Spatial Queries}. IEEE Trans. Knowl. Data Eng. 19(12): 1719-1733 (2007)
 \end{myquote}
 
-It is clear that when we consider the third-party citations of Panos Kalnis and Gabriel Ghinita the citation of [GPK2007] in [KGMP2007] should be excluded (since Panos Kalnis and Gabriel Ghinita co-authored both articles).
-
-For the case of Spiros Skiadopoulos the choice is not so clear.
+It is clear that when we consider the third-party citations of Panos Kalnis and Gabriel Ghinita the citation of [GPK2007] in [KGMP2007] should be classified as \emph{self-citation}, as Panos Kalnis and Gabriel Ghinita co-authored both articles.
+At the same time, the same citation should be classified as \emph{external citation} for Spiros Skiadopoulos, for having contributed to [GPK2007], but not to [KGMP2007].
 
 \snote{Carry on! Εδώ θα πεις ότι μάλλον δεν είναι σωστά να θεωρηθεί η [KGMP2007] self citation γιατί δεν την έχει γράψει ο Σκιαδόπουλος. Κάποιοι θα το μετρούσαν κάποιοι όχι. } 
 
@@ -111,7 +111,6 @@ use American english dictionary.
 The remainder of this work is organized as follows.
 
 
-
 \begin{description}
 
 \item
@@ -127,9 +126,5 @@ The remainder of this work is organized as follows.
 [Chapter 5] concludes the work and discusses possible future extensions.
 
 \end{description}
-
-
-
-
 
 
