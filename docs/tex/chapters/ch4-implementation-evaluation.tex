@@ -32,7 +32,7 @@ The backend performs the retrieval as a background job, while the UI polls and d
 To avoid repeating the same work on every visit, the system keeps the collected author/publication/contribution/citation data, as well as caches provider responses in an \textsf{SQLite} database.
 This keeps storage local, without a separate database server, and reduces the number of requests needed for later searches and calculations.
 
-The architecture of the backend follows the Model-View-Controller (MVC) pattern.
+The architecture of the backend follows the Model-View-Controller (MVC) pattern. \snote{You may also add a figure.}
 Controllers receive user requests and pass them to services, which coordinate the collection and analysis.
 Provider connectors handle the different external sources fetching and processing caveats.
 Repositories read from and write to the database tables.
