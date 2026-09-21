@@ -3,9 +3,11 @@
 
 \chapter{Implementation and evaluation} \label{c4:implementation-evaluation}
 
+\snote{some introduction + roadmap}
+
 \section{Implementation} \label{sec:implementation}
 
-The system implements the citation analysis described in Chapter 3.
+The system implements the citation analysis described in Chapter 3\snote{cross-refs, not hard coded nums!}.
 It takes an author name as input and returns citation counts, broken down into direct, co-author or external citations.
 This section describes the component structure, data handling and processing steps to produce the results.
 
@@ -42,10 +44,14 @@ This gives the interface a maintainable structure while keeping citation analysi
 
 The following sections describe the provider choices, data model and processing steps in more detail.
 
+\snote{You may add a figure with the components. It is nice to have. I use excalidraw, but you may use whatever else.}
+
 \subsection{Providers and limitations} \label{sec:providers}
 
-The sources were analyzed in Section~\ref{sec:data-sources}.
+The sources were analyzed in Section~\ref{sec:data-sources}. \snote{Yes, but you do not use them all, right? Say. what you use. As a general comment you are may say more. You are very ``lakonikos''}
 This section describes aspects related to the implementation.
+
+\snote{You may also add a figure, with the providers and the connectors. }
 
 The system does not rely on a single source of citation data.
 Each source is reached through its own connector, to isolate the differences in access and the structure of data it returns.
@@ -58,7 +64,7 @@ Coverage also differs between sources, so the same author can produce different 
 The sources do not share author identifiers, so an author profile from one source cannot be reliably matched to the respective profile from another; the profiles are kept separate and shown side by side, as described in Section~\ref{sec:system-overview}.
 
 The paid source is the most restrictive in practice.
-Collecting the citations of an author with $N$ publications requires at least $N$ requests, growing the cost proportionally to the volume of data retrieved.
+Collecting the citations of an author with $n$ \snote{better use small} publications requires at least $n$ requests, growing the cost proportionally to the volume of data retrieved.
 The free sources are used by default, while the paid source is enabled only for reference.
 
 \subsection{Data} \label{sec:data}
