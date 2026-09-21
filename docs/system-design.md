@@ -554,16 +554,16 @@ An LLM sees a large part of the published record during training. So a User can 
 
 There are two modes:
 
-- **Parametric memory** - The LLM answers from its training data. In this instance the LLM is the data source.
-- **Augmented retrieval** - The LLM calls a real Provider (a web search or a DB) and returns the result. In this instance the real Provider is the proxied data source, not the LLM. The limits are of the Provider, but applied against a machine operated by an agent.
+- **Training memory** - The LLM answers from its training data. In this instance the LLM is the data source.
+- **Agentic** - The LLM calls a real Provider (a web search or a DB) and returns the result. In this instance the real Provider is the proxied data source, not the LLM. The limits are of the Provider, but applied against a machine operated by an agent.
 
-##### Parametric memory
+##### Training memory
 
 - **Interface** - There is no citation API. The User sends a natural-language prompt through a chat API, the LLM returns text.
 - **Rate limit** - Set by the LLM API and the plan. The hosted APIs charge per token.
 - **Response format** - Free text. It needs parsing. It gives no stable IDs.
 - **Coverage** - Bounded by the training cut-off date. It has no data after the cut-off. It gives no completeness guarantee. It cannot list all works of an author or all citing papers from memory.
-- **Client policy and robots** - Not applicable in parametric mode, because there is no external request.
+- **Client policy and robots** - Not applicable in training memory mode, because there is no external request.
 - **Reliability** - The LLM fabricates references (hallucinates).
   - Between 18 and 55 percent depending on the model and the year (multiple studies).
   - The hallucination rate rises when the training data is sparse.
@@ -576,14 +576,14 @@ There are two modes:
   - Has no data after the training cut-off.
   - No stable IDs and no verifiable debug data.
 
-##### Augmented retrieval
+##### Agentic
 
 - **Interface** - The User sends a natural-language prompt through a chat API with tool use or web search. The LLM calls a real Provider, reads the result, and returns the text.
 - **Rate limit** - (ignoring the LLM API charges) The fetched Provider applies its limits to the machine operated by the agent. There's potential to rotate IP and user agent.
 - **Response format** - Free text, cna be adjusted by the LLM.
 - **Coverage** - The coverage of the fetched Provider. No completeness guarantee, as the agent may stop after fetching a few results.
 - **Client policy and robots** - The policy and the `robots.txt` of the fetched Provider apply. A web search over Google Scholar hits the same blocks and `robots.txt`. An open API applies its own rules.
-- **Reliability** - Grounded in the retrieved data, so fewer fabrications than parametric memory. The model can remove or modify results, completeness depends on how much the agent retrieves.
+- **Reliability** - Grounded in the retrieved data, so fewer fabrications than training memory. The model can remove or modify results, completeness depends on how much the agent retrieves.
 - **Pros**
   - Fresh data, past the training cut-off.
   - Grounded, so fewer hallucinations.
