@@ -3,27 +3,54 @@
 
 \chapter{Related work and systems} \label{c2:related-work}
 
-The analysis of scientific citations has been an active area of research within the field of bibliometrics.
-A number of metrics, data sources, and analytical approaches have been developed to assess the impact of publications and researchers.
+The analysis of scientific citations has been an active area of research within the field of bibliometrics \snote{add some refs}.
+A number of metrics, data sources, and analytical approaches have been developed to assess the impact of publications and researchers \snote{add some refs}.
 
 This chapter presents an overview of the fundamental concepts and existing systems relevant to citation analysis.
 
 \section{Data sources} \label{sec:data-sources}
 
-Citation data is obtained from specialized search services that index scientific publications and their references.
+Citation data is obtained from specialized search services that index scientific publications and their references \snote{add some refs}.
 These systems allow users to search for publications, track citation counts, and explore connections between works.
 
-At the same time, these systems present several limitations.
+At the same time, these systems present several limitations \snote{are there paper that also point this? If yes please add. }.
 Access to data is often restricted or rate limited, metadata is inconsistent across articles, and authors are not uniquely defined across data sources and publications.
 
 To compare the sources, we can define a few aspects that matter for citation analysis: method of access, cost, extent and scope of coverage, data structure (especially whether the citing publications are treated as a first-class citizen), author identification.
 
 Table~\ref{tab:data-sources} summarizes a few sources along these aspects.
 
+\snote{Move tables/figure closer to their first reference. Also always use }\verb=\begin{table}[tb]=\snote{. I fixed the following table, fix the others as well.}
+
+
+\begin{table}[tb]
+\label{tab:data-sources}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{p{2.3cm} p{2.4cm} p{3.0cm} p{2.0cm} p{2.8cm}}
+\hline
+Source & Access & Coverage & Citations & Author data \\
+\hline
+\textsf{Google Scholar} & No public API; via paid proxy & Largest; all disciplines & Yes, via proxy & Profile ID; names as text \\
+\textsf{OpenAlex} & Open API, free key & About 271M works & Yes & Author IDs; name search \\
+\textsf{Semantic Scholar} & Open API, free key (1 req/s) & Over 200M papers; 2B citations & Yes & Author IDs; name search \\
+\textsf{CrossRef} & Open API, free & Over 180M \textsf{DOI} records & Count only & No author IDs \\
+\textsf{OpenCitations} & Open API and dumps, free & Over 2B citation links & Yes & \textsf{ORCID} only \\
+\textsf{DBLP} & Open API and dump, free & 6.6M works; CS only & No & Strong disambiguation \\
+\textsf{Scopus} & Paid subscription & About 90M curated records & Yes & Scopus author IDs \\
+LLM & Model query & Broad but unverifiable & Unreliable & No identifiers \\
+\hline
+\end{tabular}
+\caption{Comparison of the main citation data sources}
+\end{table}
+
+
 \begin{itemize}
-    \item \textsf{Google Scholar}~\footnote{\url{https://scholar.google.com}} has the widest coverage of all sources across every domain.
+    \item \textsf{Google Scholar}\footnote{\url{https://scholar.google.com}} has the widest coverage of all sources across every domain. \snote{do note leave space before a footnote, deleted it. Change everywhere!}
     It offers no structured interface and actively blocks automated access.
-    \item There is a number of third-party services, such as \textsf{SerpApi}~\footnote{\url{https://serpapi.com}}, that scrape \textsf{Google Scholar} pages on demand to provide an interface to return structured data.
+
+There is a number of third-party services, such as \textsf{SerpApi}~\footnote{\url{https://serpapi.com}}, that scrape \textsf{Google Scholar} pages on demand to provide an interface to return structured data.
     These services supply a fleet of devices to automatically handle robot detection, IP rotation, solve Captcha challenges, and avoid other traps, to reliably extract data from the pages.
     They charge a fee per request.
     These services inherit the coverage and specifics of \textsf{Google Scholar} (identify authors by profile page and expose contribution lists as plain comma-separated text).
@@ -46,35 +73,15 @@ Table~\ref{tab:data-sources} summarizes a few sources along these aspects.
     These answers are not reliable, and they provide no stable author identifiers.
 \end{itemize}
 
-The largest source is the hardest to access, the open sources differ in coverage and in the data they expose, and the most curated source is not freely available.
+The largest source \snote{say which is?} is the hardest to access, the open sources differ in coverage \snote{say which are?} and in the data they expose, and the most curated source \snote{say which is?} is not freely available.
 The sources selected for this work, and the reasons for the selection, are discussed with the implementation in Section~\ref{sec:providers}.
 
-\begin{table}[htbp]
-\label{tab:data-sources}
-\centering
-\footnotesize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{p{2.3cm} p{2.4cm} p{3.0cm} p{2.0cm} p{2.8cm}}
-\hline
-Source & Access & Coverage & Citations & Author data \\
-\hline
-\textsf{Google Scholar} & No public API; via paid proxy & Largest; all disciplines & Yes, via proxy & Profile ID; names as text \\
-\textsf{OpenAlex} & Open API, free key & About 271M works & Yes & Author IDs; name search \\
-\textsf{Semantic Scholar} & Open API, free key (1 req/s) & Over 200M papers; 2B citations & Yes & Author IDs; name search \\
-\textsf{CrossRef} & Open API, free & Over 180M \textsf{DOI} records & Count only & No author IDs \\
-\textsf{OpenCitations} & Open API and dumps, free & Over 2B citation links & Yes & \textsf{ORCID} only \\
-\textsf{DBLP} & Open API and dump, free & 6.6M works; CS only & No & Strong disambiguation \\
-\textsf{Scopus} & Paid subscription & About 90M curated records & Yes & Scopus author IDs \\
-LLM & Model query & Broad but unverifiable & Unreliable & No identifiers \\
-\hline
-\end{tabular}
-\caption{Comparison of the main citation data sources}
-\end{table}
+%\snote{The above might be true, but why they affect us. Remember the problem is self/external citation distinction. In any case you do not provide solutions for inconsistent data. You use existing meta data, right?}
+%\enote{I just present the existing systems. It's the current state of things, data sources are not all equal.}
+%\enote{ID incostistency, insufficient data parity, difficulty matching the authors, limit rated access - all these aspects will become issues down the road of this investigation.}
+%\enote{The software I will create as part of this investigation, I will have to justify the preference of one of the data source over another (it might be due to the availability of papers on a data source), provide a solution for author matching, and a way around throttling.}
 
-\snote{The above might be true, but why they affect us. Remember the problem is self/external citation distinction. In any case you do not provide solutions for inconsistent data. You use existing meta data, right?}
-\enote{I just present the existing systems. It's the current state of things, data sources are not all equal.}
-\enote{ID incostistency, insufficient data parity, difficulty matching the authors, limit rated access - all these aspects will become issues down the road of this investigation.}
-\enote{The software I will create as part of this investigation, I will have to justify the preference of one of the data source over another (it might be due to the availability of papers on a data source), provide a solution for author matching, and a way around throttling.}
+\snote{It flows OK. You could add more if needed. You may use LLM polish and extend. Do not use it to write it though and do not overdo it. We use turn-it-in to check the final thesis. It is obligatory.}
 
 \section{Existing approaches} \label{sec:existing-approaches}
 
