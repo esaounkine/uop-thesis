@@ -69,7 +69,7 @@ sequenceDiagram
   autonumber
   participant S as Service
   participant GC as Global Cache
-  participant P as Provider APIs
+  participant P as Provider API
 
   S ->> GC: Get results (search params: cache key, TTL)
   GC -->> S: Results (or empty) / outdated error
@@ -100,7 +100,7 @@ sequenceDiagram
   autonumber
   actor User
   participant S as Service
-  participant P as Provider APIs
+  participant P as Provider API
 
   User ->> S: Enter entity name
   S ->> P: Search entities matching name
@@ -138,7 +138,7 @@ sequenceDiagram
   participant CS as Classification Service
   participant AS as Author Service
   participant PS as Publication Service
-  participant P as Provider APIs
+  participant P as Provider API
 
   User ->> CS: Author unique ID
   CS ->> AS: Fetch data tree starting from the author unique ID
@@ -243,7 +243,7 @@ erDiagram
 ```mermaid
 flowchart TD
   SYS["Citation Metrics System"]
-  Providers["Provider APIs<br/>(Google Scholar, OpenAlex, CrossRef, ...)"]
+  Providers["Provider API<br/>(Google Scholar, OpenAlex, CrossRef, ...)"]
   Email["Email service"]
 
   SYS -->|"search and fetch queries<br/>(authors, papers, citations)"| Providers
@@ -264,7 +264,7 @@ flowchart TD
   AS["Author Service"]
   PS["Publication Service"]
   GC[("DB / Cache")]
-  Providers["Provider APIs (external)"]
+  Providers["Provider API (external)"]
 
   CS -->|"fetch data tree by paper ID"| PS
   CS -->|"fetch data tree by author ID"| AS
@@ -297,7 +297,7 @@ flowchart TD
     PC["Provider connectors"]
   end
   DB[("DB")]
-  Providers["Provider APIs (external)"]
+  Providers["Provider API (external)"]
 
   FE --> API
   API --> SVC
@@ -319,6 +319,41 @@ flowchart TD
 ## Implementation Details
 
 ### Providers
+
+```mermaid
+flowchart TB
+  subgraph impl [Implemented]
+    direction LR
+    OA["<b>OpenAlex</b>"]
+    SS["<b>Semantic Scholar</b>"]
+    GS["<b>Google Scholar</b><br/>no public API"] --> SERP["<b>SerpApi</b>"]
+  end
+
+  SVC(["SearchService<br/>AuthorService"])
+
+  subgraph notimpl [Not implemented]
+    direction LR
+    CR["<b>CrossRef</b>"]
+    OC["<b>OpenCitations</b>"]
+    DB["<b>DBLP</b>"]
+    SC["<b>Scopus</b>"]
+    LLM["<b>LLM</b>"]
+  end
+
+  OA --> SVC
+  SS --> SVC
+  SERP --> SVC
+  SVC -.-> CR
+  SVC -.-> OC
+  SVC -.-> DB
+  SVC -.-> SC
+  SVC -.-> LLM
+
+  classDef green fill:#d9f2d9,stroke:#2e7d32,color:#000;
+  classDef beige fill:#f0e6d2,stroke:#b08d57,color:#000;
+  class OA,SS,GS,SERP green;
+  class CR,OC,DB,SC,LLM beige;
+```
 
 To interact with the Providers, the Backend defines an interface that each Provider is expected to implement:
 
@@ -560,7 +595,7 @@ There are two modes:
 ##### Training memory
 
 - **Interface** - There is no citation API. The User sends a natural-language prompt through a chat API, the LLM returns text.
-- **Rate limit** - Set by the LLM API and the plan. The hosted APIs charge per token.
+- **Rate limit** - Set by the LLM API and the plan. The hosted API charge per token.
 - **Response format** - Free text. It needs parsing. It gives no stable IDs.
 - **Coverage** - Bounded by the training cut-off date. It has no data after the cut-off. It gives no completeness guarantee. It cannot list all works of an author or all citing papers from memory.
 - **Client policy and robots** - Not applicable in training memory mode, because there is no external request.
