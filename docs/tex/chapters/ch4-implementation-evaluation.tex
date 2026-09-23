@@ -3,69 +3,116 @@
 
 \chapter{Implementation and evaluation} \label{c4:implementation-evaluation}
 
-\snote{some introduction + roadmap}
+\snote{some introduction + roadmap}\enote{done}
+
+This chapter discusses the implementation details and evaluates the results of the system, built following the methodology described in Chapter~\ref{c2:methodology}.
+Section~\ref{sec:implementation} describes the architectural decisions, external connections, storage and caching mechanisms, overviews the processing flow, user interface, and other software development concerns.
+Section~\ref{sec:evaluation} validates the outputs of the system, provides a few case studies, and compares data returned by each source.
 
 \section{Implementation} \label{sec:implementation}
 
-The system implements the citation analysis described in Chapter 3\snote{cross-refs, not hard coded nums!}.
+The system implements the citation analysis described in Chapter~\ref{c2:methodology}\snote{cross-refs, not hard coded nums!}\enote{done}.
 It takes an author name as input and returns citation counts, broken down into direct, co-author or external citations.
 This section describes the component structure, data handling and processing steps to produce the results.
 
 \subsection{System overview} \label{sec:system-overview}
 
-The system is intended to run on a low-end machine.
-It provides a web interface for the user (frontend) and a backend service, encapsulating the business logic, that collects and processes all data.
-Both parts are written in \textsf{JavaScript}: the interface is built on \textsf{React}, and the backend targets \textsf{Node.js}.
-The frontend sends requests and displays results, while the backend communicates with the publication services to perform citation analysis.
+There are two major use cases that the system attempts to satisfy.
 
-The first use case is to identify the author whose citations user wants to examine.
-The search returns matching profiles, with affiliations where available, and lets the user inspect their publications before requesting metrics for a specific author.
-The profiles are grouped by provider as each source uses identifiers not fully compatible with other sources.
-Matching a profile from one source to a profile from another would require a separate identity matching process, which is out of scope for this work.
+\begin{enumerate}
+    \item \emph{Author identification} - select the unique author, whose citations user wants to examine.
 
-The second use case, having selected an author, is for the backend to collect publications and incoming citations.
-It compares the author lists of each citing publication to classify citations and, finally, calculate totals.
-The results, returned to the frontend, contain both the aggregate counts and the raw data.
+    The initial search returns profiles matching the name provided.
+    As the results can contain multiple entries matching the name, each item includes affiliations where available from the data source, or the user can request a list of publications, to help identify the correct author.
 
-Collecting these data can take time, especially for sources with low throughput and for authors with many publications.
-The backend performs the retrieval as a background job, while the UI polls and displays its progress.
-To avoid repeating the same work on every visit, the system keeps the collected author/publication/contribution/citation data, as well as caches provider responses in an \textsf{SQLite} database.
-This keeps storage local, without a separate database server, and reduces the number of requests needed for later searches and calculations.
+    The profiles are grouped by provider, as each source does not guarantee to use identifiers compatible with other sources.
+    Matching a profile from one source to a profile from another would require a new algorithm to match identities, which is out of scope for this work.
 
-The architecture of the backend follows the Model-View-Controller (MVC) pattern. \snote{You may also add a figure.}
-Controllers receive user requests and pass them to services, which coordinate the collection and analysis.
-Provider connectors handle the different external sources fetching and processing caveats.
-Repositories read from and write to the database tables.
-This separation keeps provider-specific details and storage operations apart from the citation classification rules.
+    \item \emph{Citation classification} - having selected an author, collect all publications and incoming citations, classify them into the groups, to produce the aggregate counts.
+    The backend compares author lists of each citing paper to classify citations according to the algorithm from Chapter~\ref{c2:methodology}.
+    The results returned to the frontend contain counts and raw data.
+\end{enumerate}
 
-The frontend serves the purpose of UI alone, and follows a different structure.
-Components display individual parts of the interface, containers combine them and manage data requests, and pages arrange the views around navigation paths.
-This gives the interface a maintainable structure while keeping citation analysis in the backend.
+The system design follows the Model-View-Controller (MVC) architectural pattern.
+
+Figure~\ref{fig:mvc-pattern} outlines the architectural structure.
+
+\begin{figure}[tb]
+    \centering
+    \includegraphics[width=10cm]{include/fig-arch-mvc-diagram}
+    \caption{MVC architecture overview}
+    \label{fig:mvc-pattern}
+\end{figure}
+
+\snote{You may also add a figure.}\enote{done}
+
+The user interface (UI) consists of a web page (frontend).
+It connects to the backend service, which encapsulates the business logic, and exposes the functionality via an Application Programming Interface (API).
+
+Both components are written in \textsf{JavaScript}: the frontend is built with \textsf{React}, the backend targets \textsf{Node.js}.
+The frontend does not implement any meaningful reusable business logic, instead it forwards the requests to the backend and displays the results.
+The backend communicates with the external data sources to gather information, and performs citation analysis.
+
+In the backend, \emph{controllers} receive user requests and pass them to \emph{services}, which coordinate the collection and analysis of data.
+\emph{Connectors} handle the fetching and processing of data from external sources.
+\emph{Repositories} read from and write to the database tables.
+
+The frontend serves as a presentation layer and interface controller, and follows a data flow similar to the backend.
+The building blocks of the UI are \emph{components}, \emph{containers}, and \emph{pages}.
+Components display individual parts of the interface, containers combine them and manage data requests, and pages represent navigation paths.
+
+The backend performs the retrieval as a background job, because collecting data takes time, especially for sources with low throughput and authors with many publications.
+The frontend polls and displays the progress of these jobs in the UI.
+
+To reduce the latency of repeated requests, the system retains the collected author/publication/contribution/citation data, and caches provider responses in an \textsf{SQLite} database.
 
 The following sections describe the provider choices, data model and processing steps in more detail.
 
-\snote{You may add a figure with the components. It is nice to have. I use excalidraw, but you may use whatever else.}
+\snote{You may add a figure with the components. It is nice to have. I use excalidraw, but you may use whatever else.}\enote{done (mermaid is my tool)}
 
 \subsection{Providers and limitations} \label{sec:providers}
 
-The sources were analyzed in Section~\ref{sec:data-sources}. \snote{Yes, but you do not use them all, right? Say. what you use. As a general comment you are may say more. You are very ``lakonikos''}
-This section describes aspects related to the implementation.
+The sources were analyzed in Section~\ref{sec:data-sources} by the supported data properties and the provided access methods. \snote{Yes, but you do not use them all, right? Say. what you use. As a general comment you are may say more. You are very ``lakonikos''}\enote{added a bit more text; added more explanation on what sources were considered}
+Three data providers were supported in the system implementation: \textsf{OpenAlex}\footnote{\url{https://openalex.org}}, \textsf{Semantic Scholar}\footnote{\url{https://www.semanticscholar.org}}, \textsf{Google Scholar}\footnote{\url{https://scholar.google.com}} (via \textsf{SerpApi}).
+\textsf{OpenAlex} and \textsf{Semantic Scholar} are the most naturally fitting open sources.
+Their responses to requests for citations also include author lists, needed by the classification algorithm.
+\textsf{Google Scholar}, as the one with the widest coverage, was also considered, despite all the limitations around using it.
+The remaining sources were not considered:
 
-\snote{You may also add a figure, with the providers and the connectors. }
+\begin{itemize}
+    \item \textsf{CrossRef}\footnote{\url{https://www.crossref.org}} does not list the citing papers
+    \item \textsf{OpenCitations}\footnote{\url{https://opencitations.net}} does not support search by author name (only by identifier)
+    \item \textsf{DBLP}\footnote{\url{https://dblp.org}} is limited to computer science and does not provide citations
+    \item \textsf{Scopus}\footnote{\url{https://www.scopus.com}} requires a paid institutional subscription
+\end{itemize}
 
-The system does not rely on a single source of citation data.
-Each source is reached through its own connector, to isolate the differences in access and the structure of data it returns.
-Every connector offers implements the interface \textsf{ProviderConnector}, providing the same operations: find an author (\textsf{searchAuthors}), list author publications (\textsf{getAuthorPublications}), list paper citations (\textsf{getCitations}).
-The remaining system builds on top of these operations, treating all sources in the same way and not depending on the implementation details of any specific one.
-Because the connectors are interchangeable, a source can be added or replaced without changing the analysis, and forensic bug investigation in a source stays within its own connector, making it easier to locate problems and test behavior.
 
-Each source limits how much can be requested over time, so the data collection process is asynchronous.
-Coverage also differs between sources, so the same author can produce different counts depending on the source.
-The sources do not share author identifiers, so an author profile from one source cannot be reliably matched to the respective profile from another; the profiles are kept separate and shown side by side, as described in Section~\ref{sec:system-overview}.
+Figure~\ref{fig:providers-overview} shows the provider connectors.
 
-The paid source is the most restrictive in practice.
-Collecting the citations of an author with $n$ \snote{better use small} publications requires at least $n$ requests, growing the cost proportionally to the volume of data retrieved.
-The free sources are used by default, while the paid source is enabled only for reference.
+\begin{figure}[tb]
+    \centering
+    \includegraphics[width=10cm]{include/fig-providers-diagram}
+    \caption{Providers and their respective connectors}
+    \label{fig:providers-overview}
+\end{figure}
+
+\snote{You may also add a figure, with the providers and the connectors. }\enote{done}
+
+In the backend, each data source is reached through its own connector, to isolate the differences in access and the structure of data it returns.
+Every connector implements the interface \textsf{ProviderConnector}, defining the operations: finding an author (\textsf{searchAuthors}), listing author papers (\textsf{getAuthorPublications}), listing paper citations (\textsf{getCitations}).
+The remaining system builds on top of these operations, treating all sources in the same manner.
+As the connectors are interchangeable, a source can be added or replaced without changing the remaining processing pipeline.
+At the same time forensic bug investigation for each source remains within its own connector, making it easy to locate problems and test behavior.
+
+Each provider imposes a concurrent request throttling.
+The implementation uses asynchronous queues to stay within the rate limits.
+
+None of the sources considered for this project shares author identifiers fully compatible with another.
+The profiles are kept separate and shown side by side, as described in Section~\ref{sec:system-overview}.
+
+The paid source (\textsf{Google Scholar}) is the most restrictive in practice.
+Collecting the citations of an author with $n$ \snote{better use small}\enote{noted} publications requires at least $n$ requests, growing the cost proportionally to the volume of data retrieved.
+The free sources (\textsf{OpenAlex} and \textsf{Semantic Scholar}) are used by default.
 
 \subsection{Data} \label{sec:data}
 
@@ -81,6 +128,6 @@ The free sources are used by default, while the paid source is enabled only for 
 
 \subsection{Citation classification} \label{sec:classification-checks}
 
-\subsection{Results for selected researchers} \label{sec:author-case-studies}
+\subsection{Author case studies} \label{sec:author-case-studies}
 
 \subsection{Comparison of data sources} \label{sec:data-source-comparison}
