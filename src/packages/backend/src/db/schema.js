@@ -1,5 +1,4 @@
 import { foreignKey, integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core';
-import { CITATION_TYPES } from '../constants/citation-type.js';
 import { JOB_STATUSES } from '../constants/job-status.js';
 
 export const publications = sqliteTable(
@@ -72,9 +71,6 @@ export const citations = sqliteTable(
     provider: text('provider').notNull(),
     sourcePubId: text('source_pub_id').notNull(),
     targetPubId: text('target_pub_id').notNull(),
-    classification: text('classification', {
-      enum: CITATION_TYPES,
-    }),
   },
   (t) =>
     [

@@ -51,7 +51,6 @@ export const convertCitationTreeToDbRows = (provider, {
       provider: provider,
       sourcePubId: citation.publication.pubId,
       targetPubId: publication.pubId,
-      classification: citation.classification,
     };
   });
 
@@ -86,7 +85,6 @@ export const convertDbRowsToCitationTree = ({
     citations: citations.map((edge) => {
       return {
         publication: withContributions(publicationById.get(edge.sourcePubId)),
-        classification: edge.classification,
       };
     }),
   };
