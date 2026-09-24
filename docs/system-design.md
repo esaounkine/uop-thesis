@@ -229,7 +229,6 @@ erDiagram
   CITATION {
     string sourcePubId FK "the citing publication ID"
     string targetPubId FK "the cited publication ID"
-    string classification "external | self-direct | self-coauthor"
   }
 ```
 

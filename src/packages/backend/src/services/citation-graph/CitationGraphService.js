@@ -1,7 +1,7 @@
 import { convertCitationTreeToDbRows, convertDbRowsToCitationTree } from './converters.js';
 
 /**
- * Saves and restores a classified citation graph.
+ * Saves and restores a citation graph.
  */
 export class CitationGraphService {
   /**
@@ -45,7 +45,7 @@ export class CitationGraphService {
   }
 
   /**
-   * Rebuilds the classified tree for a paper from the DB.
+   * Rebuilds the unclassified tree for a paper from the DB.
    *
    * @param {string} provider
    * @param {string} pubId - the cited publication id

@@ -112,7 +112,6 @@ describe('convertCitationTreeToDbRows', () => {
               provider: 'openalex',
               sourcePubId: 'W2',
               targetPubId: 'W1',
-              classification: 'external',
             },
           ],
         });
@@ -195,7 +194,6 @@ describe('convertDbRowsToCitationTree', () => {
         citations: Object.freeze([
           Object.freeze({
             sourcePubId: 'W2',
-            classification: 'external',
           }),
         ]),
       }))).toEqual({
@@ -209,7 +207,6 @@ describe('convertDbRowsToCitationTree', () => {
               pubId: 'W2',
               contributions: [contribution2],
             },
-            classification: 'external',
           },
         ],
       });

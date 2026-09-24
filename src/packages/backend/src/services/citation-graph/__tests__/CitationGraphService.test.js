@@ -151,7 +151,6 @@ describe('CitationGraphService', () => {
             provider: provider,
             sourcePubId: 'W2',
             targetPubId: 'W1',
-            classification: 'self-direct',
           },
         ]);
       });
@@ -297,7 +296,6 @@ describe('CitationGraphService', () => {
                 provider: provider,
                 sourcePubId: 'W2',
                 targetPubId: pubId,
-                classification: 'self-direct',
               },
             ]);
             publicationRepositoryMock.findPublications.mockReturnValue([
@@ -309,7 +307,7 @@ describe('CitationGraphService', () => {
             ]);
           });
 
-          it('rebuilds each citation with its classification', () => {
+          it('rebuilds each citation without a stored classification', () => {
             expect(citationGraphService.getPubTree(provider, pubId).citations)
               .toEqual([
                 {
@@ -319,7 +317,6 @@ describe('CitationGraphService', () => {
                     title: 'W2',
                     contributions: [],
                   },
-                  classification: 'self-direct',
                 },
               ]);
           });
@@ -481,19 +478,18 @@ describe('CitationGraphService', () => {
               citationRepositoryMock.findCitations.mockReturnValue([
                 {
                   sourcePubId: 'W3',
-                  classification: 'self-direct',
                 },
               ]);
               publicationRepositoryMock.findPublications.mockReturnValue([{ pubId: 'W3' }]);
             });
 
-            describe('and classification returns a new label', () => {
+            describe('and classification returns a label', () => {
               beforeEach(() => {
                 classificationServiceMock.getCitationType
                   .mockReturnValue('self-coauthor');
               });
 
-              it('replaces the stored label for the selected researcher', () => {
+              it('classifies the citation for the selected researcher', () => {
                 const tree = citationGraphService
                   .getAuthorTree(provider, authorId);
                 expect(tree.publications[0].citations[0].classification)
