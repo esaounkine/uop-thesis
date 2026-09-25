@@ -61,7 +61,16 @@ The frontend serves as a presentation layer and interface controller, and follow
 The building blocks of the UI are \emph{components}, \emph{containers}, and \emph{pages}.
 Components display individual parts of the interface, containers combine them and manage data requests, and pages represent navigation paths.
 
-The backend performs the retrieval as a background job, because collecting data takes time, especially for sources with low throughput and authors with many publications.
+Figure~\ref{fig:frontend-components} shows how these encapsulated building blocks are used.
+
+\begin{figure}[tb]
+    \centering
+    \includegraphics[width=10cm]{include/fig-frontend-component-diagram}
+    \caption{Frontend building blocks: pages, containers and components}
+    \label{fig:frontend-components}
+\end{figure}
+
+The backend performs the retrieval as an asynchronous background job, to provide progress while collecting data, which can potentially take time, especially for authors with many publications and sources with low throughput.
 The frontend polls and displays the progress of these jobs in the UI.
 
 To reduce the latency of repeated requests, the system retains the collected author/publication/contribution/citation data, and caches provider responses in an \textsf{SQLite} database.
@@ -91,7 +100,7 @@ Figure~\ref{fig:providers-overview} shows the provider connectors.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=10cm]{include/fig-providers-diagram}
+    \includegraphics[width=15cm]{include/fig-providers-diagram}
     \caption{Providers and their respective connectors}
     \label{fig:providers-overview}
 \end{figure}
@@ -116,7 +125,65 @@ The free sources (\textsf{OpenAlex} and \textsf{Semantic Scholar}) are used by d
 
 \subsection{Data} \label{sec:data}
 
+The conceptual model described in Section~\ref{sec:data-model} maps to four database tables: \textsf{authors}, \textsf{publications}, \textsf{contributions}, and \textsf{citations}.
+An additional table, for cached responses, is described in Section~\ref{sec:storage-caching}.
+
+In the conceptual model, a publication is identified by its title, year and authors, and an author by name.
+The implementation uses the identifiers assigned by each provider: \textsf{pubId} and \textsf{authorId}.
+Names and titles can be ambiguous, and spelling differences do not necessarily mean that two records refer to different entities.
+All primary keys are composite and include the provider identifier.
+This is necessary to keep the data separate by provider.
+
+A \textsf{publication} record contains the title, year, citation count reported by the provider, and an external identifier, for instance a DOI, if available.
+An \textsf{author} record consists of the name and the affiliation, if available.
+A \textsf{contribution} record connects an \textsf{author} to a \textsf{publication}; it includes the position of each one of the list of paper authors.
+A \textsf{citation} record connects the \textsf{citing publication} (source) to the \textsf{cited publication} (target).
+
+Normalized author names and paper titles are stored in the respective entity tables, alongside the original names and titles.
+The normalization consists of simple string manipulations, such as conversion to lower case, removal of diacritics, and replacement of repeated whitespace.
+For example, ``Skiadópoulos'' and ``skiadopoulos'' produce the same normalized value.
+
+\textsf{OpenAlex} and \textsf{Semantic Scholar} typically return authors and publications with their own internal identifiers.
+Their connectors filter the list of contributions to remove ones without an author identifier.
+The \textsf{Semantic Scholar} connector also discards citing papers without a paper identifier.
+
+\textsf{Google Scholar} does not guarantee to return identifiers for the authors of citing papers, often it returns names as strings, which are inherently unreliable for uniquely identifying anything.
+When an identifier is missing, the respective connector uses the normalized name, but this remains a known issue, leading to self-citations being potentially under-represented in the \textsf{Google Scholar} results.
+
 \subsection{Storage and caching} \label{sec:storage-caching}
+
+\textsf{SQLite} was used in the system for the simplicity of its setup.
+It does not require a separate server, instead it runs within the backend process and stores the database in a single file.
+Schema changes also live in the codebase: they are defined as migrations and applied at runtime, every time the database is opened by the backend process.
+
+The system largely depends on externally sourced data, subject to the provider limitations and the latency of network access.
+Publications, authors, contributions and citations are treated as immutable in nature.
+These details, when retrieved and linked together, form a graph of nodes and relationships, which we call the \textsf{citation graph}.
+
+The citation graph is stored in the tables described in Section~\ref{sec:data}.
+After collecting the data, the backend saves the publications, authors and their relationships, from which the graph can be reconstructed without network requests to external providers.
+Classification labels depend on the choice of author (the same citation can be \textsf{direct} for one author and a \textsf{co-author self-citation} for another) and are calculated at runtime, when the graph is loaded.
+
+All provider connectors use the same HTTP client implementation, with caching handled internally.
+Before sending a request, the client looks for a stored response using the request URL as the key.
+The cache key enforces the order of the query parameters alphabetically, to provide a stable key, regardless of the parameter order in the original request URL.
+For instance, ``https://example.com?p1=v1\&p2=v2'' and ``https://example.com?p2=v2\&p1=v1'' produce the same key.
+Each cached record includes the date it was received, used to calculate whether the record satisfies the time-to-live timeframe.
+
+Figure~\ref{fig:cache-flowchart-diagram} illustrates the data flow inside the cache mechanism.
+
+\begin{figure}[tb]
+    \centering
+    \includegraphics[width=7cm]{include/fig-cache-flowchart-diagram}
+    \caption{Cache request data flow}
+    \label{fig:cache-flowchart-diagram}
+\end{figure}
+
+If the record is found, and it has not expired, the response contained within is returned; if no response is found, or if it has expired, the request is sent to the provider.
+Successful responses are stored as text under the same key and with the current date.
+
+Expired cache records are replaced when requested again, but there is no periodic deletion of old entries, and there is no limit on the cache size.
+The database can grow forever, which is a limitation of a shared installation, that would need a retention policy and clean up procedures.
 
 \subsection{Processing pipeline} \label{sec:processing-pipeline}
 

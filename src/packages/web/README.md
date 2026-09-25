@@ -25,3 +25,21 @@ The provided docker config places a prebuilt frontend dist into the backend as a
 - `components/` - presentational, one folder each with its CSS module.
 - `lib/api.js` - connector for the backend.
 - `main.jsx` - React and router bootstrap.
+
+The diagram represents the nested encapsulation:
+
+```mermaid
+flowchart TB
+    subgraph PAGE["Page"]
+        subgraph CONT["Container"]
+            direction LR
+            COMP1["Component 1"]
+            COMP2["Component 2"]
+            CONN{{"Connector"}}
+            CONN -- "data" --> COMP1
+        end
+    end
+
+    API[("Backend API")]
+    CONN -. "request / response" .-> API
+```
