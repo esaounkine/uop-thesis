@@ -135,13 +135,14 @@ sequenceDiagram
 sequenceDiagram
   autonumber
   actor User
+  participant MS as Metrics Service
   participant CS as Classification Service
   participant AS as Author Service
   participant PS as Publication Service
   participant P as Provider API
 
-  User ->> CS: Author unique ID
-  CS ->> AS: Fetch data tree starting from the author unique ID
+  User ->> MS: Author unique ID
+  MS ->> AS: Fetch data tree starting from the author unique ID
 
   AS ->> P: Fetch author by ID
   alt Author found
@@ -166,12 +167,12 @@ sequenceDiagram
     PS -->> AS: Citations
   end
 
-  AS -->> CS: Data tree
+  AS -->> MS: Data tree
 
-  CS ->> CS: Classify citations per publication
-  CS ->> CS: Aggregate metrics across publications
+  MS ->> CS: Classify citations per publication
+  MS ->> CS: Aggregate metrics across publications
 
-  CS -->> User: Aggregated citation metrics (total, self/external, direct/co-author)<br/>+ cache cut-off date (when cached)<br/>+ debug details
+  MS -->> User: Aggregated citation metrics (total, self/external, direct/co-author)<br/>+ cache cut-off date (when cached)<br/>+ debug details
 ```
 
 - The User provides an author unique ID
@@ -185,11 +186,45 @@ sequenceDiagram
 - For each collected publication, the Service classifies its citations
   - The Publication Service fetches the publications that cite it (*cited-by*) per the [Global Cache flow](#global-cache-flow) (key `provider-id:paper-id`, TTL 1 week), paginating until it has them all
   - The Classification Service evaluates the author lists of each citing publication and the cited publication
-- The Classification Service aggregates the citation metrics across all publications of the author and shows them to the User
+- The Classification Service aggregates the citation metrics across all publications of the author; the Metrics Service returns them to the User
   - Total citations, broken down into *self* and *external*
   - *Self* citations further broken down into *direct* and *co-author*
   - When the system uses cached data, it shows the cut-off date with the metrics
   - The output includes the debug details - the data that led to the metrics
+
+The simplified flow chart diagram is the following:
+
+```mermaid
+flowchart TD
+    START(["Author unique ID"]) --> A1
+
+    subgraph MS1["Metrics Service"]
+      A1["Fetch data tree"]
+    end
+
+    subgraph CS1["Classification Service"]
+      D1["Classify citations per publication"]
+      D2["Aggregate metrics across publications"]
+    end
+
+    subgraph AS["Author Service"]
+
+      B3["Fetch papers"] -- paginate --> B3
+    
+    end
+
+    subgraph PS["Publication Service"]
+      C1["Fetch citing publications with authors"] -- paginate --> C1
+    end
+
+    N1[/"Cache<br/>TTL: 1 week"/]
+
+    A1 --> B3 --> C1 --> D1 --> D2 --> END(["Aggregated citation
+  metrics"])
+
+    N1 -.- B3
+    N1 -.- C1
+```
 
 ## High Level Design
 
@@ -259,14 +294,16 @@ flowchart TD
 
 ```mermaid
 flowchart TD
+  MS["Metrics Service"]
   CS["Classification Service"]
   AS["Author Service"]
   PS["Publication Service"]
   GC[("DB / Cache")]
   Providers["Provider API (external)"]
 
-  CS -->|"fetch data tree by paper ID"| PS
-  CS -->|"fetch data tree by author ID"| AS
+  MS -->|"fetch data tree by paper ID"| PS
+  MS -->|"fetch data tree by author ID"| AS
+  MS -->|"classify, aggregate"| CS
   AS -->|"fetch citations per publication"| PS
   PS -->|"fetch papers, citations, author lists"| Providers
   AS -->|"fetch authors, publications"| Providers
@@ -275,7 +312,8 @@ flowchart TD
   
   style Providers fill:#f9f,stroke:#333,stroke-width:4px
 ```
-- **Classification Service** - contains the classification rules and the metrics aggregation. It controls the data collection.
+- **Metrics Service** - controls the data collection and hands the collected data to the Classification Service.
+- **Classification Service** - contains the classification rules and the metrics aggregation.
 - **Author Service** - resolves authors, collects their publications.
 - **Publication Service** - resolves papers, collects citation trees.
 - **DB / Cache** - stores all results and cached query results.

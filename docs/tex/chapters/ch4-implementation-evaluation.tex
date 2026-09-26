@@ -187,6 +187,46 @@ The database can grow forever, which is a limitation of a shared installation, t
 
 \subsection{Processing pipeline} \label{sec:processing-pipeline}
 
+Once the user has selected the author, the UI automatically checks whether a citation graph for this author exists in the system for the currently selected provider, using the date of the last completed job for this author and provider, which the backend returns with the author details.
+If the citation graph exists, it is returned as a raw dataset in JSON format, and that date is shown as the time of the last update.
+The UI renders results, including an option to update the results, bypassing the previously stored graph and cache.
+If the citation graph does not exist, or the user has requested to update the results, the backend receives a request to fetch the full graph.
+
+Having received a request to fetch the full graph from a provider, the backend creates a new job (as an in-memory object) and stores it in the database.
+The job is initially placed in the state \textsf{running}, which is the only non-final state.
+The backend immediately responds with the job object, including the identifier.
+With the identifier at hand, the client starts to poll the job status, until it reaches one of the final states: \textsf{done}, \textsf{error}, or \textsf{interrupted}.
+
+Meanwhile, in the background, the backend orchestrates the flow to build the citation graph.
+The successful path is as follows:
+
+\begin{itemize}
+    \item The \textsf{Metrics service}, which orchestrates the flow, hands it over to the \textsf{Author service}
+    \item The \textsf{Author service} requests the list of papers for the selected author identifier, and paginates to reach the end of the response list
+    \item Having reached the end of the list, the \textsf{Author service} calls the \textsf{Publication service} to fetch the citations, for each of the gathered publications
+    \item The \textsf{Publication service} requests the list of citations, and extracts the authors from each item of the list
+    \begin{itemize}
+        \item In practice, the requests for all publications are sent at once, and the provider request queue paces them to the number of requests per second that the provider allows
+    \end{itemize}
+    \item Having gathered details of each of the citing publications, the control returns to the \textsf{Metrics service} to aggregate final results
+    \item The \textsf{Classification service} applies the classification algorithm to each of the citing publications against the currently selected author, and finally
+    \item The \textsf{Metrics service} collates the results into a single nested structure, stores it in the database, and changes the job status to \textsf{done}
+\end{itemize}
+
+If the citations of a publication cannot be retrieved, for instance due to a network error, this publication is skipped, but the job still completes.
+The result mentions how many publication responses were successful and how many failed.
+
+Once the job has been updated with the final result, the next time the client requests the job, it will receive the result and will be able to fetch it and render in the UI.
+
+Figure~\ref{fig:classification-flowchart-diagram} illustrates the data flow of constructing the full graph from an author identifier.
+
+\begin{figure}[tb]
+    \centering
+    \includegraphics[width=10cm]{include/fig-classification-flowchart-diagram}
+    \caption{Citation graph construction data flow}
+    \label{fig:classification-flowchart-diagram}
+\end{figure}
+
 \subsection{User interface} \label{sec:user-interface}
 
 \subsection{Testing} \label{sec:testing}
