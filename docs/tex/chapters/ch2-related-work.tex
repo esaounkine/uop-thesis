@@ -10,19 +10,29 @@ This chapter presents an overview of the fundamental concepts and existing syste
 
 \section{Data sources} \label{sec:data-sources}
 
-Citation data is obtained from search services exposing indexes of scientific publications, and their citation references, such as \textsf{Google Scholar}\footnote{\url{https://scholar.google.com}} \snote{do not leave space before a footnote, deleted it. Change everywhere!}\enote{done} and \textsf{OpenAlex}\footnote{\url{https://openalex.org}} \snote{add some refs}.
+Citation data is obtained from search services exposing indexes of scientific publications, and their citation references, such as \textsf{Google Scholar}\footnote{\url{https://scholar.google.com}} and \textsf{OpenAlex}\footnote{\url{https://openalex.org}} \snote{add some refs}.
 These systems allow users to search for publications, track citation counts, and explore connections between works.
+At the same time, these systems present several limitations. 
+%\snote{are there paper that also point this? If yes please add. }.
+%\enote{Gusenbauer: Google Scholar index is restricted and access isn't reproducible (no API, capped retrieval, 250 char query length limit); Peroni: citation data has always been hard to get.}
+To name a few: 
+\begin{enumerate}
+\item
+Access to data is restricted and rate limited~\cite{Gusenbauer2020}, 
+\item
+Part of the citation data has historically been closed behind paywalls~\cite{Peroni2020}, 
+\item
+Metadata is inconsistent across articles, 
+\item
+Authors are not uniquely defined across data sources, 
+\item
+There's no consistent Application Programming Interface (API) for each data source.
+\end{enumerate}
 
-At the same time, these systems present several limitations \snote{are there paper that also point this? If yes please add. }.
-\enote{Gusenbauer: Google Scholar index is restricted and access isn't reproducible (no API, capped retrieval, 250 char query length limit); Peroni: citation data has always been hard to get.}
-Access to data is restricted and rate limited~\cite{Gusenbauer2020}, part of the citation data has historically been closed behind paywalls~\cite{Peroni2020}, metadata is inconsistent across articles, authors are not uniquely defined across data sources, there's no consistent Application Programming Interface (API) for each data source.
+To objectively compare the sources, we define a few aspects important for citation analysis: method of access, cost, extent and scope of coverage, data structure (especially when the citing publications are treated as a first-class citizen), author identification.
 
-To objectively compare the sources, we define a few aspects important for citation analysis: method of access, cost, extent and scope of coverage, data structure (especially whether the citing publications are treated as a first-class citizen), author identification.
-
-Table~\ref{tab:data-sources} summarizes a few sources along these aspects.
-
-\snote{Move tables/figure closer to their first reference. Also always use }\verb=\begin{table}[tb]=\snote{. I fixed the following table, fix the others as well.}
-\enote{Done}
+%\snote{Move tables/figure closer to their first reference. Also always use }\verb=\begin{table}[tb]=\snote{. I fixed the following table, fix the others as well.}
+%\enote{Done}
 
 
 \begin{table}[tb]
@@ -30,10 +40,10 @@ Table~\ref{tab:data-sources} summarizes a few sources along these aspects.
 \centering
 \footnotesize
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{p{2.3cm} p{2.4cm} p{3.0cm} p{2.0cm} p{2.8cm}}
+\begin{tabular}{|p{2.3cm}| p{2.8cm} |p{3.0cm} |p{2.0cm} |p{2.9cm}|}
 \hline
 Source & Access & Coverage & Citations & Author data \\
-\hline
+\hline\hline
 \textsf{Google Scholar} & No public API; via HTML scraping & Largest; all disciplines & Yes & Profile ID; names as text \\
 \textsf{OpenAlex} & Open API, free key & About 271M works & Yes & Author IDs; name search \\
 \textsf{Semantic Scholar}\tablefootnote{\url{https://www.semanticscholar.org}} & Open API, free key & Over 200M papers; 2B citations & Yes & Author IDs; name search \\
@@ -44,25 +54,26 @@ Source & Access & Coverage & Citations & Author data \\
 LLM & Model query & Broad, unverifiable & Yes & No identifiers \\
 \hline
 \end{tabular}
-\caption{Comparison of the main citation data sources}
+\caption{Comparison of the main citation data sources \snote{Table αντί για Πίνακας! }}
 \end{table}
 
 
-\begin{itemize}
-    \item \textsf{Google Scholar} has the widest coverage of all sources across every domain.
+Table~\ref{tab:data-sources} summarizes a few sources along these aspects. More details are presented below.
+\snote{use description env. for such case. Typically you put the title of each item in []. I did not use [] in the following to keep the font consistent. Read and delete it!}
+\begin{description}
+    \item \textsf{Google Scholar}
+    has the widest coverage of all sources across every domain.
     It offers no structured interface and blocks automated access.
 
     There is a number of third-party services, such as \textsf{SerpApi}\footnote{\url{https://serpapi.com}}, that scrape \textsf{Google Scholar} pages on demand, to extract the information, allowing to retrieve structured data via an API.
-    These services supply a fleet of devices to automatically handle robot detection, IP rotation, solve Captcha challenges, and avoid other traps, to reliably extract data from the pages.
-    They charge a fee per request.
-    These services inherit the coverage and specifics of \textsf{Google Scholar} (identify authors by profile page and expose contribution lists as plain comma-separated text).
+    These services supply a fleet of devices to automatically handle robot detection, IP rotation, solve Captcha challenges, and avoid other traps, to reliably extract data from the pages, but, they charge a fee per request. Still, these services inherit the coverage and specifics of \textsf{Google Scholar} (identify authors by profile page and expose contribution lists as plain comma-separated text).
     Some of these services provide an interface to collect the citing publications (exposed by \textsf{Google Scholar}).
+
     \item \textsf{OpenAlex} indexes about 271 million works and 213 million authors, and returns each publication together with its author list and its citing publications, so a single source can satisfy every kind of request.
     The access is provided via API.
-    The throughput is limited to ten requests per second.
+    Still, the throughput is limited to ten requests per second.
     \item \textsf{Semantic Scholar} holds more than 200 million papers and over two billion citations with a similar structure.
-    The access is provided via API.
-    The throughput is limited to one request per second, while retrieving long citation lists requires many sequential requests.
+    The access is provided via API, but, the throughput is limited to one request per second, while retrieving long citation lists requires many sequential requests.
     \item \textsf{CrossRef} provides high-quality metadata and author order for any publication that has a registered Digital Object Identifier (\textsf{DOI}).
     It reports only the number of citations rather than the list of citing publications, and exposes no author identifier.
     \item \textsf{OpenCitations} aggregates more than two billion open citation links and can be downloaded in full.
@@ -77,15 +88,18 @@ LLM & Model query & Broad, unverifiable & Yes & No identifiers \\
         \item From memory - model answers from its training data, acting as the data source.
         \item As an agentic harness - the model interacts with one or multiple data sources to aggregate the results.
     \end{itemize}
-\end{itemize}
+\end{description}
 
-The sources present trade-offs when considering the most suitable for our task:
+The sources present trade-offs when considering the most suitable for our task: \snote{use description, now it has the right use of []! -- study and delete it!}
 
-\begin{itemize}
-    \item The largest source (\textsf{Google Scholar}) \snote{say which is?} is the hardest to access and returns unstructured data.
-    \item The open sources (\textsf{OpenAlex}, \textsf{Semantic Scholar}, \textsf{CrossRef}, \textsf{OpenCitations}, \textsf{DBLP}) \snote{say which are?} differ in coverage and data they expose.
-    \item The most curated source (\textsf{Scopus}) \snote{say which is?} is not freely available.
-\end{itemize}
+\begin{description}
+    \item 
+    [The largest source] (\textsf{Google Scholar}) is the hardest to access and returns unstructured data.
+    \item 
+    [The open sources] (\textsf{OpenAlex}, \textsf{Semantic Scholar}, \textsf{CrossRef}, \textsf{OpenCitations} and \textsf{DBLP})  differ in coverage and data they expose.
+    \item 
+    [The most curated source] (\textsf{Scopus}) is not freely available.
+\end{description}
 
 The sources selected for this work are discussed in more detail in Section~\ref{sec:providers}.
 
@@ -94,7 +108,7 @@ The sources selected for this work are discussed in more detail in Section~\ref{
 %\enote{ID incostistency, insufficient data parity, difficulty matching the authors, limit rated access - all these aspects will become issues down the road of this investigation.}
 %\enote{The software I will create as part of this investigation, I will have to justify the preference of one of the data source over another (it might be due to the availability of papers on a data source), provide a solution for author matching, and a way around throttling.}
 
-\snote{It flows OK. You could add more if needed. You may use LLM polish and extend. Do not use it to write it though and do not overdo it. We use turn-it-in to check the final thesis. It is obligatory.}
+%\snote{It flows OK. You could add more if needed. You may use LLM polish and extend. Do not use it to write it though and do not overdo it. We use turn-it-in to check the final thesis. It is obligatory.}
 
 \section{Existing approaches} \label{sec:existing-approaches}
 
@@ -103,20 +117,20 @@ Existing approaches to citation analysis primarily rely on the aggregation and e
 A common representation models publications as nodes in a graph, with directed edges indicating citation relationships.
 This representation enables the application of graph-based methods to quantify influence among the scientific publications~\cite{Boyack2005, Chronis2021, Chronis2020}.
 
-\snote{
-Cite also the following. 
-\begin{itemize}
-\item
-Pantelis Chronis, Dimitrios Skoutas, Spiros Athanasiou, Spiros Skiadopoulos:
-Link Prediction in Bibliographic Networks. Predicting the Dynamics of Research Impact 2021: 271-290
-\url{https://dblp.uni-trier.de/rec/books/sp/21/Chronis0AS21.html?view=bibtex}.
-\item
-Pantelis Chronis, Dimitrios Skoutas, Spiros Athanasiou, Spiros Skiadopoulos:
-Link Prediction in Bibliographic Networks. ADBIS/TPDL/EDA Workshops 2020: 335-340
-\url{https://dblp.uni-trier.de/rec/conf/adbis/ChronisSAS20.html?view=bibtex}
-\end{itemize}
-Let me get some citations....
-}
+%\snote{
+%Cite also the following. 
+%\begin{itemize}
+%\item
+%Pantelis Chronis, Dimitrios Skoutas, Spiros Athanasiou, Spiros Skiadopoulos:
+%Link Prediction in Bibliographic Networks. Predicting the Dynamics of Research Impact 2021: 271-290
+%\url{https://dblp.uni-trier.de/rec/books/sp/21/Chronis0AS21.html?view=bibtex}.
+%\item
+%Pantelis Chronis, Dimitrios Skoutas, Spiros Athanasiou, Spiros Skiadopoulos:
+%Link Prediction in Bibliographic Networks. ADBIS/TPDL/EDA Workshops 2020: 335-340
+%\url{https://dblp.uni-trier.de/rec/conf/adbis/ChronisSAS20.html?view=bibtex}
+%\end{itemize}
+%Let me get some citations....
+%}
 
 In addition to trivial citation counts, other metrics have been proposed to evaluate research impact, such as the \textsf{Hirsch index} (h-index)~\cite{Hirsch2005}, which attempts to capture both productivity and citation influence.
 
