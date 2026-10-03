@@ -19,8 +19,8 @@ This section describes the component structure, data handling and processing ste
 
 There are two major use cases that the system attempts to satisfy.
 
-\begin{enumerate}
-    \item \emph{Author identification} - select the unique author, whose citations user wants to examine.
+\begin{description}
+    \item[Author identification] Select the unique author, whose citations user wants to examine.
 
     The initial search returns profiles matching the name provided.
     As the results can contain multiple entries matching the name, each item includes affiliations where available from the data source, or the user can request a list of publications, to help identify the correct author.
@@ -28,10 +28,10 @@ There are two major use cases that the system attempts to satisfy.
     The profiles are grouped by provider, as each source does not guarantee to use identifiers compatible with other sources.
     Matching a profile from one source to a profile from another would require a new algorithm to match identities, which is out of scope for this work.
 
-    \item \emph{Citation classification} - having selected an author, collect all publications and incoming citations, classify them into the groups, to produce the aggregate counts.
+    \item[Citation classification] Having selected an author, collect all publications and incoming citations, classify them into the groups, to produce the aggregate counts.
     The backend compares author lists of each citing paper to classify citations according to the algorithm from Chapter~\ref{c2:methodology}.
     The results returned to the frontend contain counts and raw data.
-\end{enumerate}
+\end{description}
 
 The system design follows the Model-View-Controller (MVC) architectural pattern.
 
@@ -88,12 +88,12 @@ Their responses to requests for citations also include author lists, needed by t
 \textsf{Google Scholar}, as the one with the widest coverage, was also considered, despite all the limitations around using it.
 The remaining sources were not considered:
 
-\begin{itemize}
+\begin{description}
     \item \textsf{CrossRef}\footnote{\url{https://www.crossref.org}} does not list the citing papers
     \item \textsf{OpenCitations}\footnote{\url{https://opencitations.net}} does not support search by author name (only by identifier)
     \item \textsf{DBLP}\footnote{\url{https://dblp.org}} is limited to computer science and does not provide citations
     \item \textsf{Scopus}\footnote{\url{https://www.scopus.com}} requires a paid institutional subscription
-\end{itemize}
+\end{description}
 
 
 Figure~\ref{fig:providers-overview} shows the provider connectors.
