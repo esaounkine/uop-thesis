@@ -9,7 +9,7 @@ Section~\ref{sec:evaluation} validates the outputs of the system, provides a few
 
 \section{Implementation} \label{sec:implementation}
 
-The system implements the citation analysis described in Chapter~\ref{c2:methodology}\snote{cross-refs, not hard coded nums!}\enote{done}.
+The system implements the citation analysis described in Chapter~\ref{c2:methodology}. 
 It takes an author name as input and returns citation counts, broken down into direct, co-author or external citations.
 This section describes the component structure, data handling and processing steps to produce the results.
 
@@ -18,10 +18,10 @@ This section describes the component structure, data handling and processing ste
 There are two major use cases that the system attempts to satisfy.
 
 \begin{description}
-    \item[Author identification] Select the unique author, whose citations user wants to examine.
+    \item[Author identification. \snote{Do not forget the dot.}] Select the unique author, whose citations user wants to examine.
 
     The initial search returns profiles matching the name provided.
-    As the results can contain multiple entries matching the name, each item includes affiliations where available from the data source, or the user can request a list of publications, to help identify the correct author.
+    As the results can contain multiple entries matching the name, each item includes affiliations where available from the data source, or the user can request a list of publications, to help identify a particular author.
 
     The profiles are grouped by provider, as each source does not guarantee to use identifiers compatible with other sources.
     Matching a profile from one source to a profile from another would require a new algorithm to match identities, which is out of scope for this work.
@@ -31,9 +31,6 @@ There are two major use cases that the system attempts to satisfy.
     The results returned to the frontend contain counts and raw data.
 \end{description}
 
-The system design follows the Model-View-Controller (MVC) architectural pattern.
-
-Figure~\ref{fig:mvc-pattern} outlines the architectural structure.
 
 \begin{figure}[tb]
     \centering
@@ -42,9 +39,10 @@ Figure~\ref{fig:mvc-pattern} outlines the architectural structure.
     \label{fig:mvc-pattern}
 \end{figure}
 
-\snote{You may also add a figure.}\enote{done}
+The system design follows the Model-View-Controller (MVC) architectural pattern. Figure~\ref{fig:mvc-pattern} outlines the architectural structure.
 
-The user interface (UI) consists of a web page (frontend).
+
+The user interface (UI) consists of a web page (frontend) \snote{you may need to show UI in the figure as well! Simiralr;y to the backend. Also figures is better to have a sorter height than widths to better fit in a page. This one looks like a column}.
 It connects to the backend service, which encapsulates the business logic, and exposes the functionality via an Application Programming Interface (API).
 
 Both components are written in \textsf{JavaScript}: the frontend is built with \textsf{React}, the backend targets \textsf{Node.js}.
@@ -59,8 +57,6 @@ The frontend serves as a presentation layer and interface controller, and follow
 The building blocks of the UI are \emph{components}, \emph{containers}, and \emph{pages}.
 Components display individual parts of the interface, containers combine them and manage data requests, and pages represent navigation paths.
 
-Figure~\ref{fig:frontend-components} shows how these encapsulated building blocks are used.
-
 \begin{figure}[tb]
     \centering
     \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/fig-frontend-component-diagram}
@@ -68,6 +64,7 @@ Figure~\ref{fig:frontend-components} shows how these encapsulated building block
     \label{fig:frontend-components}
 \end{figure}
 
+Figure~\ref{fig:frontend-components} shows how these encapsulated building blocks are used.
 The backend performs the retrieval as an asynchronous background job, to provide progress while collecting data, which can potentially take time, especially for authors with many publications and sources with low throughput.
 The frontend polls and displays the progress of these jobs in the UI.
 
@@ -75,7 +72,7 @@ To reduce the latency of repeated requests, the system retains the collected aut
 
 The following sections describe the provider choices, data model and processing steps in more detail.
 
-\snote{You may add a figure with the components. It is nice to have. I use excalidraw, but you may use whatever else.}\enote{done (mermaid is my tool)}
+\enote{done (mermaid is my tool)} \snote{Fine, but also put the sources in the repo. }
 
 \subsection{Providers and limitations} \label{sec:providers}
 
