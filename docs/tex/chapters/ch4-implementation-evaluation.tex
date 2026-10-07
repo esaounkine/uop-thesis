@@ -454,6 +454,80 @@ These details are useful when investigating service disruptions.
 
 \subsection{Testing} \label{sec:testing}
 
+The backend, as the subsystem containing all business logic, is covered by automated tests, validating the outputs of all units of each component in isolation (such as services, repositories, connectors, controllers).
+The unit tests guarantee that the behavior of each unit remains within the expectations.
+
+The tests are written with \textsf{Jest}\footnote{\url{https://jestjs.io}} - one of the popular JavaScript unit test libraries.
+Tests are organized into suites, where each suite covers the behavior of a single component.
+
+The tests never touch real databases, the clock or the network.
+Instead, every dependency of the unit under test is replaced by a mock or spy fixture, allowing to program the expected results on each invocation.
+
+This approach is convenient to make the unsuccessful paths reproducible.
+By mocking the dependencies, unit tests can simulate all paths of behavior of an external provider: successful or erroneous responses, malformed data, empty results and so on.
+
+The tests are placed near the components they cover, in \textsf{\_\_tests\_\_} directories at the same file system level.
+
+On every push to the repository, a workflow executed by a \textsf{GitHub Actions} runner invokes the unit tests, and if any one of these fails, the pipeline exits with an error.
+This mechanism prevents building and deploying versions of the application with invalid logic.
+
+The unit tests follow a convenient nested structure, allowing to cover every branch of the source code.
+Each level explores a scenario, by progressively refining the circumstances, to finally get to the inner blocks starting with \emph{it}, which performs a single call and asserts an outcome expectation.
+
+Listing~\ref{lst:retry-tests} shows the outlined version of the suite testing \textsf{RetryStrategy}, the component responsible for retrying failed requests.
+The method \textsf{run} executes the target function, and if the outcome is deemed retriable, it repeats the call, to either reach a successful outcome or exhaust the maximum allowed number of retries.
+
+\begin{lstlisting}[float=tb, language=Java, caption={Structure of the retry strategy unit test suite}, label={lst:retry-tests}]
+describe('RetryStrategy', () => {
+  describe('run', () => {
+    describe('when the function succeeds', () => {
+      it('returns the value', ...);
+      it('calls the function once', ...);
+    });
+    describe('when the function fails', () => {
+      describe('but the error is not retryable', () => {
+        it('does not retry', ...);
+        it('passes the error to the retry check', ...);
+      });
+      describe('and the error is retryable', () => {
+        describe('and a retry succeeds', () => {
+          it('returns the eventual value', ...);
+          it('stops calling once it succeeds', ...);
+        });
+        describe('but the retries are exhausted', () => {
+          it('gives up with the error', ...);
+          it('tries maxRetries + 1 times', ...);
+        });
+      });
+    });
+  });
+});
+\end{lstlisting}
+
+Running the suite prints the titles of each branch and test, resulting in the same nested structure.
+Listing~\ref{lst:retry-test-run} shows the output of the same retry strategy suite.
+
+\begin{lstlisting}[float=tb, caption={Output of the retry strategy unit tests}, label={lst:retry-test-run}, literate={✓}{{\ensuremath\checkmark}}1]
+PASS src/lib/__tests__/RetryStrategy.test.js
+  RetryStrategy
+    run
+      when the function succeeds
+        ✓ returns the value
+        ✓ calls the function once
+      when the function fails
+        but the error is not retryable
+          ✓ does not retry
+          ✓ passes the error to the retry check
+        and the error is retryable
+          and a retry succeeds
+            ✓ returns the eventual value
+            ✓ stops calling once it succeeds
+          but the retries are exhausted
+            ✓ gives up with the error
+            ✓ tries maxRetries + 1 times
+
+\end{lstlisting}
+
 \section{Evaluation} \label{sec:evaluation}
 
 \subsection{Citation classification} \label{sec:classification-checks}
