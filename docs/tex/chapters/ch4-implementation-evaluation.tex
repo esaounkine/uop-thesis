@@ -18,7 +18,7 @@ This section describes the component structure, data handling and processing ste
 There are two major use cases that the system attempts to satisfy.
 
 \begin{description}
-    \item[Author identification. \snote{Do not forget the dot.}] Select the unique author, whose citations user wants to examine.
+    \item[Author identification.\snote{Do not forget the dot.}\enote{done everywhere}] Select the unique author, whose citations user wants to examine.
 
     The initial search returns profiles matching the name provided.
     As the results can contain multiple entries matching the name, each item includes affiliations where available from the data source, or the user can request a list of publications, to help identify a particular author.
@@ -26,7 +26,7 @@ There are two major use cases that the system attempts to satisfy.
     The profiles are grouped by provider, as each source does not guarantee to use identifiers compatible with other sources.
     Matching a profile from one source to a profile from another would require a new algorithm to match identities, which is out of scope for this work.
 
-    \item[Citation classification] Having selected an author, collect all publications and incoming citations, classify them into the groups, to produce the aggregate counts.
+    \item[Citation classification.] Having selected an author, collect all publications and incoming citations, classify them into the groups, to produce the aggregate counts.
     The backend compares author lists of each citing paper to classify citations according to the algorithm from Chapter~\ref{c2:methodology}.
     The results returned to the frontend contain counts and raw data.
 \end{description}
@@ -39,13 +39,14 @@ There are two major use cases that the system attempts to satisfy.
     \label{fig:mvc-pattern}
 \end{figure}
 
-The system design follows the Model-View-Controller (MVC) architectural pattern. Figure~\ref{fig:mvc-pattern} outlines the architectural structure.
+The system design follows the Model-View-Controller (MVC) architectural pattern.
+Figure~\ref{fig:mvc-pattern} outlines the architectural structure.
 
 
-The user interface (UI) consists of a web page (frontend) \snote{you may need to show UI in the figure as well! Simiralr;y to the backend. Also figures is better to have a sorter height than widths to better fit in a page. This one looks like a column}.
+The user interface (UI) consists of a web page (frontend) \snote{you may need to show UI in the figure as well! Simiralr;y to the backend. Also figures is better to have a sorter height than widths to better fit in a page. This one looks like a column} \enote{done - added the frontend to the LR-oriented MVC diagram}.
 It connects to the backend service, which encapsulates the business logic, and exposes the functionality via an Application Programming Interface (API).
 
-Both components are written in \textsf{JavaScript}: the frontend is built with \textsf{React}, the backend targets \textsf{Node.js}.
+Both system modules (frontend and backend) are written in \textsf{JavaScript}: the frontend is built with \textsf{React}, the backend targets \textsf{Node.js}.
 The frontend does not implement any meaningful reusable business logic, instead it forwards the requests to the backend and displays the results.
 The backend communicates with the external data sources to gather information, and performs citation analysis.
 
@@ -55,7 +56,7 @@ In the backend, \emph{controllers} receive user requests and pass them to \emph{
 
 The frontend serves as a presentation layer and interface controller, and follows a data flow similar to the backend.
 The building blocks of the UI are \emph{components}, \emph{containers}, and \emph{pages}.
-Components display individual parts of the interface, containers combine them and manage data requests, and pages represent navigation paths.
+Components display individual parts of the interface, containers combine them and manage data requests, pages represent navigation paths.
 
 \begin{figure}[tb]
     \centering
@@ -64,7 +65,8 @@ Components display individual parts of the interface, containers combine them an
     \label{fig:frontend-components}
 \end{figure}
 
-Figure~\ref{fig:frontend-components} shows how these encapsulated building blocks are used.
+Figure~\ref{fig:frontend-components} shows how the frontend is composed and how it connects to the backend.
+
 The backend performs the retrieval as an asynchronous background job, to provide progress while collecting data, which can potentially take time, especially for authors with many publications and sources with low throughput.
 The frontend polls and displays the progress of these jobs in the UI.
 
@@ -72,22 +74,22 @@ To reduce the latency of repeated requests, the system retains the collected aut
 
 The following sections describe the provider choices, data model and processing steps in more detail.
 
-\enote{done (mermaid is my tool)} \snote{Fine, but also put the sources in the repo. }
+\enote{done (mermaid is my tool)} \snote{Fine, but also put the sources in the repo. } \enote{done (previously they were all in the system-design.md, extracted also into docs/fiagrams; build by `make diagrams`)}
 
 \subsection{Providers and limitations} \label{sec:providers}
 
 The sources were analyzed in Section~\ref{sec:data-sources} by the supported data properties and the provided access methods. \snote{Yes, but you do not use them all, right? Say. what you use. As a general comment you are may say more. You are very ``lakonikos''}\enote{added a bit more text; added more explanation on what sources were considered}
-Three data providers were supported in the system implementation: \textsf{OpenAlex}\footnote{\url{https://openalex.org}}, \textsf{Semantic Scholar}\footnote{\url{https://www.semanticscholar.org}}, \textsf{Google Scholar}\footnote{\url{https://scholar.google.com}} (via \textsf{SerpApi}).
+Three data providers were supported in the system implementation: \textsf{OpenAlex}\footnote{\url{https://openalex.org}}, \textsf{Semantic Scholar}\footnote{\url{https://www.semanticscholar.org}}, \textsf{Google Scholar}\footnote{\url{https://scholar.google.com}} (via \textsf{SerpApi}\footnote{\url{https://serpapi.com}}).
 \textsf{OpenAlex} and \textsf{Semantic Scholar} are the most naturally fitting open sources.
 Their responses to requests for citations also include author lists, needed by the classification algorithm.
 \textsf{Google Scholar}, as the one with the widest coverage, was also considered, despite all the limitations around using it.
 The remaining sources were not considered:
 
 \begin{description}
-    \item \textsf{CrossRef}\footnote{\url{https://www.crossref.org}} does not list the citing papers
-    \item \textsf{OpenCitations}\footnote{\url{https://opencitations.net}} does not support search by author name (only by identifier)
-    \item \textsf{DBLP}\footnote{\url{https://dblp.org}} is limited to computer science and does not provide citations
-    \item \textsf{Scopus}\footnote{\url{https://www.scopus.com}} requires a paid institutional subscription
+    \item \textsf{CrossRef}\footnote{\url{https://www.crossref.org}} does not list the citing papers.
+    \item \textsf{OpenCitations}\footnote{\url{https://opencitations.net}} does not support search by author name (only by identifier).
+    \item \textsf{DBLP}\footnote{\url{https://dblp.org}} is limited to computer science and does not provide citations.
+    \item \textsf{Scopus}\footnote{\url{https://www.scopus.com}} requires a paid institutional subscription.
 \end{description}
 
 
@@ -102,8 +104,15 @@ Figure~\ref{fig:providers-overview} shows the provider connectors.
 
 \snote{You may also add a figure, with the providers and the connectors. }\enote{done}
 
-In the backend, each data source is reached through its own connector, to isolate the differences in access and the structure of data it returns.
-Every connector implements the interface \textsf{ProviderConnector}, defining the operations: finding an author (\textsf{searchAuthors}), listing author papers (\textsf{getAuthorPublications}), listing paper citations (\textsf{getCitations}).
+In the backend, each data source is reached through its own \emph{connector}, to isolate the differences in access and the structure of data it returns.
+Every connector implements the interface \textsf{ProviderConnector}, defining the operations:
+
+\begin{description}
+    \item \textsf{searchAuthors} to find an author,
+    \item \textsf{getAuthorPublications} to list author papers,
+    \item \textsf{getCitations} to list paper citations.
+\end{description}
+
 The remaining system builds on top of these operations, treating all sources in the same manner.
 As the connectors are interchangeable, a source can be added or replaced without changing the remaining processing pipeline.
 At the same time forensic bug investigation for each source remains within its own connector, making it easy to locate problems and test behavior.
@@ -114,9 +123,9 @@ The implementation uses asynchronous queues to stay within the rate limits.
 None of the sources considered for this project shares author identifiers fully compatible with another.
 The profiles are kept separate and shown side by side, as described in Section~\ref{sec:system-overview}.
 
-The paid source (\textsf{Google Scholar}) is the most restrictive in practice.
+The largest source (\textsf{Google Scholar}), even when accessed via a paid proxy (\textsf{SerpApi}), is the most restrictive in practice.
 Collecting the citations of an author with $n$ \snote{better use small}\enote{noted} publications requires at least $n$ requests, growing the cost proportionally to the volume of data retrieved.
-The free sources (\textsf{OpenAlex} and \textsf{Semantic Scholar}) are used by default.
+The free sources (\textsf{OpenAlex} and \textsf{Semantic Scholar}) are used by default in the system.
 
 \subsection{Data} \label{sec:data}
 
@@ -461,7 +470,7 @@ The tests are written with \textsf{Jest}\footnote{\url{https://jestjs.io}} - one
 Tests are organized into suites, where each suite covers the behavior of a single component.
 
 The tests never touch real databases, the clock or the network.
-Instead, every dependency of the unit under test is replaced by a mock or spy fixture, allowing to program the expected results on each invocation.
+Instead, every dependency of the unit under test is replaced by a mock fixture, allowing to program the expected results on each invocation.
 
 This approach is convenient to make the unsuccessful paths reproducible.
 By mocking the dependencies, unit tests can simulate all paths of behavior of an external provider: successful or erroneous responses, malformed data, empty results and so on.
@@ -471,7 +480,7 @@ The tests are placed near the components they cover, in \textsf{\_\_tests\_\_} d
 On every push to the repository, a workflow executed by a \textsf{GitHub Actions} runner invokes the unit tests, and if any one of these fails, the pipeline exits with an error.
 This mechanism prevents building and deploying versions of the application with invalid logic.
 
-The unit tests follow a convenient nested structure, allowing to cover every branch of the source code.
+The unit tests follow a convenient nested structure, allowing to cover every branch of the source code logic.
 Each level explores a scenario, by progressively refining the circumstances, to finally get to the inner blocks starting with \emph{it}, which performs a single call and asserts an outcome expectation.
 
 Listing~\ref{lst:retry-tests} shows the outlined version of the suite testing \textsf{RetryStrategy}, the component responsible for retrying failed requests.
