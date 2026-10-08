@@ -1,0 +1,20 @@
+flowchart TD
+  MS["Metrics Service"]
+  CS["Classification Service"]
+  AS["Author Service"]
+  PS["Publication Service"]
+  GC[("DB / Cache")]
+  Providers["Provider API (external)"]
+
+  MS -->|"fetch data tree by paper ID"| PS
+  MS -->|"fetch data tree by author ID"| AS
+  MS -->|"classify, aggregate"| CS
+  AS -->|"fetch citations per publication"| PS
+  PS -->|"fetch papers, citations, author lists"| Providers
+  AS -->|"fetch authors, publications"| Providers
+  PS -->|"get / store structured results"| GC
+  AS -->|"get / store structured results"| GC
+
+  classDef plain fill:#ffffff,stroke:#33365c,stroke-width:2px,color:#1f2430
+  class MS,CS,AS,PS plain
+  style Providers fill:#f9f,stroke:#333,stroke-width:4px

@@ -1,0 +1,35 @@
+flowchart TB
+  subgraph impl [Implemented]
+    direction LR
+    OA["<b>OpenAlex</b>"]
+    SS["<b>Semantic Scholar</b>"]
+    GS["<b>Google Scholar</b><br/>no public API"] --> SERP["<b>SerpApi</b>"]
+  end
+
+  SVC(["SearchService<br/>AuthorService"])
+
+  subgraph notimpl [Not implemented]
+    direction LR
+    CR["<b>CrossRef</b>"]
+    OC["<b>OpenCitations</b>"]
+    DB["<b>DBLP</b>"]
+    SC["<b>Scopus</b>"]
+    LLM["<b>LLM</b>"]
+  end
+
+  OA --> SVC
+  SS --> SVC
+  SERP --> SVC
+  SVC -.-> CR
+  SVC -.-> OC
+  SVC -.-> DB
+  SVC -.-> SC
+  SVC -.-> LLM
+
+  classDef green fill:#d9f2d9,stroke:#2e7d32,color:#000;
+  classDef beige fill:#f0e6d2,stroke:#b08d57,color:#000;
+  class OA,SS,GS,SERP green;
+  class CR,OC,DB,SC,LLM beige;
+  class SVC fill:#ffffff,stroke:#33365c,stroke-width:2px,color:#1f2430
+  style impl fill:#fdf0fd,stroke:#d9b3e6,color:#1f2430
+  style notimpl fill:#eafaf3,stroke:#7fd4c1,color:#1f2430

@@ -29,17 +29,18 @@ The provided docker config places a prebuilt frontend dist into the backend as a
 The diagram represents the nested encapsulation:
 
 ```mermaid
-flowchart TB
-    subgraph PAGE["Page"]
-        subgraph CONT["Container"]
-            direction LR
-            COMP1["Component 1"]
-            COMP2["Component 2"]
-            CONN{{"Connector"}}
-            CONN -- "data" --> COMP1
+graph TB
+    subgraph page["Page"]
+        subgraph container["Container"]
+            conn{{"Connector"}}
+            c2["Component 2"]
+            conn -->|"data"| c1["Component 1"]
         end
     end
+    conn -.->|"request / response"| api["Backend API"]
 
-    API[("Backend API")]
-    CONN -. "request / response" .-> API
+    classDef plain fill:#ffffff,stroke:#33365c,stroke-width:2px,color:#1f2430
+    class conn,c1,c2 plain
+    style page fill:#fdf0fd,stroke:#d9b3e6,color:#1f2430
+    style container fill:#eafaf3,stroke:#7fd4c1,color:#1f2430
 ```

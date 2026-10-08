@@ -8,7 +8,7 @@ LATEXMK_FLAGS := -pdf -interaction=nonstopmode -file-line-error -synctex=1
 LATEXMK_EXTRA_FLAGS ?=
 BASE_BRANCH ?= master
 
-.PHONY: install-deps setup tex-cmd build watch clean distclean docker-build docker-push docker-up docker-down deploy install-cicd
+.PHONY: install-deps setup tex-cmd build watch clean distclean diagrams docker-build docker-push docker-up docker-down deploy install-cicd
 
 install-deps:
 	brew install --cask mactex-no-gui
@@ -40,6 +40,11 @@ clean:
 
 distclean:
 	rm -rf $(OUT_DIR)
+
+diagrams:
+	cd docs/diagrams && for f in *.mmd; do \
+		npx -y @mermaid-js/mermaid-cli -i "$$f" -o "../tex/include/$${f%.mmd}.png" -b white -s 2; \
+	done
 
 diff:
 	@test -n "$(BASE_BRANCH)" || (echo "BASE_BRANCH=<git-ref> required" && exit 1)

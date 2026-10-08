@@ -1,0 +1,36 @@
+flowchart TD
+    START(["Author unique ID"]) --> A1
+
+    subgraph MS1["Metrics Service"]
+      A1["Fetch data tree"]
+    end
+
+    subgraph CS1["Classification Service"]
+      D1["Classify citations per publication"]
+      D2["Aggregate metrics across publications"]
+    end
+
+    subgraph AS["Author Service"]
+
+      B3["Fetch papers"] -- paginate --> B3
+
+    end
+
+    subgraph PS["Publication Service"]
+      C1["Fetch citing publications with authors"] -- paginate --> C1
+    end
+
+    N1[/"Cache<br/>TTL: 1 week"/]
+
+    A1 --> B3 --> C1 --> D1 --> D2 --> END(["Aggregated citation
+  metrics"])
+
+    N1 -.- B3
+    N1 -.- C1
+
+    classDef plain fill:#ffffff,stroke:#33365c,stroke-width:2px,color:#1f2430
+    class A1,B3,C1,D1,D2,START,END,N1 plain
+    style MS1 fill:#fdf0fd,stroke:#d9b3e6,color:#1f2430
+    style AS fill:#fdf6ea,stroke:#e0b36a,color:#1f2430
+    style PS fill:#eafaf3,stroke:#7fd4c1,color:#1f2430
+    style CS1 fill:#eafaf3,stroke:#7fd4c1,color:#1f2430

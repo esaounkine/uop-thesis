@@ -1,0 +1,12 @@
+graph TB
+  lookup["Look up results in Cache"] --> hit{"Cached results exist and are within TTL?"}
+  hit -->|"No"| send["Send request"]
+  send --> recv["Receive response"]
+  recv --> ok{"Is response status code < 400"}
+  ok -->|"Yes"| store["Store results in Cache"]
+  store --> ret["Return response"]
+  ok -->|"No"| ret
+  hit -->|"Yes"| ret
+
+  classDef plain fill:#ffffff,stroke:#33365c,stroke-width:2px,color:#1f2430
+  class lookup,hit,send,recv,ok,store,ret plain

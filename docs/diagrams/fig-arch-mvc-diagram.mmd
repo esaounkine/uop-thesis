@@ -1,0 +1,25 @@
+graph LR
+  subgraph FE["Frontend"]
+    direction TB
+    PAGES["Pages"] --> CONT["Containers"] --> COMP["Components"]
+  end
+  subgraph BE["Backend (modular monolith)"]
+    direction TB
+    API["API Endpoints"]
+    SVC["Services<br/>(Classification, Author, Publication)"]
+    PC["Provider connectors"]
+    API --> SVC
+    SVC --> PC
+  end
+  DB[("DB")]
+  Providers["Provider API (external)"]
+
+  CONT -->|"request / response"| API
+  SVC --> DB
+  PC --> Providers
+
+  classDef plain fill:#ffffff,stroke:#33365c,stroke-width:2px,color:#1f2430
+  class PAGES,CONT,COMP,API,SVC,PC plain
+  style Providers fill:#f9f,stroke:#333,stroke-width:4px
+  style FE fill:#fdf0fd,stroke:#d9b3e6,color:#1f2430
+  style BE fill:#fdf0fd,stroke:#d9b3e6,color:#1f2430

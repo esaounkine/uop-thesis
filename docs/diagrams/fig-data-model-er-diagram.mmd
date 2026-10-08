@@ -1,0 +1,16 @@
+erDiagram
+  AUTHOR {
+    string name
+    string affiliation
+  }
+  PUBLICATION {
+    string title
+    int year
+  }
+  CONTRIBUTION {
+    int position "1 = lead author, >1 = co-author"
+  }
+  AUTHOR ||--o{ CONTRIBUTION : "is listed in"
+  PUBLICATION ||--o{ CONTRIBUTION : "has"
+  PUBLICATION ||--o{ CITATION : "cites from"
+  PUBLICATION ||--o{ CITATION : "cites to"
