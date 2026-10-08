@@ -74,7 +74,7 @@ describe('ClassificationService', () => {
       });
     });
 
-    describe('when no researcher is selected', () => {
+    describe('when no author is selected', () => {
       it('rejects the missing context', () => {
         expect(() =>
           service.getCitationType([], []))
