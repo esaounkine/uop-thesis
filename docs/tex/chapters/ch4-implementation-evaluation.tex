@@ -9,7 +9,7 @@ Section~\ref{sec:evaluation} validates the outputs of the system, provides a few
 
 \section{Implementation} \label{sec:implementation}
 
-The system implements the citation analysis described in Chapter~\ref{c2:methodology}. 
+The system implements the citation analysis described in Chapter~\ref{c2:methodology}.
 It takes an author name as input and returns citation counts, broken down into direct, co-author or external citations.
 This section describes the component structure, data handling and processing steps to produce the results.
 
@@ -551,8 +551,362 @@ PASS src/lib/__tests__/RetryStrategy.test.js
 
 \section{Evaluation} \label{sec:evaluation}
 
+This section evaluates the results produced by the system: given an author, return the counts of their total citations by contribution category.
+Each author represents an atomic use case, where the entirety of their publications is considered at the time of evaluation.
+Section~\ref{sec:classification-checks} evaluates the classification algorithm in isolation, by comparing the output of the respective function to manually counted citations for a single use case.
+Section~\ref{sec:data-source-comparison} compares the data and results of the same author, retrieved from different providers.
+
 \subsection{Citation classification} \label{sec:classification-checks}
 
-\subsection{Author case studies} \label{sec:author-case-studies}
+To evaluate the work of the citation classification function, let us consider an author, for instance \emph{Spiros Skiadopoulos}.
+Following the implemented methodology, described in Section~\ref{sec:processing-pipeline}, the evaluation is carried out in the context of a single provider, for instance \emph{OpenAlex}.
+
+The classification function compares the authors of each cited and citing publication, to calculate the citation classification as \emph{direct}, \emph{co-author} or \emph{external}.
+
+To operate on realistic data, we have retrieved all records from the selected provider for the selected author on 9 October 2026, and stored a normalized citation graph in the local database.
+Going forward, to analyze data, we will be using SQL queries and their results; this will help make the evaluation framework clear to understand and reproducible.
+
+Tables~\ref{tab:sample-publications}--\ref{tab:sample-citations} demonstrate a sample of records in the tables of the local database.
+
+
+\begin{table}[tb]
+    \centering
+    \begin{tabular}{|l|l|}
+        \hline
+        Field & Value \\
+        \hline\hline
+        provider & openalex \\
+        pub\_id & W3141363959 \\
+        title & inTIME: A Machine Learning-Based Framework for \dots \\
+        normalised\_title & intime: a machine learning-based framework for \dots \\
+        external\_id & https://doi.org/10.3390/electronics10070818 \\
+        year & 2021 \\
+        citation\_count & \\
+        \hline
+    \end{tabular}
+    \caption{A sample record of the \texttt{publications} table}
+    \label{tab:sample-publications}
+\end{table}
+
+\begin{table}[tb]
+    \centering
+    \footnotesize
+    \begin{tabular}{|l|l|l|l|l|}
+        \hline
+        provider & author\_id & original\_name & normalised\_name & organisation \\
+        \hline\hline
+        openalex & A5046481193 & Paris Koloveas & paris koloveas & University of Peloponnese \\
+        openalex & A5054180455 & Thanasis Chantzios & thanasis chantzios & University of Peloponnese \\
+        \hline
+    \end{tabular}
+    \caption{Sample records of the \texttt{authors} table}
+    \label{tab:sample-authors}
+\end{table}
+
+\begin{table}[tb]
+    \centering
+    \begin{tabular}{|l|l|l|r|}
+        \hline
+        provider & pub\_id & author\_id & position \\
+        \hline\hline
+        openalex & W3141363959 & A5046481193 & 1 \\
+        openalex & W3141363959 & A5054180455 & 2 \\
+        \hline
+    \end{tabular}
+    \caption{Sample records of the \texttt{contributions} table}
+    \label{tab:sample-contributions}
+\end{table}
+
+\begin{table}[tb]
+    \centering
+    \begin{tabular}{|l|l|l|}
+        \hline
+        provider & source\_pub\_id & target\_pub\_id \\
+        \hline\hline
+        openalex & W4386028955 & W3141363959 \\
+        openalex & W4200158199 & W3141363959 \\
+        \hline
+    \end{tabular}
+    \caption{Sample records of the \texttt{citations} table}
+    \label{tab:sample-citations}
+\end{table}
+
+Each of the steps below defines a named query, building on the previously defined named queries.
+The complete query is built at the end, combining all the steps and producing the final result.
+
+The selected author is found in the \texttt{authors} table.
+
+\begin{quote}
+    \begin{vercode}
+WITH selected_author AS (
+    SELECT *
+    FROM authors
+    WHERE provider = 'openalex'
+        AND normalised_name = 'spiros skiadopoulos'
+)
+    \end{vercode}
+\end{quote}
+
+\begin{center}
+    \begin{tabular}{|l|l|}
+        \hline
+        Column & Value \\
+        \hline\hline
+        provider & openalex \\
+        author\_id & A5009411092 \\
+        original\_name & Spiros Skiadopoulos \\
+        normalised\_name & spiros skiadopoulos \\
+        organisation & University of Peloponnese \\
+        \hline
+    \end{tabular}
+\end{center}
+
+The selected author has multiple records in the \texttt{contributions} table.
+
+\begin{quote}
+    \begin{vercode}
+WITH author_contributions AS (
+    SELECT c.*
+    FROM contributions c
+        JOIN selected_author sa
+            ON c.provider = sa.provider
+                AND c.author_id = sa.author_id
+)
+    \end{vercode}
+\end{quote}
+
+\begin{center}
+    \begin{tabular}{|l|l|l|r|}
+        \hline
+        provider & pub\_id & author\_id & position \\
+        \hline\hline
+        openalex & W129833210 & A5009411092 & 3 \\
+        openalex & W141810174 & A5009411092 & 3 \\
+        \multicolumn{4}{|c|}{$\vdots$} \\
+        \multicolumn{4}{|c|}{Total: 117 records} \\
+        \hline
+    \end{tabular}
+\end{center}
+
+The selected author's publication citations are stored in the \texttt{citations} table.
+The column \texttt{target\_pub\_id} indicates that these are all incoming citations.
+
+\begin{quote}
+    \begin{vercode}
+WITH author_citations AS (
+    SELECT ci.*
+    FROM citations ci
+        JOIN author_contributions ac
+            ON ci.provider = ac.provider
+                AND ci.target_pub_id = ac.pub_id
+)
+    \end{vercode}
+\end{quote}
+
+\begin{center}
+    \begin{tabular}{|r|}
+        \hline
+        num\_citations\_total \\
+        \hline\hline
+        3584 \\
+        \hline
+    \end{tabular}
+\end{center}
+
+We select \emph{direct} citations from all author citations by matching the author contributions with the \texttt{source\_pub\_id} of the author citations.
+
+\begin{quote}
+    \begin{vercode}
+WITH direct_citations AS (
+    SELECT aci.*
+    FROM author_citations aci
+        JOIN author_contributions ac
+            ON aci.provider = ac.provider
+                AND aci.source_pub_id = ac.pub_id
+)
+    \end{vercode}
+\end{quote}
+
+\begin{center}
+    \begin{tabular}{|r|}
+        \hline
+        num\_citations\_direct \\
+        \hline\hline
+        115 \\
+        \hline
+    \end{tabular}
+\end{center}
+
+The remaining citations, where the selected author is not an author of a citing publication, are either \emph{co-author} or \emph{external} citations.
+
+\begin{quote}
+    \begin{vercode}
+WITH indirect_citations AS (
+    SELECT aci.*
+    FROM author_citations aci
+        LEFT OUTER JOIN direct_citations dc
+            ON aci.provider = dc.provider
+                AND aci.source_pub_id = dc.source_pub_id
+                AND aci.target_pub_id = dc.target_pub_id
+    WHERE dc.source_pub_id IS NULL
+)
+    \end{vercode}
+\end{quote}
+
+\begin{center}
+    \begin{tabular}{|r|}
+        \hline
+        num\_citations\_indirect \\
+        \hline\hline
+        3469 \\
+        \hline
+    \end{tabular}
+\end{center}
+
+The \emph{co-author} citations are those where the selected author is not an author of a citing publication, but the citing and cited publications share at least one other author.
+
+\begin{quote}
+    \begin{vercode}
+WITH coauthor_citations AS (
+    SELECT DISTINCT ic.*
+    FROM indirect_citations ic
+        JOIN contributions cited
+            ON cited.provider = ic.provider
+                AND cited.pub_id = ic.target_pub_id
+        JOIN contributions citing
+            ON citing.provider = ic.provider
+                AND citing.pub_id = ic.source_pub_id
+                AND citing.author_id = cited.author_id
+)
+    \end{vercode}
+\end{quote}
+
+\begin{center}
+    \begin{tabular}{|r|}
+        \hline
+        num\_citations\_coauthor \\
+        \hline\hline
+        243 \\
+        \hline
+    \end{tabular}
+\end{center}
+
+The \emph{external} citations are those where the citing and cited publications share no author at all.
+
+\begin{quote}
+    \begin{vercode}
+WITH external_citations AS (
+    SELECT ic.*
+    FROM indirect_citations ic
+        LEFT OUTER JOIN coauthor_citations cc
+            ON ic.provider = cc.provider
+                AND ic.source_pub_id = cc.source_pub_id
+                AND ic.target_pub_id = cc.target_pub_id
+    WHERE cc.source_pub_id IS NULL
+)
+    \end{vercode}
+\end{quote}
+
+\begin{center}
+    \begin{tabular}{|r|}
+        \hline
+        num\_citations\_external \\
+        \hline\hline
+        3226 \\
+        \hline
+    \end{tabular}
+\end{center}
+
+The complete query combines all the steps above and returns all the counts at once.
+
+\begin{quote}
+    \begin{vercode}
+WITH
+selected_author AS (
+    SELECT *
+    FROM authors
+    WHERE provider = 'openalex'
+        AND normalised_name = 'spiros skiadopoulos'
+),
+author_contributions AS (
+    SELECT c.*
+    FROM contributions c
+        JOIN selected_author sa
+            ON c.provider = sa.provider
+                AND c.author_id = sa.author_id
+),
+author_citations AS (
+    SELECT ci.*
+    FROM citations ci
+        JOIN author_contributions ac
+            ON ci.provider = ac.provider
+                AND ci.target_pub_id = ac.pub_id
+),
+direct_citations AS (
+    SELECT aci.*
+    FROM author_citations aci
+        JOIN author_contributions ac
+            ON aci.provider = ac.provider
+                AND aci.source_pub_id = ac.pub_id
+),
+indirect_citations AS (
+    SELECT aci.*
+    FROM author_citations aci
+        LEFT OUTER JOIN direct_citations dc
+            ON aci.provider = dc.provider
+                AND aci.source_pub_id = dc.source_pub_id
+                AND aci.target_pub_id = dc.target_pub_id
+    WHERE dc.source_pub_id IS NULL
+),
+coauthor_citations AS (
+    SELECT DISTINCT ic.*
+    FROM indirect_citations ic
+        JOIN contributions cited
+            ON cited.provider = ic.provider
+                AND cited.pub_id = ic.target_pub_id
+        JOIN contributions citing
+            ON citing.provider = ic.provider
+                AND citing.pub_id = ic.source_pub_id
+                AND citing.author_id = cited.author_id
+),
+external_citations AS (
+    SELECT ic.*
+    FROM indirect_citations ic
+        LEFT OUTER JOIN coauthor_citations cc
+            ON ic.provider = cc.provider
+                AND ic.source_pub_id = cc.source_pub_id
+                AND ic.target_pub_id = cc.target_pub_id
+    WHERE cc.source_pub_id IS NULL
+)
+SELECT
+    (SELECT COUNT(*) FROM author_citations) AS num_citations_total,
+    (SELECT COUNT(*) FROM direct_citations) AS num_citations_direct,
+    (SELECT COUNT(*) FROM coauthor_citations) AS num_citations_coauthor,
+    (SELECT COUNT(*) FROM external_citations) AS num_citations_external;
+    \end{vercode}
+\end{quote}
+
+\begin{center}
+    \begin{tabular}{|r|r|r|r|}
+        \hline
+        total & direct & co-author & external \\
+        \hline\hline
+        3584 & 115 & 243 & 3226 \\
+        \hline
+    \end{tabular}
+\end{center}
+
+The three subtotals produce the expected total ($115 + 243 + 3226 = 3584$), matching the counts calculated by the system for the same author and provider, as shown in Figure~\ref{fig:sample-counts}.
+
+\begin{figure}[tb]
+    \centering
+    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/fig-sample-counts}
+    \caption{Sample counts calculated by the system}
+    \label{fig:sample-counts}
+\end{figure}
 
 \subsection{Comparison of data sources} \label{sec:data-source-comparison}
+
+% the same author across providers
+% compare counts, coverage and metadata quality
+% disagreement between sources does not show which one is correct
