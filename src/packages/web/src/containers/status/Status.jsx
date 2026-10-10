@@ -13,16 +13,28 @@ const formatBytes = (bytes) => {
 };
 
 const formatQuota = (quota) => {
-  if (!quota) {
+  const credits = quota.creditsRemaining == null && quota.creditsLimit == null
+    ? ''
+    : ` ${quota.creditsRemaining?.toLocaleString() ?? '-'} / ${quota.creditsLimit?.toLocaleString() ?? '-'}`;
+  const exhausted = quota.exhausted
+    ? ' (exhausted)'
+    : '';
+
+  return `${quota.apiKey}${credits}${exhausted}`;
+};
+
+const formatQuotas = (quotas) => {
+  if (!quotas.length) {
     return '-';
   }
 
-  return `${quota.creditsRemaining?.toLocaleString()} / ${quota.creditsLimit?.toLocaleString() ?? '-'}`;
+  return quotas.map((quota, index) =>
+    <div key={index} className={quota.current
+      ? styles.CurrentKey
+      : undefined}>
+      {formatQuota(quota)}
+    </div>);
 };
-
-const formatApiKey = (apiKey) => {
-  return apiKey ?? '-';
-}
 
 const StatusPanel = ({ data }) => {
   const columns = Object.keys(data.providers[0]?.records ?? {});
@@ -33,9 +45,8 @@ const StatusPanel = ({ data }) => {
         <thead>
         <tr>
           <th>Provider</th>
-          <th>Key</th>
           <th>Req/s</th>
-          <th>Quota</th>
+          <th>Quotas</th>
           {columns.map((column) =>
             <th key={column}>{column}</th>)}
         </tr>
@@ -44,9 +55,8 @@ const StatusPanel = ({ data }) => {
         {data.providers.map((provider) =>
           <tr key={provider.id}>
             <td>{provider.id}</td>
-            <td>{formatApiKey(provider.apiKey)}</td>
             <td>{provider.requestsPerSecond}</td>
-            <td>{formatQuota(provider.quota)}</td>
+            <td>{formatQuotas(provider.quotas)}</td>
             {columns.map((column) =>
               <td key={column}>{provider.records[column]}</td>)}
           </tr>)}
