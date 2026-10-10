@@ -6,13 +6,12 @@ import { StatusController } from '../StatusController.js';
 const createConnector = (overrides = {}) => {
   return {
     id: 'openalex',
-    apiKey: 'secret',
     httpClient: {
       queue: {
         requestsPerSecond: 5,
       },
     },
-    getQuota: jest.fn().mockResolvedValue(null),
+    getQuotas: jest.fn(),
     ...overrides,
   };
 };
@@ -39,9 +38,15 @@ describe('StatusController', () => {
         });
       });
 
-      describe('and the connector returns a quota', () => {
+      describe('and the connector returns quotas', () => {
         beforeEach(() => {
-          connectorMock.getQuota.mockResolvedValue({ creditsRemaining: 9000 });
+          connectorMock.getQuotas.mockResolvedValue([
+            {
+              apiKey: 'secret',
+              current: true,
+              creditsRemaining: 9000,
+            },
+          ]);
         });
 
         it('reports the provider id and rate limit', async () => {
@@ -53,16 +58,19 @@ describe('StatusController', () => {
           });
         });
 
-        it('masks the api key', async () => {
+        it('masks the api key of the quota', async () => {
           const status = await controller.getStatus();
 
-          expect(status.providers[0].apiKey).toBe('****cret');
+          expect(status.providers[0].quotas[0].apiKey).toBe('****cret');
         });
 
-        it('includes the quota', async () => {
+        it('keeps the rest of the quota', async () => {
           const status = await controller.getStatus();
 
-          expect(status.providers[0].quota).toEqual({ creditsRemaining: 9000 });
+          expect(status.providers[0].quotas[0]).toMatchObject({
+            current: true,
+            creditsRemaining: 9000,
+          });
         });
 
         it('includes the record counts', async () => {
@@ -92,18 +100,35 @@ describe('StatusController', () => {
           expect(status.system.disk.freeBytes).toBeGreaterThanOrEqual(0);
         });
 
-        describe('and the provider has no api key', () => {
+        describe('and there is a quota per key', () => {
           beforeEach(() => {
-            controller = new StatusController(
-              [createConnector({ apiKey: null })],
-              statsRepositoryMock,
-            );
+            connectorMock.getQuotas.mockResolvedValue([
+              {
+                apiKey: 'first-key',
+                current: true,
+                creditsRemaining: 0,
+              },
+              {
+                apiKey: 'other-key',
+                current: false,
+                creditsRemaining: 80,
+              },
+            ]);
           });
 
-          it('reports a null api key', async () => {
+          it('masks the key of every quota', async () => {
             const status = await controller.getStatus();
 
-            expect(status.providers[0].apiKey).toBeNull();
+            expect(status.providers[0].quotas.map((quota) =>
+              quota.apiKey)).toEqual(['****-key', '****-key']);
+          });
+
+          it('keeps the rest of every quota', async () => {
+            const status = await controller.getStatus();
+            const remaining = status.providers[0].quotas.map((quota) =>
+              quota.creditsRemaining);
+
+            expect(remaining).toEqual([0, 80]);
           });
         });
 
@@ -114,8 +139,7 @@ describe('StatusController', () => {
                 connectorMock,
                 createConnector({
                   id: 'semanticscholar',
-                  getQuota: jest.fn()
-                    .mockResolvedValue({ creditsRemaining: 5000 }),
+                  getQuotas: jest.fn().mockResolvedValue([]),
                 }),
               ],
               statsRepositoryMock,
@@ -151,48 +175,34 @@ describe('StatusController', () => {
         });
       });
 
-      describe('and the connector returns no quota', () => {
+      describe('and the connector returns no quotas', () => {
         beforeEach(() => {
-          connectorMock.getQuota.mockResolvedValue(null);
+          connectorMock.getQuotas.mockResolvedValue([]);
         });
 
-        it('reports a null quota', async () => {
+        it('reports an empty list', async () => {
           const status = await controller.getStatus();
 
-          expect(status.providers[0].quota).toBeNull();
+          expect(status.providers[0].quotas).toEqual([]);
         });
       });
 
       describe('but the connector rejects', () => {
         beforeEach(() => {
-          connectorMock.getQuota.mockRejectedValue(new Error('error-1'));
+          connectorMock.getQuotas.mockRejectedValue(new Error('error-1'));
         });
 
-        it('reports a null quota', async () => {
+        it('reports an empty list', async () => {
           const status = await controller.getStatus();
 
-          expect(status.providers[0].quota).toBeNull();
-        });
-      });
-
-      describe('and the connector does not support quota', () => {
-        beforeEach(() => {
-          controller = new StatusController(
-            [createConnector({ getQuota: undefined })],
-            statsRepositoryMock,
-          );
-        });
-
-        it('reports a null quota', async () => {
-          const status = await controller.getStatus();
-
-          expect(status.providers[0].quota).toBeNull();
+          expect(status.providers[0].quotas).toEqual([]);
         });
       });
     });
 
     describe('when the stats repo throws', () => {
       beforeEach(() => {
+        connectorMock.getQuotas.mockResolvedValue([]);
         statsRepositoryMock.countByProvider.mockImplementation(() => {
           throw new Error('error-3');
         });

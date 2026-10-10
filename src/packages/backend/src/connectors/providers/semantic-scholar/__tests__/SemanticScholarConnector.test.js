@@ -379,4 +379,47 @@ describe('SemanticScholarConnector', () => {
       });
     });
   });
+
+  describe('getQuotas', () => {
+    describe('when there is an api key', () => {
+      beforeEach(() => {
+        connector = new SemanticScholarConnector({
+          httpClient: httpClientMock,
+          apiKey: 'secret',
+        });
+      });
+
+      it('reports the key with unknown credits', async () => {
+        expect(await connector.getQuotas()).toEqual([
+          {
+            apiKey: 'secret',
+            current: true,
+            exhausted: false,
+            creditsLimit: null,
+            creditsUsed: null,
+            creditsRemaining: null,
+            resetsAt: null,
+          },
+        ]);
+      });
+
+      it('does not query the http client', async () => {
+        await connector.getQuotas();
+        expect(httpClientMock.getJson).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when there is no api key', () => {
+      beforeEach(() => {
+        connector = new SemanticScholarConnector({
+          httpClient: httpClientMock,
+          apiKey: null,
+        });
+      });
+
+      it('returns an empty list', async () => {
+        expect(await connector.getQuotas()).toEqual([]);
+      });
+    });
+  });
 });

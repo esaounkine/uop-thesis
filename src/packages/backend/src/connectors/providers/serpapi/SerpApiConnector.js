@@ -129,13 +129,9 @@ export class SerpApiConnector extends ProviderConnector {
    * The account endpoint is free and does not count towards the quota.
    *
    * @see https://serpapi.com/account-api
-   * @returns {Promise<Object[] | null>} one entry per key; null when no API key provided
+   * @returns {Promise<import('../../ProviderConnector.js').Quota[]>} one entry per key
    */
-  async getQuota() {
-    if (!this.apiKeys.length) {
-      return null;
-    }
-
+  async getQuotas() {
     return Promise.all(this.apiKeys.map(async (apiKey) => {
       return {
         apiKey: apiKey,

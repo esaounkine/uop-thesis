@@ -10,6 +10,14 @@ const maskValue = (key, showChars = -4) =>
     ? `****${key.slice(showChars)}`
     : null);
 
+const maskQuotas = (quotas) =>
+  quotas.map((quota) => {
+    return {
+      ...quota,
+      apiKey: maskValue(quota.apiKey),
+    };
+  });
+
 const getSystemStats = () => {
   const {
     bsize, blocks, bavail,
@@ -38,11 +46,12 @@ export class StatusController {
       version: version,
       providers: await Promise.all(
         this.providers.map(async (provider) => {
+          const quotas = await this.fetchQuotas(provider);
+
           return {
             id: provider.id,
-            apiKey: maskValue(provider.apiKey),
             requestsPerSecond: provider.httpClient.queue?.requestsPerSecond,
-            quota: await this.fetchQuota(provider),
+            quotas: maskQuotas(quotas),
             records: this.statsRepository.countByProvider(provider.id),
           };
         })),
@@ -50,15 +59,13 @@ export class StatusController {
     };
   }
 
-  async fetchQuota(connector) {
+  async fetchQuotas(connector) {
     try {
-      const quota = await connector?.getQuota?.();
-
-      return quota ?? null;
+      return await connector.getQuotas();
     } catch (error) {
       process.stderr.write(`quota fetch failed: ${error.message}\n`);
 
-      return null;
+      return [];
     }
   }
 }

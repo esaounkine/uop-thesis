@@ -144,7 +144,7 @@ describe('SerpApiConnector', () => {
 
           it('reports the key as exhausted', async () => {
             await connector.searchAuthors('jane');
-            const quota = await connector.getQuota();
+            const quota = await connector.getQuotas();
             expect(quota.map((entry) =>
               [
                 entry.apiKey,
@@ -184,7 +184,7 @@ describe('SerpApiConnector', () => {
 
           it('keeps the key usable', async () => {
             await connector.searchAuthors('jane');
-            const quota = await connector.getQuota();
+            const quota = await connector.getQuotas();
             expect(quota.map((entry) =>
               entry.exhausted)).toEqual([false, false]);
           });
@@ -596,7 +596,7 @@ describe('SerpApiConnector', () => {
     });
   });
 
-  describe('getQuota', () => {
+  describe('getQuotas', () => {
     describe('when there is an api key', () => {
       describe('and the account is returned', () => {
         beforeEach(() => {
@@ -611,7 +611,7 @@ describe('SerpApiConnector', () => {
         });
 
         it('maps the account usage of the key', async () => {
-          expect(await connector.getQuota()).toEqual([
+          expect(await connector.getQuotas()).toEqual([
             {
               apiKey: 'secret',
               current: true,
@@ -633,13 +633,13 @@ describe('SerpApiConnector', () => {
           });
 
           it('reports every key', async () => {
-            const quota = await connector.getQuota();
+            const quota = await connector.getQuotas();
             expect(quota.map((entry) =>
               [entry.apiKey, entry.current])).toEqual([['key-1', true], ['key-2', false]]);
           });
 
           it('queries the account of each key', async () => {
-            await connector.getQuota();
+            await connector.getQuotas();
             expect(httpClientMock.getJson.mock.calls.map(([
               , , , query,
             ]) =>
@@ -654,7 +654,7 @@ describe('SerpApiConnector', () => {
         });
 
         it('propagates the error', async () => {
-          await expect(connector.getQuota()).rejects.toThrow('error-1');
+          await expect(connector.getQuotas()).rejects.toThrow('error-1');
         });
       });
     });
@@ -667,12 +667,12 @@ describe('SerpApiConnector', () => {
         });
       });
 
-      it('returns null', async () => {
-        expect(await connector.getQuota()).toBeNull();
+      it('returns an empty list', async () => {
+        expect(await connector.getQuotas()).toEqual([]);
       });
 
       it('does not query the http client', async () => {
-        await connector.getQuota();
+        await connector.getQuotas();
         expect(httpClientMock.getJson).not.toHaveBeenCalled();
       });
     });

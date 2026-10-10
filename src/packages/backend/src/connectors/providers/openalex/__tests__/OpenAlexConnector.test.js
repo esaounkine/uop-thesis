@@ -369,7 +369,7 @@ describe('OpenAlexConnector', () => {
     });
   });
 
-  describe('getQuota', () => {
+  describe('getQuotas', () => {
     describe('when there is an api key', () => {
       beforeEach(() => {
         connector = new OpenAlexConnector({
@@ -393,13 +393,35 @@ describe('OpenAlexConnector', () => {
           });
         });
 
-        it('maps the remaining credits', async () => {
-          expect(await connector.getQuota()).toEqual({
-            creditsLimit: 10_000,
-            creditsUsed: 250,
-            creditsRemaining: 9_750,
-            resetsAt: '2026-08-23T00:00:00.000Z',
+        it('reports the quota of the key', async () => {
+          expect(await connector.getQuotas()).toEqual([
+            {
+              apiKey: 'secret',
+              current: true,
+              exhausted: false,
+              creditsLimit: 10_000,
+              creditsUsed: 250,
+              creditsRemaining: 9_750,
+              resetsAt: '2026-08-23T00:00:00.000Z',
+            },
+          ]);
+        });
+      });
+
+      describe('and no credits are left', () => {
+        beforeEach(() => {
+          httpClientMock.getJson.mockResolvedValue({
+            data: {
+              rate_limit: {
+                credits_remaining: 0,
+              },
+            },
           });
+        });
+
+        it('reports the key as exhausted', async () => {
+          const [quota] = await connector.getQuotas();
+          expect(quota.exhausted).toBe(true);
         });
       });
 
@@ -409,7 +431,7 @@ describe('OpenAlexConnector', () => {
         });
 
         it('propagates the error', async () => {
-          await expect(connector.getQuota()).rejects.toThrow('error-1');
+          await expect(connector.getQuotas()).rejects.toThrow('error-1');
         });
       });
     });
@@ -422,12 +444,12 @@ describe('OpenAlexConnector', () => {
         });
       });
 
-      it('returns null', async () => {
-        expect(await connector.getQuota()).toBeNull();
+      it('returns an empty list', async () => {
+        expect(await connector.getQuotas()).toEqual([]);
       });
 
       it('does not query the http client', async () => {
-        await connector.getQuota();
+        await connector.getQuotas();
         expect(httpClientMock.getJson).not.toHaveBeenCalled();
       });
     });

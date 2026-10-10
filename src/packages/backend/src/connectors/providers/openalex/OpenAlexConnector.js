@@ -92,20 +92,25 @@ export class OpenAlexConnector extends ProviderConnector {
    *
    * @returns {Promise<Object | null>} null when no API key provided
    */
-  async getQuota() {
+  async getQuotas() {
     if (!this.apiKey) {
-      return null;
+      return [];
     }
 
     const data = await this.fetchJson('/rate-limit', {}, null);
     const limit = data.rate_limit ?? {};
 
-    return {
-      creditsLimit: limit.credits_limit ?? null,
-      creditsUsed: limit.credits_used ?? null,
-      creditsRemaining: limit.credits_remaining ?? null,
-      resetsAt: limit.resets_at ?? null,
-    };
+    return [
+      {
+        apiKey: this.apiKey,
+        current: true,
+        exhausted: limit.credits_remaining === 0,
+        creditsLimit: limit.credits_limit ?? null,
+        creditsUsed: limit.credits_used ?? null,
+        creditsRemaining: limit.credits_remaining ?? null,
+        resetsAt: limit.resets_at ?? null,
+      },
+    ];
   }
 
   /**

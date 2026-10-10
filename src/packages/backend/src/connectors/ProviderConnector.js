@@ -1,4 +1,15 @@
 /**
+ * @typedef {Object} Quota
+ * @property {string} apiKey
+ * @property {boolean} current - the key in use
+ * @property {boolean} exhausted - no requests left until the quota resets
+ * @property {number | null} creditsLimit
+ * @property {number | null} creditsUsed
+ * @property {number | null} creditsRemaining
+ * @property {string | null} resetsAt
+ */
+
+/**
  * The contract every provider connector implements.
  * Results omit the provider key and include available contributor details.
  */
@@ -44,11 +55,24 @@ export class ProviderConnector {
   }
 
   /**
-   * API quota of the provider.
+   * Quotas of the provider, one entry per API key; empty without a key.
+   * A provider without a quota endpoint reports its key with unknown credits.
    *
-   * @returns {Promise<Object | null>} null when the provider doesn't expose it
+   * @returns {Promise<Quota[]>}
    */
-  getQuota() {
-    return Promise.resolve(null);
+  getQuotas() {
+    return Promise.resolve(this.apiKey
+      ? [
+          {
+            apiKey: this.apiKey,
+            current: true,
+            exhausted: false,
+            creditsLimit: null,
+            creditsUsed: null,
+            creditsRemaining: null,
+            resetsAt: null,
+          },
+        ]
+      : []);
   }
 }
