@@ -35,7 +35,13 @@ export const semanticScholarMaxPerSecond = Number(
 );
 
 export const serpapiBaseUrl = process.env.SERPAPI_BASE_URL ?? 'https://serpapi.com';
-export const serpapiApiKey = process.env.SERPAPI_API_KEY;
+export const serpapiApiKeys = [
+  ...new Set((process.env.SERPAPI_API_KEYS ?? '')
+    .split(',')
+    .map((key) =>
+      key.trim())
+    .filter(Boolean)),
+];
 export const serpapiMaxPerSecond = Number(
   process.env.SERPAPI_MAX_PER_SECOND ?? 5,
 );

@@ -1,5 +1,5 @@
 import {
-  serpapiApiKey,
+  serpapiApiKeys,
   serpapiMaxPerSecond,
   openAlexApiKey,
   openAlexMaxPerSecond,
@@ -29,7 +29,7 @@ const PROVIDER_SPEC_REGISTRY = {
   },
   serpapi: {
     requestsPerSecond: serpapiMaxPerSecond,
-    apiKey: serpapiApiKey,
+    apiKeys: serpapiApiKeys,
     create: (httpClient) =>
       new SerpApiConnector({
         httpClient: httpClient,

@@ -1,7 +1,6 @@
-import {
-  beforeEach, describe, expect, it, jest,
-} from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { directFetchTtlMs, searchTtlMs } from '../../../../config/env.js';
+import { HttpError } from '../../../../lib/HttpClient.js';
 import { SerpApiConnector } from '../SerpApiConnector.js';
 
 describe('SerpApiConnector', () => {
@@ -15,7 +14,7 @@ describe('SerpApiConnector', () => {
     connector = new SerpApiConnector({
       httpClient: httpClientMock,
       baseUrl: 'https://serpapi.com',
-      apiKey: 'secret',
+      apiKeys: ['secret'],
     });
   });
 
@@ -59,13 +58,167 @@ describe('SerpApiConnector', () => {
       });
     });
 
-    describe('when the http client rejects', () => {
+    describe('when the http client rejects (not rate limited)', () => {
       beforeEach(() => {
         httpClientMock.getJson.mockRejectedValue(new Error('error-1'));
       });
 
       it('propagates the error', async () => {
         await expect(connector.searchAuthors('jane')).rejects.toThrow('error-1');
+      });
+
+      describe('and there are more keys', () => {
+        beforeEach(() => {
+          connector = new SerpApiConnector({
+            httpClient: httpClientMock,
+            apiKeys: ['key-1', 'key-2'],
+          });
+        });
+
+        it('does not switch keys', async () => {
+          await expect(connector.searchAuthors('jane')).rejects.toThrow('error-1');
+          expect(httpClientMock.getJson).toHaveBeenCalledTimes(1);
+        });
+      });
+    });
+
+    describe('when the http client rejects (rate limited)', () => {
+      let rateLimitError;
+
+      beforeEach(() => {
+        rateLimitError = new HttpError({ status: 429 });
+      });
+
+      describe('and there is a single key', () => {
+        beforeEach(() => {
+          httpClientMock.getJson.mockRejectedValue(rateLimitError);
+        });
+
+        it('propagates the error', async () => {
+          await expect(connector.searchAuthors('jane')).rejects.toBe(rateLimitError);
+        });
+
+        it('does not check the quota', async () => {
+          await expect(connector.searchAuthors('jane')).rejects.toBe(rateLimitError);
+          expect(httpClientMock.getJson).toHaveBeenCalledTimes(1);
+        });
+      });
+
+      describe('and there are more keys', () => {
+        beforeEach(() => {
+          connector = new SerpApiConnector({
+            httpClient: httpClientMock,
+            apiKeys: ['key-1', 'key-2'],
+          });
+        });
+
+        describe('and the key has no searches left', () => {
+          beforeEach(() => {
+            httpClientMock.getJson
+              .mockRejectedValueOnce(rateLimitError)
+              .mockResolvedValueOnce({ data: { total_searches_left: 0 } })
+              .mockResolvedValueOnce({ data: { profiles: { authors: [] } } })
+              .mockResolvedValue({ data: {} });
+          });
+
+          it('checks the quota of the key', async () => {
+            await connector.searchAuthors('jane');
+            const [
+              url, , , query,
+            ] = httpClientMock.getJson.mock.calls[1];
+            expect([url.pathname, query.api_key.value])
+              .toEqual(['/account.json', 'key-1']);
+          });
+
+          it('retries with the next key', async () => {
+            await connector.searchAuthors('jane');
+            const [
+              , , , query,
+            ] = httpClientMock.getJson.mock.calls[2];
+            expect(query.api_key.value).toBe('key-2');
+          });
+
+          it('returns the result of the retry', async () => {
+            expect(await connector.searchAuthors('jane')).toEqual([]);
+          });
+
+          it('reports the key as exhausted', async () => {
+            await connector.searchAuthors('jane');
+            const quota = await connector.getQuota();
+            expect(quota.map((entry) =>
+              [
+                entry.apiKey,
+                entry.current,
+                entry.exhausted,
+              ])).toEqual([
+              [
+                'key-1',
+                false,
+                true,
+              ],
+              [
+                'key-2',
+                true,
+                false,
+              ],
+            ]);
+          });
+        });
+
+        describe('and the key still has searches left', () => {
+          beforeEach(() => {
+            httpClientMock.getJson
+              .mockRejectedValueOnce(rateLimitError)
+              .mockResolvedValueOnce({ data: { total_searches_left: 50 } })
+              .mockResolvedValueOnce({ data: { profiles: { authors: [] } } })
+              .mockResolvedValue({ data: {} });
+          });
+
+          it('retries with the next key', async () => {
+            await connector.searchAuthors('jane');
+            const [
+              , , , query,
+            ] = httpClientMock.getJson.mock.calls[2];
+            expect(query.api_key.value).toBe('key-2');
+          });
+
+          it('keeps the key usable', async () => {
+            await connector.searchAuthors('jane');
+            const quota = await connector.getQuota();
+            expect(quota.map((entry) =>
+              entry.exhausted)).toEqual([false, false]);
+          });
+        });
+
+        describe('but the quota check fails', () => {
+          beforeEach(() => {
+            httpClientMock.getJson
+              .mockRejectedValueOnce(rateLimitError)
+              .mockRejectedValueOnce(new Error('error-2'))
+              .mockResolvedValueOnce({ data: { profiles: { authors: [] } } });
+          });
+
+          it('retries with the next key', async () => {
+            expect(await connector.searchAuthors('jane')).toEqual([]);
+            const [
+              , , , query,
+            ] = httpClientMock.getJson.mock.calls[2];
+            expect(query.api_key.value).toBe('key-2');
+          });
+        });
+
+        describe('but the next key is rate limited too', () => {
+          beforeEach(() => {
+            httpClientMock.getJson
+              .mockRejectedValueOnce(rateLimitError)
+              .mockResolvedValueOnce({ data: { total_searches_left: 0 } })
+              .mockRejectedValueOnce(rateLimitError);
+          });
+
+          it('propagates the error', async () => {
+            await expect(connector.searchAuthors('jane')).rejects.toBe(rateLimitError);
+          });
+        });
       });
     });
   });
@@ -457,12 +610,40 @@ describe('SerpApiConnector', () => {
           });
         });
 
-        it('maps the account usage', async () => {
-          expect(await connector.getQuota()).toEqual({
-            creditsLimit: 10_000,
-            creditsUsed: 250,
-            creditsRemaining: 9_750,
-            resetsAt: '2026-09-01',
+        it('maps the account usage of the key', async () => {
+          expect(await connector.getQuota()).toEqual([
+            {
+              apiKey: 'secret',
+              current: true,
+              exhausted: false,
+              creditsLimit: 10_000,
+              creditsUsed: 250,
+              creditsRemaining: 9_750,
+              resetsAt: '2026-09-01',
+            },
+          ]);
+        });
+
+        describe('and there are more keys', () => {
+          beforeEach(() => {
+            connector = new SerpApiConnector({
+              httpClient: httpClientMock,
+              apiKeys: ['key-1', 'key-2'],
+            });
+          });
+
+          it('reports every key', async () => {
+            const quota = await connector.getQuota();
+            expect(quota.map((entry) =>
+              [entry.apiKey, entry.current])).toEqual([['key-1', true], ['key-2', false]]);
+          });
+
+          it('queries the account of each key', async () => {
+            await connector.getQuota();
+            expect(httpClientMock.getJson.mock.calls.map(([
+              , , , query,
+            ]) =>
+              query.api_key.value)).toEqual(['key-1', 'key-2']);
           });
         });
       });
@@ -482,7 +663,7 @@ describe('SerpApiConnector', () => {
       beforeEach(() => {
         connector = new SerpApiConnector({
           httpClient: httpClientMock,
-          apiKey: null,
+          apiKeys: [],
         });
       });
 

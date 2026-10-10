@@ -1,5 +1,5 @@
-import { directFetchTtlMs, searchTtlMs, serpapiApiKey, serpapiBaseUrl } from '../../../config/env.js';
-import { HttpClient } from '../../../lib/HttpClient.js';
+import { directFetchTtlMs, searchTtlMs, serpapiApiKeys, serpapiBaseUrl } from '../../../config/env.js';
+import { HttpClient, HttpError } from '../../../lib/HttpClient.js';
 import { ProviderConnector } from '../../ProviderConnector.js';
 import { convertSerpApiArticleToPublication, convertSerpApiProfileToAuthor, convertSerpApiResultToPublication } from './converters.js';
 
@@ -17,17 +17,26 @@ export class SerpApiConnector extends ProviderConnector {
    * @param {Object} [args]
    * @param {HttpClient} [args.httpClient]
    * @param {string} [args.baseUrl]
-   * @param {string} [args.apiKey]
+   * @param {string[]} [args.apiKeys] - pool of API keys
    */
   constructor({
     httpClient = new HttpClient(),
     baseUrl = serpapiBaseUrl,
-    apiKey = serpapiApiKey,
+    apiKeys = serpapiApiKeys,
   } = {}) {
     super();
     this.httpClient = httpClient;
     this.baseUrl = baseUrl;
-    this.apiKey = apiKey;
+    this.apiKeys = apiKeys;
+    this.keyIndex = 0;
+    this.exhaustedKeys = new Set();
+  }
+
+  /**
+   * @returns {string | undefined} the key in use
+   */
+  get apiKey() {
+    return this.apiKeys[this.keyIndex];
   }
 
   /**
@@ -115,18 +124,34 @@ export class SerpApiConnector extends ProviderConnector {
   }
 
   /**
-   * Account usage for the SerpApi key. Never cached.
-   * The account endpoint is free and does not count against the quota.
+   * Account usage of every key in the pool.
+   * Never cached.
+   * The account endpoint is free and does not count towards the quota.
    *
    * @see https://serpapi.com/account-api
-   * @returns {Promise<Object | null>} null when no API key provided
+   * @returns {Promise<Object[] | null>} one entry per key; null when no API key provided
    */
   async getQuota() {
-    if (!this.apiKey) {
+    if (!this.apiKeys.length) {
       return null;
     }
 
-    const data = await this.fetchJson('/account.json', {}, null);
+    return Promise.all(this.apiKeys.map(async (apiKey) => {
+      return {
+        apiKey: apiKey,
+        current: apiKey === this.apiKey,
+        exhausted: this.exhaustedKeys.has(apiKey),
+        ...await this.fetchKeyQuota(apiKey),
+      };
+    }));
+  }
+
+  /**
+   * @param {string} apiKey
+   * @returns {Promise<Object>}
+   */
+  async fetchKeyQuota(apiKey) {
+    const data = await this.fetchJsonWithKey('/account.json', {}, null, apiKey);
 
     return {
       creditsLimit: data.searches_per_month ?? null,
@@ -143,6 +168,70 @@ export class SerpApiConnector extends ProviderConnector {
    * @returns {Promise<any>} the response body
    */
   async fetchJson(path, params, ttl) {
+    // one attempt per key at most
+    // so a pool of exhausted keys would not enter an endless loop
+    for (let attempt = 1; ; attempt += 1) {
+      const apiKey = this.apiKey;
+
+      try {
+        return await this.fetchJsonWithKey(path, params, ttl, apiKey);
+      } catch (error) {
+        const isRateLimited = error instanceof HttpError
+          && error.status === 429;
+
+        if (!isRateLimited || attempt >= this.apiKeys.length) {
+          throw error;
+        }
+
+        if (!await this.switchKey(apiKey)) {
+          throw error;
+        }
+      }
+    }
+  }
+
+  /**
+   * Called after a 429. Marks the key exhausted when it has no searches left
+   * (to avoid the hourly cap, the key is still usable), then moves to the
+   * next usable key.
+   *
+   * @param {string} apiKey - the key that just received 429
+   * @returns {Promise<boolean>} false when no usable key is left
+   */
+  async switchKey(apiKey) {
+    // a concurrent request has already shifted away from this key
+    if (apiKey !== this.apiKey) {
+      return true;
+    }
+
+    const quota = await this.fetchKeyQuota(apiKey).catch(() =>
+      null);
+
+    if (quota?.creditsRemaining === 0) {
+      this.exhaustedKeys.add(apiKey);
+    }
+
+    for (let step = 1; step <= this.apiKeys.length; step += 1) {
+      const index = (this.keyIndex + step) % this.apiKeys.length;
+
+      if (!this.exhaustedKeys.has(this.apiKeys[index])) {
+        this.keyIndex = index;
+
+        return this.apiKeys[index] !== apiKey;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * @param {string} path
+   * @param {Object} params
+   * @param {number|null} ttl - transient param for HttpClient.getJson
+   * @param {string} [apiKey]
+   * @returns {Promise<any>} the response body
+   */
+  async fetchJsonWithKey(path, params, ttl, apiKey) {
     const url = new URL(path, this.baseUrl);
 
     const { data } = await this.httpClient.getJson(
@@ -151,9 +240,9 @@ export class SerpApiConnector extends ProviderConnector {
       {},
       {
         ...params,
-        ...this.apiKey && {
+        ...apiKey && {
           api_key: {
-            value: this.apiKey,
+            value: apiKey,
             secret: true,
           },
         },
