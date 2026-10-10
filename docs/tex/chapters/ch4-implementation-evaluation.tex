@@ -18,7 +18,7 @@ This section describes the component structure, data handling and processing ste
 There are two major use cases that the system attempts to satisfy.
 
 \begin{description}
-    \item[Author identification.\snote{Do not forget the dot.}\enote{done everywhere}] Select the unique author, whose citations user wants to examine.
+    \item[Author identification.] Select the unique author, whose citations user wants to examine.
 
     The initial search returns profiles matching the name provided.
     As the results can contain multiple entries matching the name, each item includes affiliations where available from the data source, or the user can request a list of publications, to help identify a particular author.
@@ -34,7 +34,14 @@ There are two major use cases that the system attempts to satisfy.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/fig-arch-mvc-diagram}
+    \includegraphics[scale=.3]{include/fig-arch-mvc-diagram}
+
+    \snote{Λοιπόν με τα σχήματα μην χρησιμοποιείς}
+    \verb=width ,height ,keepaspectratio=
+    \snote{αλλά μόνο}
+    \verb=scale=
+    \snote{και μάλιστα αν χρησιμοποιείς το ίδιο πρόγραμμα και το ίδιο zoom, το scale θα είναι το ίδιο για κάθε σχήμα σε όλο το κείμενο. Αν το σχήμα δεν χωράει στην σελίδα, αλλάζεις το σχήμα (και όχι το scale). Όλα αυτά πρέπει να γίνουν για να υπάρχει ομοιομορφία. Π.χ., τα γράμματα στα σχήματα να έχουν το ίδιο μέγεθος. Τώρα το έχεις παρακάνει. Βασικά φταίει το mermaid. Δεν σε αφήνει να αλλάξεις πράγματα. Εγώ για παράδειγμα θα έβαζα μια φάσα με το frontend και από κάτω το backend (π.χ., κάνοντας wrap στο request/response. }
+
     \caption{MVC architecture overview}
     \label{fig:mvc-pattern}
 \end{figure}
@@ -43,7 +50,7 @@ The system design follows the Model-View-Controller (MVC) architectural pattern.
 Figure~\ref{fig:mvc-pattern} outlines the architectural structure.
 
 
-The user interface (UI) consists of a web page (frontend) \snote{you may need to show UI in the figure as well! Simiralr;y to the backend. Also figures is better to have a sorter height than widths to better fit in a page. This one looks like a column} \enote{done - added the frontend to the LR-oriented MVC diagram}.
+The user interface (UI) consists of a web page (frontend). 
 It connects to the backend service, which encapsulates the business logic, and exposes the functionality via an Application Programming Interface (API).
 
 Both system modules (frontend and backend) are written in \textsf{JavaScript}: the frontend is built with \textsf{React}, the backend targets \textsf{Node.js}.
@@ -52,7 +59,7 @@ The backend communicates with the external data sources to gather information, a
 
 In the backend, \emph{controllers} receive user requests and pass them to \emph{services}, which coordinate the collection and analysis of data.
 \emph{Connectors} handle the fetching and processing of data from external sources.
-\emph{Repositories} read from and write to the database tables.
+\emph{Repositories} read from and write to the database tables. \snote{Say more. What do they do? How do they interact? Might need to show a figure with these connections and processes. }
 
 The frontend serves as a presentation layer and interface controller, and follows a data flow similar to the backend.
 The building blocks of the UI are \emph{components}, \emph{containers}, and \emph{pages}.
@@ -60,12 +67,15 @@ Components display individual parts of the interface, containers combine them an
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/fig-frontend-component-diagram}
+    \includegraphics[scale=.2]{include/fig-frontend-component-diagram}
+
+\snote{This might be a nice scale. Still there is unnecessary space between the shapes. Mermaid is not very configurable}
+
     \caption{Frontend building blocks: pages, containers and components}
     \label{fig:frontend-components}
 \end{figure}
 
-Figure~\ref{fig:frontend-components} shows how the frontend is composed and how it connects to the backend.
+Figure~\ref{fig:frontend-components} shows how the frontend is composed and how it connects to the backend. \snote{This is right. Still, you need to discuss the figure.}
 
 The backend performs the retrieval as an asynchronous background job, to provide progress while collecting data, which can potentially take time, especially for authors with many publications and sources with low throughput.
 The frontend polls and displays the progress of these jobs in the UI.
@@ -74,12 +84,12 @@ To reduce the latency of repeated requests, the system retains the collected aut
 
 The following sections describe the provider choices, data model and processing steps in more detail.
 
-\enote{done (mermaid is my tool)} \snote{Fine, but also put the sources in the repo. } \enote{done (previously they were all in the system-design.md, extracted also into docs/fiagrams; build by `make diagrams`)}
+%\enote{done (mermaid is my tool)} \snote{Fine, but also put the sources in the repo. } \enote{done (previously they were all in the system-design.md, extracted also into docs/fiagrams; build by `make diagrams`)}
 
 \subsection{Providers and limitations} \label{sec:providers}
 
-The sources were analyzed in Section~\ref{sec:data-sources} by the supported data properties and the provided access methods. \snote{Yes, but you do not use them all, right? Say. what you use. As a general comment you are may say more. You are very ``lakonikos''}\enote{added a bit more text; added more explanation on what sources were considered}
-Three data providers were supported in the system implementation: \textsf{OpenAlex}\footnote{\url{https://openalex.org}}, \textsf{Semantic Scholar}\footnote{\url{https://www.semanticscholar.org}}, \textsf{Google Scholar}\footnote{\url{https://scholar.google.com}} (via \textsf{SerpApi}\footnote{\url{https://serpapi.com}}).
+Citation sources were analyzed in Section~\ref{sec:data-sources} by the supported data properties and the provided access methods (see also Figure~\ref{fig:providers-overview}). Among these, three data providers were supported in our system implementation: \textsf{OpenAlex}\footnote{\url{https://openalex.org}}, \textsf{Semantic Scholar}\footnote{\url{https://www.semanticscholar.org}}, \textsf{Google Scholar}\footnote{\url{https://scholar.google.com}} (via \textsf{SerpApi}\footnote{\url{https://serpapi.com}}).
+
 \textsf{OpenAlex} and \textsf{Semantic Scholar} are the most naturally fitting open sources.
 Their responses to requests for citations also include author lists, needed by the classification algorithm.
 \textsf{Google Scholar}, as the one with the widest coverage, was also considered, despite all the limitations around using it.
@@ -93,16 +103,14 @@ The remaining sources were not considered:
 \end{description}
 
 
-Figure~\ref{fig:providers-overview} shows the provider connectors.
+%Figure~\ref{fig:providers-overview} shows the provider connectors.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/fig-providers-diagram}
+    \includegraphics[scale=.2]{include/fig-providers-diagram}
     \caption{Providers and their respective connectors}
     \label{fig:providers-overview}
 \end{figure}
-
-\snote{You may also add a figure, with the providers and the connectors. }\enote{done}
 
 In the backend, each data source is reached through its own \emph{connector}, to isolate the differences in access and the structure of data it returns.
 Every connector implements the interface \textsf{ProviderConnector}, defining the operations:
@@ -114,7 +122,7 @@ Every connector implements the interface \textsf{ProviderConnector}, defining th
 \end{description}
 
 The remaining system builds on top of these operations, treating all sources in the same manner.
-As the connectors are interchangeable, a source can be added or replaced without changing the remaining processing pipeline.
+As the connectors are interchangeable, a source may be added or replaced without changing the remaining processing pipeline.
 At the same time forensic bug investigation for each source remains within its own connector, making it easy to locate problems and test behavior.
 
 Each provider imposes a concurrent request throttling.
@@ -124,13 +132,13 @@ None of the sources considered for this project shares author identifiers fully 
 The profiles are kept separate and shown side by side, as described in Section~\ref{sec:system-overview}.
 
 The largest source (\textsf{Google Scholar}), even when accessed via a paid proxy (\textsf{SerpApi}), is the most restrictive in practice.
-Collecting the citations of an author with $n$ \snote{better use small}\enote{noted} publications requires at least $n$ requests, growing the cost proportionally to the volume of data retrieved.
-The free sources (\textsf{OpenAlex} and \textsf{Semantic Scholar}) are used by default in the system.
+Collecting the citations of an author with $n$ publications requires at least $n$ requests, growing the cost proportionally to the volume of data retrieved.
+The free sources (i.e., \textsf{OpenAlex} and \textsf{Semantic Scholar}) are used by default in the system.
 
 \subsection{Data} \label{sec:data}
 
 The conceptual model described in Section~\ref{sec:data-model} maps to four database tables: \textsf{authors}, \textsf{publications}, \textsf{contributions}, and \textsf{citations}.
-An additional table, for cached responses, is described in Section~\ref{sec:storage-caching}.
+An additional table, for cached responses, is described in Section~\ref{sec:storage-caching}. \snote{You might need to present them in a figure. The ER maybe?}
 
 In the conceptual model, a publication is identified by its title, year and authors, and an author by name.
 The implementation uses the identifiers assigned by each provider: \textsf{pubId} and \textsf{authorId}.
@@ -158,32 +166,36 @@ When an identifier is missing, the respective connector uses the normalized name
 
 \textsf{SQLite} was used in the system for the simplicity of its setup.
 It does not require a separate server, instead it runs within the backend process and stores the database in a single file.
-Schema changes also live in the codebase: they are defined as migrations and applied at runtime, every time the database is opened by the backend process.
+Schema changes \snote{I am not sure what you mean. It seems nice and important. Give it more space} also live in the codebase: they are defined as migrations and applied at runtime, every time the database is opened by the backend process.
 
 The system largely depends on externally sourced data, subject to the provider limitations and the latency of network access.
 Publications, authors, contributions and citations are treated as immutable in nature.
-These details, when retrieved and linked together, form a graph of nodes and relationships, which we call the \textsf{citation graph}.
+These details, when retrieved and linked together, form a graph of nodes and relationships, coined as \textsf{citation graph}. \snote{Describe it, which are the nodes, which are the edges, which are the semantics. }
 
-The citation graph is stored in the tables described in Section~\ref{sec:data}.
+The citation graph is stored in the tables described in Section~\ref{sec:data}.  \snote{Name the tables and give a pointer to the respective figure.}
 After collecting the data, the backend saves the publications, authors and their relationships, from which the graph can be reconstructed without network requests to external providers.
-Classification labels depend on the choice of author (the same citation can be \textsf{direct} for one author and a \textsf{co-author self-citation} for another) and are calculated at runtime, when the graph is loaded.
+Classification labels depend on the choice of author (the same citation can be \textsf{direct} for one author and a \textsf{co-author self-citation} for another) and are calculated at runtime, when the graph is loaded. \snote{I am not sure that I get it. Why don't you give an example and a figure?}
 
 All provider connectors use the same HTTP client implementation, with caching handled internally.
 Before sending a request, the client looks for a stored response using the request URL as the key.
 The cache key enforces the order of the query parameters alphabetically, to provide a stable key, regardless of the parameter order in the original request URL.
-For instance, ``https://example.com?p1=v1\&p2=v2'' and ``https://example.com?p2=v2\&p1=v1'' produce the same key.
+For instance, \verb=https://example.com?p1=v1\&p2=v2= \snote{use verb, texttt or url do not use quotes.} and ``https://example.com?p2=v2\&p1=v1'' produce the same key.
 Each cached record includes the date it was received, used to calculate whether the record satisfies the time-to-live timeframe.
 
-Figure~\ref{fig:cache-flowchart-diagram} illustrates the data flow inside the cache mechanism.
+Figure~\ref{fig:cache-flowchart-diagram} illustrates the data flow inside the cache mechanism. \snote{You start with this. Give the pointer to the Figure and then discuss the figure. Not vice-versa. }
 
 \begin{figure}[tb]
     \centering
+    \snote{see the comments for the figures above.}
+
+
     \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/fig-cache-flowchart-diagram}
-    \caption{Cache request data flow}
+    \caption{Cache request data flow}  
+
     \label{fig:cache-flowchart-diagram}
 \end{figure}
 
-If the record is found, and it has not expired, the response contained within is returned; if no response is found, or if it has expired, the request is sent to the provider.
+If the record is found, and it has not expired, the response contained within is returned; \scor{if no response is found, or if it has expired}{otherwise}, the request is sent to the provider.
 Successful responses are stored as text under the same key and with the current date.
 
 Expired cache records are replaced when requested again, but there is no periodic deletion of old entries, and there is no limit on the cache size.
