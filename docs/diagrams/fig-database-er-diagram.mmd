@@ -1,0 +1,47 @@
+erDiagram
+  authors {
+    text provider PK
+    text author_id PK
+    text original_name
+    text normalised_name
+    text organisation
+  }
+  publications {
+    text provider PK
+    text pub_id PK
+    text title
+    text normalised_title
+    text external_id
+    integer year
+    integer citation_count
+  }
+  contributions {
+    text provider PK, FK
+    text pub_id PK, FK
+    text author_id PK, FK
+    integer position
+  }
+  citations {
+    text provider PK, FK
+    text source_pub_id PK, FK
+    text target_pub_id PK, FK
+  }
+  cache {
+    text key PK
+    text payload
+    text fetched_at
+  }
+  jobs {
+    text id PK
+    text provider
+    text author_id
+    text status
+    text progress
+    text error
+    text created_at
+    text updated_at
+  }
+  authors ||--o{ contributions : "contributes"
+  publications ||--|{ contributions : "has"
+  publications ||--o{ citations : "cites (source)"
+  publications ||--o{ citations : "is cited (target)"

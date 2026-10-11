@@ -12,6 +12,14 @@ This chapter introduces a data model representing publications and authors, and 
 \section{Data model} \label{sec:data-model}
 
 The goal of the model proposed in this section is to define the minimum structure required for identifying and classifying citations.
+Figure~\ref{fig:er-model} presents the data model used in this work; its entities and relationships are described below. \snote{First give the pointer and the discussion follows. You do it in the opposite manner. }\enote{done}
+
+\begin{figure}[tb]
+    \centering
+    \includegraphics[scale=.2]{include/fig-data-model-er-diagram}
+    \caption{Conceptual ER model for citation analysis}
+    \label{fig:er-model}
+\end{figure}
 
 We identify two entities in the data of this system:
 
@@ -36,15 +44,6 @@ Two relationships are identified between the entities:
     A publication may cite and be cited by multiple other publications (many-to-many).
 
 \end{description}
-
-Figure~\ref{fig:er-model} presents the data model used in this work and described above. \snote{First give the pointer and the discussion follows. You do it in the opposite manner. }
-
-\begin{figure}[tb]
-    \centering
-    \includegraphics[width=\linewidth,height=0.82\textheight,keepaspectratio]{include/fig-data-model-er-diagram}
-    \caption{Conceptual ER model for citation analysis}
-    \label{fig:er-model}
-\end{figure}
 
 In addition to the contribution relationship, the author list (as it appears in the publication) is also retained as a property of the publication.
 This reflects the way publications are usually identified, where author names form part of the citation string.

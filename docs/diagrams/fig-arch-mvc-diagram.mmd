@@ -1,25 +1,26 @@
-graph LR
+flowchart TB
   subgraph FE["Frontend"]
-    direction TB
+    direction LR
     PAGES["Pages"] --> CONT["Containers"] --> COMP["Components"]
   end
-  subgraph BE["Backend (modular monolith)"]
-    direction TB
-    API["API Endpoints"]
-    SVC["Services<br/>(Classification, Author, Publication)"]
-    PC["Provider connectors"]
-    API --> SVC
-    SVC --> PC
+  subgraph BE["Backend"]
+    direction LR
+    CTRL["Controllers"] --> SVC["Services"]
+    SVC --> REPO["Repositories"]
+    SVC --> CONN["Connectors<br/>(HTTP client)"]
+    REPO --> DB[("SQLite database")]
+    REPO -->|"cached responses"| CONN
   end
-  DB[("DB")]
-  Providers["Provider API (external)"]
+  subgraph EXT["External"]
+    direction LR
+    PROV["Provider API"]
+  end
 
-  CONT -->|"request / response"| API
-  SVC --> DB
-  PC --> Providers
+  FE <-->|"request / response"| BE
+  BE <-->|"request / response"| EXT
 
   classDef plain fill:#ffffff,stroke:#33365c,stroke-width:2px,color:#1f2430
-  class PAGES,CONT,COMP,API,SVC,PC plain
-  style Providers fill:#f9f,stroke:#333,stroke-width:4px
+  class PAGES,CONT,COMP,CTRL,SVC,CONN,REPO,PROV plain
   style FE fill:#fdf0fd,stroke:#d9b3e6,color:#1f2430
   style BE fill:#fdf0fd,stroke:#d9b3e6,color:#1f2430
+  style EXT fill:#ffffff,stroke:#d9b3e6,color:#1f2430

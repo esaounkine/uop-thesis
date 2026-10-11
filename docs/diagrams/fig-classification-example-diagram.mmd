@@ -1,0 +1,15 @@
+flowchart TB
+  subgraph CIT["Papers"]
+    direction LR
+    KGMP["<b>[KGMP2007]</b><br/>Panos Kalnis, Gabriel Ghinita,<br/>Kyriakos Mouratidis, Dimitris Papadias"]
+    GPK["<b>[GPK2007]</b><br/>Gabriel Ghinita, Panos Kalnis,<br/>Spiros Skiadopoulos"]
+    KGMP -->|"cites"| GPK
+  end
+
+  CIT -->|"selected: Panos Kalnis"| D1["<b>direct</b><br/>cites his own paper"]
+  CIT -->|"selected: Gabriel Ghinita"| D2["<b>direct</b><br/>cites his own paper"]
+  CIT -->|"selected: Spiros Skiadopoulos"| C1["<b>co-author</b><br/>not on the citing publication,<br/>but co-authors are"]
+
+  classDef plain fill:#ffffff,stroke:#33365c,stroke-width:2px,color:#1f2430
+  class KGMP,GPK,D1,D2,C1 plain
+  style CIT fill:#f4f5fa,stroke:#33365c,stroke-width:1px

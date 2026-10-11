@@ -34,13 +34,14 @@ There are two major use cases that the system attempts to satisfy.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[scale=.3]{include/fig-arch-mvc-diagram}
+    \includegraphics[scale=.2]{include/fig-arch-mvc-diagram}
 
     \snote{Λοιπόν με τα σχήματα μην χρησιμοποιείς}
     \verb=width ,height ,keepaspectratio=
     \snote{αλλά μόνο}
     \verb=scale=
     \snote{και μάλιστα αν χρησιμοποιείς το ίδιο πρόγραμμα και το ίδιο zoom, το scale θα είναι το ίδιο για κάθε σχήμα σε όλο το κείμενο. Αν το σχήμα δεν χωράει στην σελίδα, αλλάζεις το σχήμα (και όχι το scale). Όλα αυτά πρέπει να γίνουν για να υπάρχει ομοιομορφία. Π.χ., τα γράμματα στα σχήματα να έχουν το ίδιο μέγεθος. Τώρα το έχεις παρακάνει. Βασικά φταίει το mermaid. Δεν σε αφήνει να αλλάξεις πράγματα. Εγώ για παράδειγμα θα έβαζα μια φάσα με το frontend και από κάτω το backend (π.χ., κάνοντας wrap στο request/response. }
+    \enote{done}
 
     \caption{MVC architecture overview}
     \label{fig:mvc-pattern}
@@ -57,13 +58,55 @@ Both system modules (frontend and backend) are written in \textsf{JavaScript}: t
 The frontend does not implement any meaningful reusable business logic, instead it forwards the requests to the backend and displays the results.
 The backend communicates with the external data sources to gather information, and performs citation analysis.
 
-In the backend, \emph{controllers} receive user requests and pass them to \emph{services}, which coordinate the collection and analysis of data.
+\subsubsection{Backend} \label{sec:backend-layers}
+
+\emph{Services} is the only component containing the business logic to coordinate the collection and analysis of data.
+
+Services are classes corresponding to entity domains, exposing methods that provide the functionality expected of each entity.
+They never see the request or the response objects.
+Instead, they receive transformed and sanitized arguments, and return data structures corresponding to their own internal model.
+This separation keeps the business logic independent of the transport protocol: the same service can be invoked by a controller, injected into another service, or unit tested.
+There is one service for each subject: \textsf{AuthorService} for author profiles, \textsf{PublicationService} for papers and citations, \textsf{ClassificationService} for the classification algorithm, \textsf{CitationGraphService} for operations on the citation graph as a whole, \textsf{JobService} for the background jobs, and \textsf{MetricsService} for the count aggregation.
+
+Dependencies are injected into each service to provide the underlying functionality needed to produce the results.
+For instance, the \textsf{MetricsService} orchestrates the flow to produce the citation collection described in Section~\ref{sec:processing-pipeline}: it requests the papers of the selected author by calling the \textsf{AuthorService}, the citations of each paper through the \textsf{PublicationService}, and the classification of each citation through the \textsf{ClassificationService}, to finally hand the assembled graph to the \textsf{CitationGraphService} to be stored.
+
 \emph{Connectors} handle the fetching and processing of data from external sources.
-\emph{Repositories} read from and write to the database tables. \snote{Say more. What do they do? How do they interact? Might need to show a figure with these connections and processes. }
+
+Connectors are also classes, one per provider, implementing the communication with external data sources; no other component is allowed to contact a provider directly, instead all requests for external data go through the connectors.
+Every connector implements the same interface (\textsf{ProviderConnector}) with the operations described in Section~\ref{sec:providers}, so the rest of the system treats all sources in the same manner.
+
+A connector transforms the responses into the internal model, that is used by the rest of the system.
+All provider specifics are isolated inside the respective connector: the endpoint structure, the request and response models, pagination, authentication etc.
+For instance, the \textsf{OpenAlex} connector paginates with 200 records per page, and the \textsf{Google Scholar} connector is limited to 20 records per page; both return the same data structure, regardless of how they gather the results.
+
+\emph{Controllers} receive user requests and pass them to \emph{services}.
+
+Controllers are classes with one method for each API endpoint that the backend exposes.
+They contain minimal business logic, limited to the endpoint structure, as a function of the interface that the service provides.
+Their responsibility is to validate the incoming parameters, transform the requests into the internal model, call the respective service, transform the service result into a response.
+For instance, a search request without a query parameter is rejected with a status code \textsf{400}, not having reached a service.
+Controllers are separated by the use cases.
+There is \textsf{SearchController} for the author search, \textsf{AuthorController} for the author details, papers and stored metrics, \textsf{JobController} for submitting jobs and polling their status, and \textsf{StatusController} for the provider quotas and system resources.
+
+\emph{Repositories} read from and write to the database tables. \snote{Say more. What do they do? How do they interact? Might need to show a figure with these connections and processes. } \enote{done}
+
+Repositories, too, are classes with methods, implementing the functionality that depends on connection to the database; no other component is allowed to make database queries directly, instead all requests for data go through the methods exposed by the repositories.
+There is one repository for each table: \textsf{publications}, \textsf{authors}, \textsf{contributions}, \textsf{citations}, \textsf{cache} and \textsf{jobs}.
+
+Repositories implement only the SQL operations that the application needs, not every possible operation on every table.
+They expose arbitrary methods, for instance to save items or to find records by different criteria.
+
+Instead of writing the queries directly in SQL and sending them through the database driver, the repositories use an object-relational mapping (ORM) library (\textsf{Drizzle}\footnote{\url{https://orm.drizzle.team}}).
+The schema of tables and columns is declared in code, as described in Section~\ref{sec:storage-caching}, and the queries are expressed as code as well, to allow this layer of the system to be statically analyzed and unit tested, just like the rest of the project.
+
+As the repositories are isolated per entity, only the relevant repositories are injected into the respective services.
+For instance, the citation graph service (\textsf{CitationGraphService}) needs to read and update the tables \textsf{publications}, \textsf{authors}, \textsf{contributions} and \textsf{citations} to save a collected graph and load it back, so the four respective repositories (\textsf{PublicationRepository}, \textsf{AuthorRepository}, \textsf{ContributionRepository}, \textsf{CitationRepository}) must be provided in the constructor.
+
+\subsubsection{Frontend} \label{sec:frontend-layers}
 
 The frontend serves as a presentation layer and interface controller, and follows a data flow similar to the backend.
 The building blocks of the UI are \emph{components}, \emph{containers}, and \emph{pages}.
-Components display individual parts of the interface, containers combine them and manage data requests, pages represent navigation paths.
 
 \begin{figure}[tb]
     \centering
@@ -75,12 +118,22 @@ Components display individual parts of the interface, containers combine them an
     \label{fig:frontend-components}
 \end{figure}
 
-Figure~\ref{fig:frontend-components} shows how the frontend is composed and how it connects to the backend. \snote{This is right. Still, you need to discuss the figure.}
+Figure~\ref{fig:frontend-components} shows how the frontend is composed and how it connects to the backend. \snote{This is right. Still, you need to discuss the figure.} \enote{done}
+
+\emph{Components} are the reusable atomic widgets that define how a piece of data should look and behave.
+They are not responsible for retrieving the data, only for rendering and styling it.
+For example, a loading indicator or an error message are components, and can be used on different occasions by different containers.
+
+\emph{Containers} are meaningful groups of related components.
+They manage and request data, implement all the presentation logic around orchestration of the components.
+They are responsible for calling the API, showing the loading or error state, as well as wiring together the components and supplying the data to them.
+
+\emph{Pages} are the largest units of the frontend, each page usually corresponds to a unique path of the address in the browser.
+The application currently consists of two pages: author search (\texttt{/authors}) and author details (\texttt{/author/:provider/:authorId}).
+Each page is built with one or more containers.
 
 The backend performs the retrieval as an asynchronous background job, to provide progress while collecting data, which can potentially take time, especially for authors with many publications and sources with low throughput.
 The frontend polls and displays the progress of these jobs in the UI.
-
-To reduce the latency of repeated requests, the system retains the collected author/publication/contribution/citation data, and caches provider responses in an \textsf{SQLite} database.
 
 The following sections describe the provider choices, data model and processing steps in more detail.
 
@@ -137,8 +190,16 @@ The free sources (i.e., \textsf{OpenAlex} and \textsf{Semantic Scholar}) are use
 
 \subsection{Data} \label{sec:data}
 
-The conceptual model described in Section~\ref{sec:data-model} maps to four database tables: \textsf{authors}, \textsf{publications}, \textsf{contributions}, and \textsf{citations}.
-An additional table, for cached responses, is described in Section~\ref{sec:storage-caching}. \snote{You might need to present them in a figure. The ER maybe?}
+The conceptual model described in Section~\ref{sec:data-model} translates to four domain-specific tables: \textsf{authors}, \textsf{publications}, \textsf{contributions}, and \textsf{citations}.
+There is also a table to save the asynchronous jobs state (\textsf{jobs}), and a table for cached responses (\textsf{cache}), described in Section~\ref{sec:storage-caching}. \snote{You might need to present them in a figure. The ER maybe?} \enote{done}
+Figure~\ref{fig:database-er} shows the database tables and the relationships between them.
+
+\begin{figure}[tb]
+    \centering
+    \includegraphics[scale=.2]{include/fig-database-er-diagram}
+    \caption{Database tables}
+    \label{fig:database-er}
+\end{figure}
 
 In the conceptual model, a publication is identified by its title, year and authors, and an author by name.
 The implementation uses the identifiers assigned by each provider: \textsf{pubId} and \textsf{authorId}.
@@ -166,36 +227,74 @@ When an identifier is missing, the respective connector uses the normalized name
 
 \textsf{SQLite} was used in the system for the simplicity of its setup.
 It does not require a separate server, instead it runs within the backend process and stores the database in a single file.
-Schema changes \snote{I am not sure what you mean. It seems nice and important. Give it more space} also live in the codebase: they are defined as migrations and applied at runtime, every time the database is opened by the backend process.
+Schema changes \snote{I am not sure what you mean. It seems nice and important. Give it more space} \enote{done} also live in the codebase: they are defined as migrations and applied at runtime, every time the database is opened by the backend process.
+
+The schema is only defined in code, in a single file describing every table.
+When the schema changes, the ORM compares it with the previous version and generates code representing the migration.
+A migration is a file with SQL statements needed to change the current database schema to the new schema.
+Migrations are kept in the codebase and are checked into the version control system.
+Every time the backend starts up and opens the database, it applies the migrations that have not been applied yet.
+Using this approach, the database schema always starts from the initial empty state, it then grows, and eventually evolves into the final version of the schema needed by the application.
+By keeping the database schema in the repository, the domain model changes can be associated with the current application model, to keep the models synchronized.
 
 The system largely depends on externally sourced data, subject to the provider limitations and the latency of network access.
 Publications, authors, contributions and citations are treated as immutable in nature.
-These details, when retrieved and linked together, form a graph of nodes and relationships, coined as \textsf{citation graph}. \snote{Describe it, which are the nodes, which are the edges, which are the semantics. }
+These details, when retrieved and linked together, form a graph of nodes and relationships, coined as \textsf{citation graph}. \snote{Describe it, which are the nodes, which are the edges, which are the semantics. } \enote{done}
 
-The citation graph is stored in the tables described in Section~\ref{sec:data}.  \snote{Name the tables and give a pointer to the respective figure.}
+The citation graph is a two-dimensional representation of the conceptual domain model.
+In this graph, \emph{publications} and \emph{authors} are the nodes of this graph, \emph{contributions} and \emph{citations} are the two types of directed edges.
+
+The graph can be pivoted to center around any author, producing three levels of layering.
+
+\begin{description}
+    \item [Selected author] is connected to their own papers (as \emph{contributions}).
+    \item [Citing papers] are connected to the selected author papers (as \emph{citations}).
+    \item [Citation authors] are connected to each citing paper (as \emph{contributions}).
+\end{description}
+
+The citation graph is decomposed and stored as separate entities in the tables
+\textsf{publications}, \textsf{authors}, \textsf{contributions} and \textsf{citations} (Figure~\ref{fig:database-er}), as described in Section~\ref{sec:data}.  \snote{Name the tables and give a pointer to the respective figure.} \enote{done}
+
+The citation graph described in Section~\ref{sec:user-interface} represents the citations graph visually.
+
 After collecting the data, the backend saves the publications, authors and their relationships, from which the graph can be reconstructed without network requests to external providers.
-Classification labels depend on the choice of author (the same citation can be \textsf{direct} for one author and a \textsf{co-author self-citation} for another) and are calculated at runtime, when the graph is loaded. \snote{I am not sure that I get it. Why don't you give an example and a figure?}
+Classification labels depend on the choice of author (the same citation can be \textsf{direct} for one author and a \textsf{co-author self-citation} for another) and are calculated at runtime, when the graph is loaded. \snote{I am not sure that I get it. Why don't you give an example and a figure?} \enote{done}
 
-All provider connectors use the same HTTP client implementation, with caching handled internally.
-Before sending a request, the client looks for a stored response using the request URL as the key.
-The cache key enforces the order of the query parameters alphabetically, to provide a stable key, regardless of the parameter order in the original request URL.
-For instance, \verb=https://example.com?p1=v1\&p2=v2= \snote{use verb, texttt or url do not use quotes.} and ``https://example.com?p2=v2\&p1=v1'' produce the same key.
-Each cached record includes the date it was received, used to calculate whether the record satisfies the time-to-live timeframe.
+Figure~\ref{fig:classification-example} shows the classification of the same citation for different authors, involved in either or both of the papers.
 
-Figure~\ref{fig:cache-flowchart-diagram} illustrates the data flow inside the cache mechanism. \snote{You start with this. Give the pointer to the Figure and then discuss the figure. Not vice-versa. }
+As an example, let us consider the publications discussed in Chapter~\ref{c1:intro}.
+[KGMP2007]~\cite{Kalnis2007} by Kalnis, Ghinita, Mouratidis and Papadias cites [GPK2007]~\cite{Ghinita2007} by Ghinita, Kalnis and Skiadopoulos.
+The citation classification changes depending on who is the author under analysis.
+For \emph{Kalnis} or \emph{Ghinita}, as authors of both papers, the citation classification is \textsf{direct self-citation}.
+If the selected author is \emph{Skiadopoulos}, who only appears on the cited publication, the classification cannot be \textsf{direct self-citation}.
+As other authors of the cited paper also appear on the citing paper, the classification is then \textsf{co-author self-citation} for Skiadopoulos.
 
 \begin{figure}[tb]
     \centering
-    \snote{see the comments for the figures above.}
+    \includegraphics[scale=.2]{include/fig-classification-example-diagram}
+    \caption{Classification of the same citation for each selected author}
+    \label{fig:classification-example}
+\end{figure}
+
+Figure~\ref{fig:cache-flowchart-diagram} illustrates the data flow inside the cache mechanism. \snote{You start with this. Give the pointer to the Figure and then discuss the figure. Not vice-versa. }\enote{done}
+All provider connectors use the same HTTP client implementation, with caching handled internally.
+Before sending a request, the client looks for a stored response using the request URL as the key.
+The cache key enforces the order of the query parameters alphabetically, to provide a stable key, regardless of the parameter order in the original request URL.
+For instance, \texttt{https://example.com?p1=v1\&p2=v2} \snote{use verb, texttt or url do not use quotes.}\enote{done} and \texttt{https://example.com?p2=v2\&p1=v1} produce the same key.
+Each cached record includes the date it was received, used to calculate whether the record satisfies the time-to-live timeframe.
+
+\begin{figure}[tb]
+    \centering
+    \snote{see the comments for the figures above.} \enote{done}
 
 
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/fig-cache-flowchart-diagram}
+    \includegraphics[scale=.2]{include/fig-cache-flowchart-diagram}
     \caption{Cache request data flow}  
 
     \label{fig:cache-flowchart-diagram}
 \end{figure}
 
-If the record is found, and it has not expired, the response contained within is returned; \scor{if no response is found, or if it has expired}{otherwise}, the request is sent to the provider.
+If the record is found, and it has not expired, the response contained within is returned; otherwise, the request is sent to the provider.
 Successful responses are stored as text under the same key and with the current date.
 
 Expired cache records are replaced when requested again, but there is no periodic deletion of old entries, and there is no limit on the cache size.
@@ -238,7 +337,7 @@ Figure~\ref{fig:classification-flowchart-diagram} illustrates the data flow of c
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/fig-classification-flowchart-diagram}
+    \includegraphics[scale=.2]{include/fig-classification-flowchart-diagram}
     \caption{Citation graph construction data flow}
     \label{fig:classification-flowchart-diagram}
 \end{figure}
@@ -260,7 +359,7 @@ Figure~\ref{fig:ui-search-form} shows the initially blank search page, with a fo
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/ui/search-form-1}
+    \includegraphics[scale=.55]{include/ui/search-form-1}
     \caption{Author search form}
     \label{fig:ui-search-form}
 \end{figure}
@@ -274,7 +373,7 @@ Figure~\ref{fig:ui-search-results} shows the list of results returned for ``skia
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/ui/search-res-1}
+    \includegraphics[scale=.55]{include/ui/search-res-1}
     \caption{Authors returned by one of the providers}
     \label{fig:ui-search-results}
 \end{figure}
@@ -289,7 +388,7 @@ Figure~\ref{fig:ui-search-controls} shows the stored metrics, update date and re
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/ui/search-res-2}
+    \includegraphics[scale=.55]{include/ui/search-res-2}
     \caption{Stored citation metrics, update date and refresh button}
     \label{fig:ui-search-controls}
 \end{figure}
@@ -299,7 +398,7 @@ Figure~\ref{fig:ui-provider-tabs} highlights the selected provider.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/ui/search-res-4}
+    \includegraphics[scale=.55]{include/ui/search-res-4}
     \caption{Provider tabs in the search results}
     \label{fig:ui-provider-tabs}
 \end{figure}
@@ -313,7 +412,7 @@ The \emph{Show papers for all} switch applies to all the authors in the selected
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/ui/search-res-5}
+    \includegraphics[scale=.55]{include/ui/search-res-5}
     \caption{Showing papers for all authors}
     \label{fig:ui-show-papers}
 \end{figure}
@@ -323,7 +422,7 @@ This is helpful to avoid waiting for other authors on the list, and consuming th
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/ui/search-res-3}
+    \includegraphics[scale=.55]{include/ui/search-res-3}
     \caption{An author without an affiliation}
     \label{fig:ui-unknown-affiliation}
 \end{figure}
@@ -332,7 +431,7 @@ Figure~\ref{fig:ui-individual-papers} shows the papers of an individual author a
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/ui/search-res-5.3}
+    \includegraphics[scale=.55]{include/ui/search-res-5.3}
     \caption{Showing the papers of an author without an affiliation}
     \label{fig:ui-individual-papers}
 \end{figure}
@@ -343,14 +442,14 @@ Figures~\ref{fig:ui-paper-order} and~\ref{fig:ui-most-cited} show these two orde
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/ui/search-res-5.1}
+    \includegraphics[scale=.55]{include/ui/search-res-5.1}
     \caption{Papers ordered most recent first}
     \label{fig:ui-paper-order}
 \end{figure}
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/ui/search-res-5.2}
+    \includegraphics[scale=.55]{include/ui/search-res-5.2}
     \caption{Papers ordered most cited first}
     \label{fig:ui-most-cited}
 \end{figure}
@@ -361,7 +460,7 @@ Having identified the author, the user can request the citation metrics by click
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/ui/search-res-6}
+    \includegraphics[scale=.55]{include/ui/search-res-6}
     \caption{Requesting citation metrics for an author}
     \label{fig:ui-get-metrics}
 \end{figure}
@@ -370,7 +469,7 @@ The progress appears under the selected author name, with the number of requests
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/ui/search-form-2}
+    \includegraphics[scale=.55]{include/ui/search-form-2}
     \caption{Progress while collecting the selected author's citations}
     \label{fig:ui-metrics-progress}
 \end{figure}
@@ -380,7 +479,7 @@ Figure~\ref{fig:ui-metrics} shows the completed citation breakdown.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/ui/search-res-7}
+    \includegraphics[scale=.55]{include/ui/search-res-7}
     \caption{The citation breakdown in the search results}
     \label{fig:ui-metrics}
 \end{figure}
@@ -392,7 +491,7 @@ Figure~\ref{fig:ui-graph} shows the expanded graph.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/ui/author-details-2}
+    \includegraphics[scale=.55]{include/ui/author-details-2}
     \caption{The expanded citation graph}
     \label{fig:ui-graph}
 \end{figure}
@@ -410,7 +509,7 @@ Figure~\ref{fig:ui-graph-filter} shows a paper title inside a filtered graph.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/ui/author-details-5}
+    \includegraphics[scale=.55]{include/ui/author-details-5}
     \caption{Publication details with external citations hidden}
     \label{fig:ui-graph-filter}
 \end{figure}
@@ -420,7 +519,7 @@ Figure~\ref{fig:ui-graph-help} shows the first page of this guide.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/ui/author-details-6}
+    \includegraphics[scale=.55]{include/ui/author-details-6}
     \caption{Built-in guide to reading the graph}
     \label{fig:ui-graph-help}
 \end{figure}
@@ -431,7 +530,7 @@ Figure~\ref{fig:ui-raw-data} shows the expanded panel.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/ui/author-details-7}
+    \includegraphics[scale=.55]{include/ui/author-details-7}
     \caption{The result exposed as JSON}
     \label{fig:ui-raw-data}
 \end{figure}
@@ -449,7 +548,7 @@ The remaining space on the page is occupied by the controls identical to the str
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/ui/author-details-1}
+    \includegraphics[scale=.55]{include/ui/author-details-1}
     \caption{A separate page for the selected author}
     \label{fig:ui-author}
 \end{figure}
@@ -468,7 +567,7 @@ These details are useful when investigating service disruptions.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/ui/status-1}
+    \includegraphics[scale=.55]{include/ui/status-1}
     \caption{Provider and system status}
     \label{fig:ui-status}
 \end{figure}
@@ -904,7 +1003,7 @@ The three subtotals produce the expected total ($115 + 243 + 3226 = 3584$), matc
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{include/fig-sample-counts}
+    \includegraphics[scale=.55]{include/fig-sample-counts}
     \caption{Sample counts calculated by the system}
     \label{fig:sample-counts}
 \end{figure}
@@ -922,7 +1021,7 @@ Table~\ref{tab:provider-distribution} illustrates the results.
 
 \begin{table}[tb]
     \centering
-    \begin{minipage}[c]{0.52\linewidth}
+    \begin{minipage}[c]{0.6\linewidth}
         \centering
         \small
         \begin{tabular}{|l|r|}
@@ -936,11 +1035,10 @@ Table~\ref{tab:provider-distribution} illustrates the results.
             exclusive to \textsf{Google Scholar} & 32 \\
             \hline
         \end{tabular}
-    \end{minipage}\hfill
-    \begin{minipage}[c]{0.46\linewidth}
-        \centering
-        \includegraphics[width=\linewidth, trim=320 0 230 0, clip]{include/fig-provider-distribution-diagram}
     \end{minipage}
+
+    \medskip
+    \includegraphics[scale=.2]{include/fig-provider-distribution-diagram}
     \caption{Distribution of author publications by source}
     \label{tab:provider-distribution}
 \end{table}
