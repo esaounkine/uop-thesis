@@ -43,7 +43,7 @@ distclean:
 
 diagrams:
 	cd docs/diagrams && for f in *.mmd; do \
-		npx -y @mermaid-js/mermaid-cli -i "$$f" -o "../tex/include/$${f%.mmd}.png" -b white -s 2; \
+		npx -y @mermaid-js/mermaid-cli -i "$$f" -o "../tex/include/$${f%.mmd}.png" -c mermaid.config.json -b white -s 2; \
 	done
 
 diff:

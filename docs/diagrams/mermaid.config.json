@@ -1,0 +1,5 @@
+{
+  "flowchart": { "useMaxWidth": true },
+  "er": { "useMaxWidth": true },
+  "sequence": { "useMaxWidth": true }
+}
