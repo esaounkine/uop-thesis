@@ -288,7 +288,7 @@ Each cached record includes the date it was received, used to calculate whether 
     \snote{see the comments for the figures above.} \enote{done}
 
 
-    \includegraphics[scale=.2]{include/fig-cache-flowchart-diagram}
+    \includegraphics[scale=.3]{include/fig-cache-flowchart-diagram}
     \caption{Cache request data flow}  
 
     \label{fig:cache-flowchart-diagram}
@@ -313,6 +313,7 @@ The backend immediately responds with the job object, including the identifier.
 With the identifier at hand, the client starts to poll the job status, until it reaches one of the final states: \textsf{done}, \textsf{error}, or \textsf{interrupted}.
 
 Meanwhile, in the background, the backend orchestrates the flow to build the citation graph.
+Figure~\ref{fig:classification-flowchart-diagram} illustrates the data flow of constructing the full graph from an author identifier.
 The successful path is as follows:
 
 \begin{itemize}
@@ -333,11 +334,9 @@ The result mentions how many publication responses were successful and how many 
 
 Once the job has been updated with the final result, the next time the client requests the job, it will receive the result and will be able to fetch it and render in the UI.
 
-Figure~\ref{fig:classification-flowchart-diagram} illustrates the data flow of constructing the full graph from an author identifier.
-
 \begin{figure}[tb]
     \centering
-    \includegraphics[scale=.2]{include/fig-classification-flowchart-diagram}
+    \includegraphics[scale=.3]{include/fig-classification-flowchart-diagram}
     \caption{Citation graph construction data flow}
     \label{fig:classification-flowchart-diagram}
 \end{figure}
@@ -350,30 +349,27 @@ The application consists of a few individual components described below: \textsf
 
 \subsubsection{Search form} \label{sec:ui-search-form}
 
-The page initially loads with an empty search form, where the user can enter a name to start the flow of selecting an author.
+Figure~\ref{fig:ui-search-form} shows the initially empty search page, where the user enters a name to start the flow of selecting an author.
 Currently, there is no way to disable or enable some of the providers, this setting is controlled by the backend.
 
 The page supports deep-linking to the search form with the name prefilled, when the URL specifies the parameter \emph{q=query}, for instance \texttt{http://localhost:3000/authors?q=skiadopoulos}.
 
-Figure~\ref{fig:ui-search-form} shows the initially blank search page, with a form to enter a name to search for.
-
 \begin{figure}[tb]
     \centering
-    \includegraphics[scale=.55]{include/ui/search-form-1}
+    \includegraphics[scale=.4]{include/ui/search-form-1}
     \caption{Author search form}
     \label{fig:ui-search-form}
 \end{figure}
 
 \subsubsection{Search results} \label{sec:ui-results}
 
-This page is shown to the user when the search form has been submitted, and the response has been returned.
+Figure~\ref{fig:ui-search-results} shows the search results page, displayed after the search form has been submitted, and the response has been returned.
 
-Searching by name can return multiple results, matching the name, for each of the supported providers.
-Figure~\ref{fig:ui-search-results} shows the list of results returned for ``skiadopoulos''.
+Searching by name can return multiple results, matching the name, for each of the supported providers; the figure shows the list of results returned for ``skiadopoulos''.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[scale=.55]{include/ui/search-res-1}
+    \includegraphics[scale=.4]{include/ui/search-res-1}
     \caption{Authors returned by one of the providers}
     \label{fig:ui-search-results}
 \end{figure}
@@ -381,117 +377,110 @@ Figure~\ref{fig:ui-search-results} shows the list of results returned for ``skia
 Each author name on the result list is accompanied by an affiliation, when available, and the identifier assigned by the selected provider.
 The name is a link to the author detail page, described in Section~\ref{sec:ui-details}.
 
+Figure~\ref{fig:ui-search-controls} shows the stored metrics, the update date and the refresh button of a profile.
 The profiles, where results have not been collected previously, include a \emph{Get metrics} button, to request the citation counts.
 For profiles, where citation metrics have previously been requested, and the citation graphs are found in the database, the UI shows the metrics and the date of the last update.
 For these profiles there is a \emph{Refresh} button to request the data, ignoring the stored graph and cached responses.
-Figure~\ref{fig:ui-search-controls} shows the stored metrics, update date and refresh button.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[scale=.55]{include/ui/search-res-2}
+    \includegraphics[scale=.4]{include/ui/search-res-2}
     \caption{Stored citation metrics, update date and refresh button}
     \label{fig:ui-search-controls}
 \end{figure}
 
-The provider tabs keep results isolated per source, following the decision described in Section~\ref{sec:providers}.
 Figure~\ref{fig:ui-provider-tabs} highlights the selected provider.
+The provider tabs keep results isolated per source, following the decision described in Section~\ref{sec:providers}.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[scale=.55]{include/ui/search-res-4}
+    \includegraphics[scale=.4]{include/ui/search-res-4}
     \caption{Provider tabs in the search results}
     \label{fig:ui-provider-tabs}
 \end{figure}
 
 If search fails for a provider, its tab will display an error, not affecting the results of the other providers.
 
+Figure~\ref{fig:ui-show-papers} shows the \emph{Show papers for all} switch, which applies to all the authors in the selected tab.
 To help deterministically select the correct author, among ones with similar names and affiliations, the UI provides an option to display their publications.
 A familiar title could be easier to recognize, especially if the author has changed affiliation, or shows no affiliation in the UI.
 
-The \emph{Show papers for all} switch applies to all the authors in the selected tab, as shown in Figure~\ref{fig:ui-show-papers}.
-
 \begin{figure}[tb]
     \centering
-    \includegraphics[scale=.55]{include/ui/search-res-5}
+    \includegraphics[scale=.4]{include/ui/search-res-5}
     \caption{Showing papers for all authors}
     \label{fig:ui-show-papers}
 \end{figure}
 
-Only the profiles without an affiliation (shown as \emph{Unknown affiliation} in the UI) include a switch to show the papers of this author (Figure~\ref{fig:ui-unknown-affiliation}).
+Figure~\ref{fig:ui-unknown-affiliation} shows a profile without an affiliation, displayed as \emph{Unknown affiliation}: only such profiles include a switch to show the papers of the individual author.
 This is helpful to avoid waiting for other authors on the list, and consuming the provider quotas.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[scale=.55]{include/ui/search-res-3}
+    \includegraphics[scale=.4]{include/ui/search-res-3}
     \caption{An author without an affiliation}
     \label{fig:ui-unknown-affiliation}
 \end{figure}
 
-Figure~\ref{fig:ui-individual-papers} shows the papers of an individual author alone.
+Figure~\ref{fig:ui-individual-papers} shows how the toggle to show the papers of an individual author alone works.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[scale=.55]{include/ui/search-res-5.3}
+    \includegraphics[scale=.4]{include/ui/search-res-5.3}
     \caption{Showing the papers of an author without an affiliation}
     \label{fig:ui-individual-papers}
 \end{figure}
 
+Figure~\ref{fig:ui-paper-order} shows the two ways of ordering the papers of the same author.
 The list initially shows five papers, ordered by the publication date (\emph{most recent} first), with an option to order by citation count (\emph{most cited} first).
-The \emph{Show more} button reveals the rest of the list.
-Figures~\ref{fig:ui-paper-order} and~\ref{fig:ui-most-cited} show these two orderings for the same author.
+The \emph{Show more} button allows to load the rest of the list, beyond the initially shown five papers.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[scale=.55]{include/ui/search-res-5.1}
-    \caption{Papers ordered most recent first}
+    \includegraphics[scale=.3]{include/ui/search-res-5.1}
+    \includegraphics[scale=.3]{include/ui/search-res-5.2}
+    \caption{Papers ordered most recent or most cited first}
     \label{fig:ui-paper-order}
-\end{figure}
-
-\begin{figure}[tb]
-    \centering
-    \includegraphics[scale=.55]{include/ui/search-res-5.2}
-    \caption{Papers ordered most cited first}
-    \label{fig:ui-most-cited}
 \end{figure}
 
 Users must explicitly request publication lists to be shown, to avoid unnecessary provider requests when the author is already recognizable.
 
-Having identified the author, the user can request the citation metrics by clicking the button \emph{Get metrics}, as shown in Figure~\ref{fig:ui-get-metrics}, to start the job described in Section~\ref{sec:processing-pipeline}.
+Figure~\ref{fig:ui-get-metrics} shows the button \emph{Get metrics} that is available for every author, the user can click to request the citation metrics, starting the job as described in Section~\ref{sec:processing-pipeline}.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[scale=.55]{include/ui/search-res-6}
+    \includegraphics[scale=.4]{include/ui/search-res-6}
     \caption{Requesting citation metrics for an author}
     \label{fig:ui-get-metrics}
 \end{figure}
 
-The progress appears under the selected author name, with the number of requests \textsf{completed}, \textsf{queued} and \textsf{failed}, updated while the job is running, as shown in Figure~\ref{fig:ui-metrics-progress}.
+Figure~\ref{fig:ui-metrics-progress} shows the progress under the selected author name, with the number of requests \textsf{completed}, \textsf{queued} and \textsf{failed}, updated while the job is running.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[scale=.55]{include/ui/search-form-2}
+    \includegraphics[scale=.4]{include/ui/search-form-2}
     \caption{Progress while collecting the selected author's citations}
     \label{fig:ui-metrics-progress}
 \end{figure}
 
-The completed result returns the breakdown of the number of citations, with counts for: \textsf{total}, \textsf{external}, and \textsf{direct} and \textsf{co-author} self-citations.
 Figure~\ref{fig:ui-metrics} shows the completed citation breakdown.
+The completed result returns the breakdown of the number of citations, with counts for: \textsf{total}, \textsf{external}, and \textsf{direct} and \textsf{co-author} self-citations.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[scale=.55]{include/ui/search-res-7}
+    \includegraphics[scale=.4]{include/ui/search-res-7}
     \caption{The citation breakdown in the search results}
     \label{fig:ui-metrics}
 \end{figure}
 
 Counts summarize the result, but to provide more detailed information and a graph visualization, there are two initially collapsed options at the bottom of an author section.
 
-Opening the \emph{Citation graph} shows the graph chart, representing the selected author, their own papers and the citing papers.
-Figure~\ref{fig:ui-graph} shows the expanded graph.
+Figure~\ref{fig:ui-graph} shows the graph chart, opened by clicking the \emph{Citation graph} link.
+It represents the selected author, their own papers and the citing papers.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[scale=.55]{include/ui/author-details-2}
+    \includegraphics[scale=.4]{include/ui/author-details-2}
     \caption{The expanded citation graph}
     \label{fig:ui-graph}
 \end{figure}
@@ -500,74 +489,46 @@ The connecting lines (graph edges) represent the relations between the selected 
 
 The graph supports zooming and panning, and hovering over a node reveals its details.
 
-At the bottom of the chart there is a legend explaining the shapes and colors of the graph.
+Figure~\ref{fig:ui-graph-filter} shows the graph filtered by excluding one of the node types.
+There is a legend at the bottom of the chart explaining the shapes and colors of the graph, and acting as a filter, to hide or show the respective nodes by clicking on each category.
 The citing papers are colored by the classification (\textsf{direct}, \textsf{co-author}, \textsf{external}).
-The legend acts as a filter: clicking on a category hides or shows its nodes.
-A large graph is difficult to inspect with every citation visible.
-For example, hiding the external citations leaves the self-citations available for inspection.
-Figure~\ref{fig:ui-graph-filter} shows a paper title inside a filtered graph.
+A large graph is difficult to inspect with every citation visible; in the figure, the external citations are hidden, which leaves only the self-citations rendered in the graph.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[scale=.55]{include/ui/author-details-5}
+    \includegraphics[scale=.4]{include/ui/author-details-5}
     \caption{Publication details with external citations hidden}
     \label{fig:ui-graph-filter}
 \end{figure}
 
-The question-mark button in the top left corner of the chart opens a hint dialog, explaining the symbols and controls.
-Figure~\ref{fig:ui-graph-help} shows the first page of this guide.
-
-\begin{figure}[tb]
-    \centering
-    \includegraphics[scale=.55]{include/ui/author-details-6}
-    \caption{Built-in guide to reading the graph}
-    \label{fig:ui-graph-help}
-\end{figure}
-
-
-Opening the \emph{Raw data} shows the JSON raw data, used by the system to produce the metrics and render the chart.
-Figure~\ref{fig:ui-raw-data} shows the expanded panel.
-
-\begin{figure}[tb]
-    \centering
-    \includegraphics[scale=.55]{include/ui/author-details-7}
-    \caption{The result exposed as JSON}
-    \label{fig:ui-raw-data}
-\end{figure}
-
-It contains the entire dataset for an author, including the aggregated counts, the author own papers and the respective citations.
-Any citation classification can be checked by using these data.
-
 \subsubsection{Author details} \label{sec:ui-details}
 
-Clicking on an author name opens a separate page; as any other link, it can be opened in a new browser tab, allowing multiple author results to be open side by side.
-Figure~\ref{fig:ui-author} shows the page for the selected author.
-
-The author name, the provider and the affiliation are rendered in the header of the page.
-The remaining space on the page is occupied by the controls identical to the structure of the individual author details shown in the search results, as described in Section~\ref{sec:ui-results}.
-
 \begin{figure}[tb]
     \centering
-    \includegraphics[scale=.55]{include/ui/author-details-1}
+    \includegraphics[scale=.4]{include/ui/author-details-1}
     \caption{A separate page for the selected author}
     \label{fig:ui-author}
 \end{figure}
 
+Figure~\ref{fig:ui-author} shows the page for the selected author, that can be opened by clicking on an author name.
+As any other link, it can be opened in a new browser tab, allowing multiple author results to be open side by side.
+
+The author name, the provider and the affiliation are rendered in the header of the page.
+The remaining space on the page is occupied by the controls identical to the structure of the individual author details shown in the search results, as described in Section~\ref{sec:ui-results}.
+
 \subsubsection{Status} \label{sec:ui-status}
 
-The status table is typically collapsed at the bottom of the page, behind the \emph{Show status} button.
-Figure~\ref{fig:ui-status} shows the provider and system details in this panel.
-
-Clicking the button opens the panel, showing the request rate limit (requests per second), quotas, and the number of stored records for each provider, as well as jobs.
-API keys are shown, but masked, only to identify that an API key is used.
-This is helpful for providers that allow access with or without an API key, for instance \textsf{Semantic Scholar}.
+Figure~\ref{fig:ui-status} shows the provider and system details panel.
+Normally, it stays collapsed at the bottom of the page.
+Clicking the \emph{Show status} button opens the panel, showing the request rate limit (requests per second), quotas, and the number of stored records for each provider, as well as jobs.
+API keys are shown masked, only to identify that an API key is used, which can be helpful for providers that allow access with or without an API key, for instance \textsf{Semantic Scholar}.
 
 The application version, together with the system resources (including the available memory and disk space) appear below the table.
 These details are useful when investigating service disruptions.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[scale=.55]{include/ui/status-1}
+    \includegraphics[scale=.4]{include/ui/status-1}
     \caption{Provider and system status}
     \label{fig:ui-status}
 \end{figure}
@@ -999,11 +960,12 @@ SELECT
     \end{tabular}
 \end{center}
 
-The three subtotals produce the expected total ($115 + 243 + 3226 = 3584$), matching the counts calculated by the system for the same author and provider, as shown in Figure~\ref{fig:sample-counts}.
+Figure~\ref{fig:sample-counts} shows the counts calculated by the system for the same author and provider.
+The three subtotals produce the expected total ($115 + 243 + 3226 = 3584$), matching the system counts.
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[scale=.55]{include/fig-sample-counts}
+    \includegraphics[scale=.4]{include/fig-sample-counts}
     \caption{Sample counts calculated by the system}
     \label{fig:sample-counts}
 \end{figure}
@@ -1016,8 +978,8 @@ All data were updated on the same date, 10 October 2026.
 
 None of the provider data or the produced counts match precisely.
 
+Table~\ref{tab:provider-distribution} illustrates the distribution of the publications of the selected author across the providers.
 As each provider exposes their own publication identifier, and in an attempt to compare the papers returned by each source, we compared publications by normalized title, and discovered that there are 236 distinct titles for the same author in total, where only 71 match across all providers.
-Table~\ref{tab:provider-distribution} illustrates the results.
 
 \begin{table}[tb]
     \centering

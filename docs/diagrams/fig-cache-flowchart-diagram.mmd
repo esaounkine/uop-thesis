@@ -1,10 +1,11 @@
-graph TB
-  lookup["Look up results in Cache"] --> hit{"Cached results exist and are within TTL?"}
-  hit -->|"No"| send["Send request"]
-  send --> recv["Receive response"]
-  recv --> ok{"Is response status code < 400"}
-  ok -->|"Yes"| store["Store results in Cache"]
-  store --> ret["Return response"]
+%%{init: {"flowchart": {"rankSpacing": 20, "padding": 10}} }%%
+graph LR
+  lookup["Look up<br/>results in Cache"] --> hit{"Cached results<br/>exist and are<br/>within TTL?"}
+  hit -->|"No"| send["Send<br/>request"]
+  send --> recv["Receive<br/> response"]
+  recv --> ok{"Is response<br/> status code <br/>< 400"}
+  ok -->|"Yes"| store["Store results<br/> in Cache"]
+  store --> ret["Return<br/>response"]
   ok -->|"No"| ret
   hit -->|"Yes"| ret
 
