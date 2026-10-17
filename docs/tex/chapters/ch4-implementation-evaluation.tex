@@ -36,13 +36,6 @@ There are two major use cases that the system attempts to satisfy.
     \centering
     \includegraphics[scale=.2]{include/fig-arch-mvc-diagram}
 
-    \snote{Λοιπόν με τα σχήματα μην χρησιμοποιείς}
-    \verb=width ,height ,keepaspectratio=
-    \snote{αλλά μόνο}
-    \verb=scale=
-    \snote{και μάλιστα αν χρησιμοποιείς το ίδιο πρόγραμμα και το ίδιο zoom, το scale θα είναι το ίδιο για κάθε σχήμα σε όλο το κείμενο. Αν το σχήμα δεν χωράει στην σελίδα, αλλάζεις το σχήμα (και όχι το scale). Όλα αυτά πρέπει να γίνουν για να υπάρχει ομοιομορφία. Π.χ., τα γράμματα στα σχήματα να έχουν το ίδιο μέγεθος. Τώρα το έχεις παρακάνει. Βασικά φταίει το mermaid. Δεν σε αφήνει να αλλάξεις πράγματα. Εγώ για παράδειγμα θα έβαζα μια φάσα με το frontend και από κάτω το backend (π.χ., κάνοντας wrap στο request/response. }
-    \enote{done}
-
     \caption{MVC architecture overview}
     \label{fig:mvc-pattern}
 \end{figure}
@@ -60,18 +53,36 @@ The backend communicates with the external data sources to gather information, a
 
 \subsubsection{Backend} \label{sec:backend-layers}
 
-\emph{Services} is the only component containing the business logic to coordinate the collection and analysis of data.
+\snote{The backend consists of services, ... described as follows.}
+
+\snote{See also what I have edited.}
+
+\paragraph{Services} is the only component containing the business logic to coordinate the collection and analysis of data.
 
 Services are classes corresponding to entity domains, exposing methods that provide the functionality expected of each entity.
 They never see the request or the response objects.
 Instead, they receive transformed and sanitized arguments, and return data structures corresponding to their own internal model.
 This separation keeps the business logic independent of the transport protocol: the same service can be invoked by a controller, injected into another service, or unit tested.
-There is one service for each subject: \textsf{AuthorService} for author profiles, \textsf{PublicationService} for papers and citations, \textsf{ClassificationService} for the classification algorithm, \textsf{CitationGraphService} for operations on the citation graph as a whole, \textsf{JobService} for the background jobs, and \textsf{MetricsService} for the count aggregation.
+There is one service for each subject:
+\begin{enumerate}
+\item
+\textsf{AuthorService} for author profiles, 
+\item
+\textsf{PublicationService} for papers and citations, 
+\item
+\textsf{ClassificationService} for the classification algorithm, 
+\item
+\textsf{CitationGraphService} for operations on the citation graph as a whole, 
+\item
+\textsf{JobService} for the background jobs, and 
+\item
+\textsf{MetricsService} for the count aggregation.
+\end{enumerate}
 
 Dependencies are injected into each service to provide the underlying functionality needed to produce the results.
 For instance, the \textsf{MetricsService} orchestrates the flow to produce the citation collection described in Section~\ref{sec:processing-pipeline}: it requests the papers of the selected author by calling the \textsf{AuthorService}, the citations of each paper through the \textsf{PublicationService}, and the classification of each citation through the \textsf{ClassificationService}, to finally hand the assembled graph to the \textsf{CitationGraphService} to be stored.
 
-\emph{Connectors} handle the fetching and processing of data from external sources.
+\paragraph{Connectors} handle the fetching and processing of data from external sources.
 
 Connectors are also classes, one per provider, implementing the communication with external data sources; no other component is allowed to contact a provider directly, instead all requests for external data go through the connectors.
 Every connector implements the same interface (\textsf{ProviderConnector}) with the operations described in Section~\ref{sec:providers}, so the rest of the system treats all sources in the same manner.
@@ -80,7 +91,7 @@ A connector transforms the responses into the internal model, that is used by th
 All provider specifics are isolated inside the respective connector: the endpoint structure, the request and response models, pagination, authentication etc.
 For instance, the \textsf{OpenAlex} connector paginates with 200 records per page, and the \textsf{Google Scholar} connector is limited to 20 records per page; both return the same data structure, regardless of how they gather the results.
 
-\emph{Controllers} receive user requests and pass them to \emph{services}.
+\paragraph{Controllers} receive user requests and pass them to services.
 
 Controllers are classes with one method for each API endpoint that the backend exposes.
 They contain minimal business logic, limited to the endpoint structure, as a function of the interface that the service provides.
@@ -89,7 +100,7 @@ For instance, a search request without a query parameter is rejected with a stat
 Controllers are separated by the use cases.
 There is \textsf{SearchController} for the author search, \textsf{AuthorController} for the author details, papers and stored metrics, \textsf{JobController} for submitting jobs and polling their status, and \textsf{StatusController} for the provider quotas and system resources.
 
-\emph{Repositories} read from and write to the database tables. \snote{Say more. What do they do? How do they interact? Might need to show a figure with these connections and processes. } \enote{done}
+\paragraph{Repositories} read from and write to the database tables.
 
 Repositories, too, are classes with methods, implementing the functionality that depends on connection to the database; no other component is allowed to make database queries directly, instead all requests for data go through the methods exposed by the repositories.
 There is one repository for each table: \textsf{publications}, \textsf{authors}, \textsf{contributions}, \textsf{citations}, \textsf{cache} and \textsf{jobs}.
