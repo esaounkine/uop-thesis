@@ -232,7 +232,7 @@ A \textsf{citation} record connects the \textsf{citing publication} (source) to 
 
 Normalized author names and paper titles are stored in the respective entity tables, alongside the original names and titles.
 The normalization consists of simple string manipulations, such as conversion to lower case, removal of diacritics, and replacement of repeated whitespace.
-For example, ``Skiadópoulos'' and ``skiadopoulos'' produce the same normalized value.
+For example, \emph{Skiadópoulos} and \emph{skiadopoulos} produce the same normalized value.
 
 \textsf{OpenAlex} and \textsf{Semantic Scholar} typically return authors and publications with their own internal identifiers.
 Their connectors filter the list of contributions to remove ones without an author identifier.
@@ -276,19 +276,16 @@ The citation graph is decomposed and stored as separate entities in the tables
 The citation graph described in Section~\ref{sec:user-interface} represents the citations graph visually.
 
 After collecting the data, the backend saves the publications, authors and their relationships, from which the graph can be reconstructed without network requests to external providers.
-Classification labels depend on the choice of author (the same citation can be \textsf{direct} for one author and a \textsf{co-author self-citation} for another) and are calculated at runtime, when the graph is loaded. \snote{I am not sure that I get it. Why don't you give an example and a figure?} \enote{done}
-
+Classification labels depend on the choice of author (the same citation can be \textsf{direct} for one author and a \textsf{co-author self-citation} for another) and are calculated at runtime, when the graph is loaded. 
 Figure~\ref{fig:classification-example} shows the classification of the same citation for different authors, involved in either or both of the papers.
 
 As an example, let us consider the publications discussed in Chapter~\ref{c1:intro}.
-
-
 \scor{[KGMP2007]~\cite{Kalnis2007} by Kalnis, Ghinita, Mouratidis and Papadias cites [GPK2007]~\cite{Ghinita2007} by Ghinita, Kalnis and Skiadopoulos.}{Publication~\cite{Kalnis2007} by Kalnis, Ghinita, Mouratidis and Papadias cites  publication~\cite{Ghinita2007} by Ghinita, Kalnis and Skiadopoulos.}
 
 
 The citation classification changes depending on who is the author under analysis.
 For \emph{Kalnis} or \emph{Ghinita}, as authors of both papers, the citation classification is \textsf{direct self-citation}.
-If the selected author is \emph{Skiadopoulos}, who only appears on the cited publication, the classification cannot be \textsf{direct self-citation}.
+If the author under analysis is \emph{Skiadopoulos}, who only appears on the cited publication, the classification cannot be \textsf{direct self-citation}.
 As other authors of the cited paper also appear on the citing paper, the classification is then \textsf{co-author self-citation} for Skiadopoulos.
 
 \begin{figure}[tb]
@@ -298,19 +295,17 @@ As other authors of the cited paper also appear on the citing paper, the classif
     \label{fig:classification-example}
 \end{figure}
 
-Figure~\ref{fig:cache-flowchart-diagram} illustrates the data flow inside the cache mechanism. \snote{You start with this. Give the pointer to the Figure and then discuss the figure. Not vice-versa. }\enote{done}
+Figure~\ref{fig:cache-flowchart-diagram} illustrates the data flow inside the cache mechanism. 
 All provider connectors use the same HTTP client implementation, with caching handled internally.
 Before sending a request, the client looks for a stored response using the request URL as the key.
 The cache key enforces the order of the query parameters alphabetically, to provide a stable key, regardless of the parameter order in the original request URL.
-For instance, \texttt{https://example.com?p1=v1\&p2=v2} \snote{use verb, texttt or url do not use quotes.}\enote{done} and \texttt{https://example.com?p2=v2\&p1=v1} produce the same key.
-Each cached record includes the date it was received, used to calculate whether the record satisfies the time-to-live timeframe.
+For instance, \texttt{https://example.com?p1=v1\&p2=v2} and \texttt{https://example.com?p2=v2\&p1=v1} produce the same key.
+Each cached record includes the date it was received, used to calculate when the record satisfies the time-to-live timeframe.
 
 \begin{figure}[tb]
     \centering
-
     \includegraphics[scale=.3]{include/fig-cache-flowchart-diagram}
     \caption{Cache request data flow}  
-
     \label{fig:cache-flowchart-diagram}
 \end{figure}
 
@@ -321,32 +316,30 @@ Expired cache records are replaced when requested again, but there is no periodi
 The database can grow forever, which is a limitation of a shared installation, that would need a retention policy and clean up procedures.
 
 \subsection{Processing pipeline} \label{sec:processing-pipeline}
-
-Once the user has selected the author, the UI automatically checks whether a citation graph for this author exists in the system for the currently selected provider, using the date of the last completed job for this author and provider, which the backend returns with the author details.
+Once the user has selected the author, the UI automatically checks if a citation graph for this author exists in the system for the currently selected provider, using the date of the last completed job for this author and provider, which the backend returns with the author details.
 If the citation graph exists, it is returned as a raw dataset in JSON format, and that date is shown as the time of the last update.
 The UI renders results, including an option to update the results, bypassing the previously stored graph and cache.
 If the citation graph does not exist, or the user has requested to update the results, the backend receives a request to fetch the full graph.
 
+\snote{it goes "whether ... or not".  If you do not have "or not" use "if"}
+
 Having received a request to fetch the full graph from a provider, the backend creates a new job (as an in-memory object) and stores it in the database.
-The job is initially placed in the state \textsf{running}, which is the only non-final state.
+The job is initially placed in the \scor{state \textsf{running}}{\textsf{running} state}, which is the only non-final state.
 The backend immediately responds with the job object, including the identifier.
-With the identifier at hand, the client starts to poll the job status, until it reaches one of the final states: \textsf{done}, \textsf{error}, or \textsf{interrupted}.
+With the identifier at hand, the client starts to poll the job status, until it reaches one of the final states, namely, \textsf{done}, \textsf{error}, or \textsf{interrupted}.
 
 Meanwhile, in the background, the backend orchestrates the flow to build the citation graph.
 Figure~\ref{fig:classification-flowchart-diagram} illustrates the data flow of constructing the full graph from an author identifier.
 The successful path is as follows:
 
 \begin{itemize}
-    \item The \textsf{Metrics service}, which orchestrates the flow, hands it over to the \textsf{Author service}
-    \item The \textsf{Author service} requests the list of papers for the selected author identifier, and paginates to reach the end of the response list
+    \item The \textsf{Metrics service}, which orchestrates the flow, hands it over to the \textsf{Author service}.
+    \item The \textsf{Author service} requests the list of papers for the selected author identifier, and paginates to reach the end of the response list.
     \item Having reached the end of the list, the \textsf{Author service} calls the \textsf{Publication service} to fetch the citations, for each of the gathered publications
-    \item The \textsf{Publication service} requests the list of citations, and extracts the authors from each item of the list
-    \begin{itemize}
-        \item In practice, the requests for all publications are sent at once, and the provider request queue paces them to the number of requests per second that the provider allows
-    \end{itemize}
-    \item Having gathered details of each of the citing publications, the control returns to the \textsf{Metrics service} to aggregate final results
-    \item The \textsf{Classification service} applies the classification algorithm to each of the citing publications against the currently selected author, and finally
-    \item The \textsf{Metrics service} collates the results into a single nested structure, stores it in the database, and changes the job status to \textsf{done}
+    \item The \textsf{Publication service} requests the list of citations, and extracts the authors from each item of the list. In practice, the requests for all publications are sent at once, and the provider request queue paces them to the number of requests per second that the provider allows.
+    \item Having gathered details of each of the citing publications, the control returns to the \textsf{Metrics service} to aggregate final results.
+    \item The \textsf{Classification service} applies the classification algorithm to each of the citing publications against the currently selected author, and finally.
+    \item The \textsf{Metrics service} collates the results into a single nested structure, stores it in the database, and changes the job status to \textsf{done}.
 \end{itemize}
 
 If the citations of a publication cannot be retrieved, for instance due to a network error, this publication is skipped, but the job still completes.
