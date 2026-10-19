@@ -244,16 +244,14 @@ When an identifier is missing, the respective connector uses the normalized name
 \subsection{Storage and caching} \label{sec:storage-caching}
 
 \textsf{SQLite} was used in the system for the simplicity of its setup.
-It does not require a separate server, instead it runs within the backend process and stores the database in a single file.
-Schema changes also live in the codebase: they are defined as migrations and applied at runtime, every time the database is opened by the backend process.
+It does not require a separate server, instead the database file (it is a single file) is opened directly by the backend server process, all updates and changes are stored in it, and it is closed when the server shuts down and closes the database connection.
 
-The schema is only defined in code, in a single file describing every table.
-When the schema changes, the ORM compares it with the previous version and generates code representing the migration.
+The database schema is only defined in the code, in a single file describing every table, index, and column relationship.
+When the schema changes, the ORM compares it with the previous version and generates code representing the migration, as part of the backend build pipeline.
 A migration is a file with SQL statements needed to change the current database schema to the new schema.
-Migrations are kept in the codebase and are checked into the version control system.
+Migrations are kept in the codebase too, and are checked into the version control system.
 Every time the backend starts up and opens the database, it applies the migrations that have not been applied yet.
 Using this approach, the database schema always starts from the initial empty state, it then grows, and eventually evolves into the final version of the schema needed by the application.
-By keeping the database schema in the repository, the domain model changes can be associated with the current application model, to keep the models synchronized.
 
 The system largely depends on externally sourced data, subject to the provider limitations and the latency of network access.
 Publications, authors, contributions and citations are treated as immutable in nature.
