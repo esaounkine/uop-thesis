@@ -55,7 +55,7 @@ The backend communicates with the external data sources to gather information, a
 
 \snote{The backend consists of services, ... described as follows.}
 
-\snote{See also what I have edited.}
+\snote{See also what I have changed.}
 
 \paragraph{Services} is the only component containing the business logic to coordinate the collection and analysis of data.
 
@@ -118,6 +118,7 @@ For instance, the citation graph service (\textsf{CitationGraphService}) needs t
 
 The frontend serves as a presentation layer and interface controller, and follows a data flow similar to the backend.
 The building blocks of the UI are \emph{components}, \emph{containers}, and \emph{pages}.
+Figure~\ref{fig:frontend-components} shows how the frontend is composed and how it connects to the backend. 
 
 \begin{figure}[tb]
     \centering
@@ -129,17 +130,16 @@ The building blocks of the UI are \emph{components}, \emph{containers}, and \emp
     \label{fig:frontend-components}
 \end{figure}
 
-Figure~\ref{fig:frontend-components} shows how the frontend is composed and how it connects to the backend. \snote{This is right. Still, you need to discuss the figure.} \enote{done}
 
-\emph{Components} are the reusable atomic widgets that define how a piece of data should look and behave.
+\paragraph{Components} are the reusable atomic widgets that define how a piece of data should look and behave.
 They are not responsible for retrieving the data, only for rendering and styling it.
 For example, a loading indicator or an error message are components, and can be used on different occasions by different containers.
 
-\emph{Containers} are meaningful groups of related components.
+\paragraph{Containers} are meaningful groups of related components.
 They manage and request data, implement all the presentation logic around orchestration of the components.
 They are responsible for calling the API, showing the loading or error state, as well as wiring together the components and supplying the data to them.
 
-\emph{Pages} are the largest units of the frontend, each page usually corresponds to a unique path of the address in the browser.
+\paragraph{Pages} are the largest units of the frontend, each page usually corresponds to a unique path of the address in the browser.
 The application currently consists of two pages: author search (\texttt{/authors}) and author details (\texttt{/author/:provider/:authorId}).
 Each page is built with one or more containers.
 
@@ -152,8 +152,15 @@ The following sections describe the provider choices, data model and processing 
 
 \subsection{Providers and limitations} \label{sec:providers}
 
-Citation sources were analyzed in Section~\ref{sec:data-sources} by the supported data properties and the provided access methods (see also Figure~\ref{fig:providers-overview}). Among these, three data providers were supported in our system implementation: \textsf{OpenAlex}\footnote{\url{https://openalex.org}}, \textsf{Semantic Scholar}\footnote{\url{https://www.semanticscholar.org}}, \textsf{Google Scholar}\footnote{\url{https://scholar.google.com}} (via \textsf{SerpApi}\footnote{\url{https://serpapi.com}}).
-
+Citation sources were analyzed in Section~\ref{sec:data-sources} by the supported data properties and the provided access methods (see also Figure~\ref{fig:providers-overview}). Among these, three data providers were supported in our system implementation, namely: 
+\begin{enumerate}
+\item
+\textsf{OpenAlex}\footnote{\url{https://openalex.org}}, 
+\item
+\textsf{Semantic Scholar}\footnote{\url{https://www.semanticscholar.org}}, and
+\item
+\textsf{Google Scholar}\footnote{\url{https://scholar.google.com}} (via \textsf{SerpApi}\footnote{\url{https://serpapi.com}}).
+\end{enumerate}
 \textsf{OpenAlex} and \textsf{Semantic Scholar} are the most naturally fitting open sources.
 Their responses to requests for citations also include author lists, needed by the classification algorithm.
 \textsf{Google Scholar}, as the one with the widest coverage, was also considered, despite all the limitations around using it.
@@ -202,7 +209,7 @@ The free sources (i.e., \textsf{OpenAlex} and \textsf{Semantic Scholar}) are use
 \subsection{Data} \label{sec:data}
 
 The conceptual model described in Section~\ref{sec:data-model} translates to four domain-specific tables: \textsf{authors}, \textsf{publications}, \textsf{contributions}, and \textsf{citations}.
-There is also a table to save the asynchronous jobs state (\textsf{jobs}), and a table for cached responses (\textsf{cache}), described in Section~\ref{sec:storage-caching}. \snote{You might need to present them in a figure. The ER maybe?} \enote{done}
+There is also a table to save the asynchronous jobs state (\textsf{jobs}), and a table for cached responses (\textsf{cache}), described in Section~\ref{sec:storage-caching}. 
 Figure~\ref{fig:database-er} shows the database tables and the relationships between them.
 
 \begin{figure}[tb]
@@ -238,7 +245,7 @@ When an identifier is missing, the respective connector uses the normalized name
 
 \textsf{SQLite} was used in the system for the simplicity of its setup.
 It does not require a separate server, instead it runs within the backend process and stores the database in a single file.
-Schema changes \snote{I am not sure what you mean. It seems nice and important. Give it more space} \enote{done} also live in the codebase: they are defined as migrations and applied at runtime, every time the database is opened by the backend process.
+Schema changes also live in the codebase: they are defined as migrations and applied at runtime, every time the database is opened by the backend process.
 
 The schema is only defined in code, in a single file describing every table.
 When the schema changes, the ORM compares it with the previous version and generates code representing the migration.
@@ -250,7 +257,7 @@ By keeping the database schema in the repository, the domain model changes can b
 
 The system largely depends on externally sourced data, subject to the provider limitations and the latency of network access.
 Publications, authors, contributions and citations are treated as immutable in nature.
-These details, when retrieved and linked together, form a graph of nodes and relationships, coined as \textsf{citation graph}. \snote{Describe it, which are the nodes, which are the edges, which are the semantics. } \enote{done}
+These details, when retrieved and linked together, form a graph of nodes and relationships, coined as \emph{citation graph}. 
 
 The citation graph is a two-dimensional representation of the conceptual domain model.
 In this graph, \emph{publications} and \emph{authors} are the nodes of this graph, \emph{contributions} and \emph{citations} are the two types of directed edges.
@@ -264,7 +271,7 @@ The graph can be pivoted to center around any author, producing three levels of 
 \end{description}
 
 The citation graph is decomposed and stored as separate entities in the tables
-\textsf{publications}, \textsf{authors}, \textsf{contributions} and \textsf{citations} (Figure~\ref{fig:database-er}), as described in Section~\ref{sec:data}.  \snote{Name the tables and give a pointer to the respective figure.} \enote{done}
+\textsf{publications}, \textsf{authors}, \textsf{contributions} and \textsf{citations} (Figure~\ref{fig:database-er}), as described in Section~\ref{sec:data}. 
 
 The citation graph described in Section~\ref{sec:user-interface} represents the citations graph visually.
 
@@ -274,7 +281,11 @@ Classification labels depend on the choice of author (the same citation can be \
 Figure~\ref{fig:classification-example} shows the classification of the same citation for different authors, involved in either or both of the papers.
 
 As an example, let us consider the publications discussed in Chapter~\ref{c1:intro}.
-[KGMP2007]~\cite{Kalnis2007} by Kalnis, Ghinita, Mouratidis and Papadias cites [GPK2007]~\cite{Ghinita2007} by Ghinita, Kalnis and Skiadopoulos.
+
+
+\scor{[KGMP2007]~\cite{Kalnis2007} by Kalnis, Ghinita, Mouratidis and Papadias cites [GPK2007]~\cite{Ghinita2007} by Ghinita, Kalnis and Skiadopoulos.}{Publication~\cite{Kalnis2007} by Kalnis, Ghinita, Mouratidis and Papadias cites  publication~\cite{Ghinita2007} by Ghinita, Kalnis and Skiadopoulos.}
+
+
 The citation classification changes depending on who is the author under analysis.
 For \emph{Kalnis} or \emph{Ghinita}, as authors of both papers, the citation classification is \textsf{direct self-citation}.
 If the selected author is \emph{Skiadopoulos}, who only appears on the cited publication, the classification cannot be \textsf{direct self-citation}.
@@ -296,8 +307,6 @@ Each cached record includes the date it was received, used to calculate whether 
 
 \begin{figure}[tb]
     \centering
-    \snote{see the comments for the figures above.} \enote{done}
-
 
     \includegraphics[scale=.3]{include/fig-cache-flowchart-diagram}
     \caption{Cache request data flow}  
