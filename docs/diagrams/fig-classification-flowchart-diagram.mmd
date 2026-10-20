@@ -1,4 +1,4 @@
-%%{init: {"flowchart": {"rankSpacing": 30, "padding": 10}} }%%
+%%{init: {"flowchart": {"rankSpacing": 20, "padding": 10}} }%%
 flowchart LR
     START(["Author<br/>unique ID"]) --> MS1
 
@@ -11,7 +11,7 @@ flowchart LR
     end
 
     subgraph PS["Publication Service"]
-      C1["Fetch citing<br/>publications with authors<br/>(paginated)"]
+      C1["Fetch citing<br/>publications with<br/>authors (paginated)"]
     end
 
     subgraph CS1["Classification Service"]
