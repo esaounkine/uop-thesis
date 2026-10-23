@@ -365,7 +365,7 @@ The application consists of a few individual components described below: \textsf
 Figure~\ref{fig:ui-search-form} shows the initially empty search page, where the user enters a name to start the flow of selecting an author.
 Currently, there is no way to disable or enable some of the providers, this setting is controlled by the backend.
 
-The page supports deep-linking to the search form with the name prefilled, when the URL specifies the parameter \emph{q=query}, for instance \texttt{http://localhost:3000/authors?q=skiadopoulos}.
+The page supports deep-linking to the search form with the name prefilled, when the URL specifies the parameter \texttt{q=query}, for instance \texttt{http://localhost:3000/authors?q=skiadopoulos}.
 
 \begin{figure}[tb]
     \centering
@@ -619,8 +619,9 @@ PASS src/lib/__tests__/RetryStrategy.test.js
           but the retries are exhausted
             ✓ gives up with the error
             ✓ tries maxRetries + 1 times
-
 \end{lstlisting}
+
+\snote{Colors on Listing \ref{lst:retry-test-run}}
 
 \section{Evaluation} \label{sec:evaluation}
 
