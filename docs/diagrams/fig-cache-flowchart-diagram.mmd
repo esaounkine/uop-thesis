@@ -1,9 +1,8 @@
 %%{init: {"flowchart": {"rankSpacing": 20, "padding": 10}} }%%
 graph LR
   lookup["Look up<br/>results in Cache"] --> hit{"Cached results<br/>exist and are<br/>within TTL?"}
-  hit -->|"No"| send["Send<br/>request"]
-  send --> recv["Receive<br/> response"]
-  recv --> ok{"Is response<br/> status code <br/>< 400"}
+  hit -->|"No"| send["Send request<br/>and receive<br/>response"]
+  send --> ok{"Response<br/>status code<br/>< 400?"}
   ok -->|"Yes"| store["Store results<br/> in Cache"]
   store --> ret["Return<br/>response"]
   ok -->|"No"| ret
