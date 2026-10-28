@@ -369,6 +369,8 @@ The page supports deep-linking to the search form with the name prefilled, when 
 \begin{figure}[tb]
     \centering
     \includegraphics[scale=.4]{include/ui/search-form-1}
+
+\snote{crop the white part. You do not need it!}
     \caption{Author search form}
     \label{fig:ui-search-form}
 \end{figure}
@@ -379,27 +381,35 @@ Figure~\ref{fig:ui-search-results} shows the search results page, displayed afte
 
 Searching by name can return multiple results, matching the name, for each of the supported providers; the figure shows the list of results returned for \texttt{skiadopoulos}.
 
-\begin{figure}[tb]
+\begin{figure}[p]
+%\begin{figure}[tb]
+\snote{An idea when you have to many figures is to use [p] that puts them in a single page. Here it looks good this way!}
+
     \centering
     \includegraphics[scale=.4]{include/ui/search-res-1}
     \caption{Authors returned by one of the providers}
     \label{fig:ui-search-results}
+
+    \includegraphics[scale=.4]{include/ui/search-res-2}
+    \caption{Stored citation metrics, update date and refresh button}
+    \label{fig:ui-search-controls}
+
 \end{figure}
 
 Each author name on the result list is accompanied by an affiliation, when available, and the identifier assigned by the selected provider.
 The name is a link to the author detail page, described in Section~\ref{sec:ui-details}.
 
 Figure~\ref{fig:ui-search-controls} shows the stored metrics, the update date and the refresh button of a profile.
-The profiles, where results have not been collected previously, include a \emph{Get metrics} button, to request the citation counts.
+The profiles, where results have not been collected previously, include a \emph{Get metrics} button \snote{Ideally, buttons should look as it is in the figure, but do not try hard to do it. Only if it does not take time and energy! An inline includegraphics might to the trick.}, to request the citation counts.
 For profiles, where citation metrics have previously been requested, and the citation graphs are found in the database, the UI shows the metrics and the date of the last update.
 For these profiles there is a \emph{Refresh} button to request the data, ignoring the stored graph and cached responses.
 
-\begin{figure}[tb]
-    \centering
-    \includegraphics[scale=.4]{include/ui/search-res-2}
-    \caption{Stored citation metrics, update date and refresh button}
-    \label{fig:ui-search-controls}
-\end{figure}
+%\begin{figure}[tb]
+%    \centering
+%    \includegraphics[scale=.4]{include/ui/search-res-2}
+%    \caption{Stored citation metrics, update date and refresh button}
+%    \label{fig:ui-search-controls}
+%\end{figure}
 
 Figure~\ref{fig:ui-provider-tabs} highlights the selected provider.
 The provider tabs keep results isolated per source, following the decision described in Section~\ref{sec:providers}.
