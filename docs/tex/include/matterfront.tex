@@ -5,6 +5,7 @@
 %
 %
 \frontmatter
+\gre % the front pages are in Greek, up to the English abstract
 
 %
 % First page
@@ -23,7 +24,7 @@
     \begin{minipage}[r]{12.5cm}
         \raggedleft
 	\vspace*{-1.5cm}~\\
-	\textsc{\large Πανεπιστημίο Πελοποννήσου}\\
+	\textsc{\large Πανεπιστήμιο Πελοποννήσου}\\
 	\vspace*{-5pt}{Τμήμα Πληροφορικής και Τηλεπικοινωνιών}\\
 	\vspace*{-5pt}{\small Ακαδημαϊκού Βλάχου, 22100, Τρίπολη}\\
 	\vspace*{-5pt}{\small Τηλ. 2710-230177}\\
@@ -35,9 +36,11 @@
 
 \begin{center}
 
-\vspace*{60pt}{\Huge\textsc\mytitle}
+\vspace*{60pt}{\Huge\mytitle}
 
-\vspace{100pt}{\LARGE \myauthor}
+\vspace{20pt}{\LARGE\textlatin{\myentitle}}
+
+\vspace{80pt}{\LARGE \textlatin{\myauthor}}
 
 \vspace{100pt}{\LARGE \mythesis}
 
@@ -53,7 +56,8 @@
 \vfill
 ~\\
 \mytitle.\\
-\myauthor.\\
+\textlatin{\myentitle}.\\
+\textlatin{\myauthor}.\\
 \mythesis.\\
 Εργαστήριο Συστημάτων Λογισμικού και Βάσεων Δεδομένων.\\
 Τμήμα Πληροφορικής και Τηλεπικοινωνιών, Πανεπιστήμιο Πελοποννήσου\\
@@ -77,7 +81,7 @@
     \begin{minipage}[r]{12.5cm}
         \raggedleft
 	\vspace*{-1.5cm}~\\
-	\textsc{\large Πανεπιστημίο Πελοποννήσου}\\
+	\textsc{\large Πανεπιστήμιο Πελοποννήσου}\\
 	\vspace*{-5pt}{Τμήμα Πληροφορικής και Τηλεπικοινωνιών}\\
 	\vspace*{-5pt}{\small Ακαδημαϊκού Βλάχου, 22100, Τρίπολη}\\
 	\vspace*{-5pt}{\small Τηλ. 2710-230177}\\
@@ -87,9 +91,11 @@
 \endgroup
 \par
 \begin{center}
-\vspace*{50pt}{\Large\textsc\mytitle}
+\vspace*{50pt}{\Large\mytitle}
 
-\vspace{20pt}{\large\textbf\myauthor}
+\vspace{10pt}{\large\textlatin{\myentitle}}
+
+\vspace{20pt}{\large\textbf{\textlatin{\myauthor}}}
 
 \vspace{20pt}{\mythesis}
 
@@ -119,23 +125,26 @@
 \setcounter{page}{1}
 
 %
-% English abstract
+% Greek abstract
 %
 \clearpage
-{\latintext 
+\chapter*{Περίληψη}
+{\setstretch{1.25}\mygrabstract\par}
+
+%
+% English abstract (everything that follows is in English)
+%
+\clearpage
+\eng
 \chapter*{Abstract}
-{\myenabstract}
-}
+{\setstretch{1.25}\myenabstract\par}
 
 
 %% Into the table of contents.
 \clearpage
-\gre
-\addcontentsline{toc}{chapter}{Περιεχόμενα}\tableofcontents
+\addcontentsline{toc}{chapter}{Contents}\tableofcontents
 \cleardoublepage
-\renewcommand{\listfigurename}{Κατάλογος σχημάτων}
-\addcontentsline{toc}{chapter}{Κατάλογος σχημάτων}\listoffigures
-\eng
+\addcontentsline{toc}{chapter}{List of Figures}\listoffigures
 \cleardoublepage
 
 
