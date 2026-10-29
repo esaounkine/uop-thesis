@@ -1,5 +1,7 @@
 {
-  "flowchart": { "useMaxWidth": true },
-  "er": { "useMaxWidth": true },
-  "sequence": { "useMaxWidth": true }
+  "themeVariables": { "fontSize": "16px" },
+  "flowchart": { "useMaxWidth": false, "minNodeWidth": 60 },
+  "er": { "useMaxWidth": false },
+  "sequence": { "useMaxWidth": false },
+  "venn": { "useMaxWidth": false, "width": 533, "height": 300 }
 }

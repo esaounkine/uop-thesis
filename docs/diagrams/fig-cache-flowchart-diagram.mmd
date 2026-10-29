@@ -1,4 +1,4 @@
-%%{init: {"flowchart": {"rankSpacing": 20, "padding": 10}} }%%
+%%{init: {"layout": "dagre", "flowchart": {"rankSpacing": 20, "padding": 10}} }%%
 graph LR
   lookup["Look up<br/>results in Cache"] --> hit{"Cached results<br/>exist and are<br/>within TTL?"}
   hit -->|"No"| send["Send request<br/>and receive<br/>response"]

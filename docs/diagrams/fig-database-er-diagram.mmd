@@ -26,21 +26,6 @@ erDiagram
     text source_pub_id PK, FK
     text target_pub_id PK, FK
   }
-  cache {
-    text key PK
-    text payload
-    text fetched_at
-  }
-  jobs {
-    text id PK
-    text provider
-    text author_id
-    text status
-    text progress
-    text error
-    text created_at
-    text updated_at
-  }
   authors ||--o{ contributions : "contributes"
   publications ||--|{ contributions : "has"
   publications ||--o{ citations : "cites (source)"
