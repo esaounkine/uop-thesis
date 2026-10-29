@@ -1,19 +1,13 @@
 % !TEX encoding = UTF-8 Unicode
 % !TEX root = ../Saunkin.tex
 
-\chapter{Implementation and evaluation} \label{c4:implementation-evaluation}
+\chapter{Implementation} \label{c3:implementation}
 
-This chapter discusses the implementation details and evaluates the results of the system, built following the methodology described in Chapter~\ref{c2:methodology}.
-Section~\ref{sec:implementation} describes the architectural decisions, external connections, storage and caching mechanisms, overviews the processing flow, user interface, and other software development concerns.
-Section~\ref{sec:evaluation} validates the outputs of the system, provides a few case studies, and compares data returned by each source.
-
-\section{Implementation} \label{sec:implementation}
-
-The system implements the citation analysis described in Chapter~\ref{c2:methodology}.
+The system implements the citation analysis described in Section~\ref{sec:methodology}.
 It takes an author name as input and returns citation counts, broken down into direct, co-author or external citations.
-This section describes the component structure, data handling and processing steps to produce the results.
+This chapter describes the component structure, data handling and processing steps to produce the results.
 
-\subsection{System overview} \label{sec:system-overview}
+\section{System overview} \label{sec:system-overview}
 
 There are two major use cases that the system attempts to satisfy.
 
@@ -27,7 +21,7 @@ There are two major use cases that the system attempts to satisfy.
     Matching a profile from one source to a profile from another would require a new algorithm to match identities, which is out of scope for this work.
 
     \item[Citation classification.] Having selected an author, collect all publications and incoming citations, classify them into the groups, to produce the aggregate counts.
-    The backend compares author lists of each citing paper to classify citations according to the algorithm from Chapter~\ref{c2:methodology}.
+    The backend compares author lists of each citing paper to classify citations according to the algorithm from Section~\ref{sec:methodology}.
     The results returned to the frontend contain counts and raw data.
 \end{description}
 
@@ -51,12 +45,14 @@ Both system modules (frontend and backend) are written in \textsf{JavaScript}: t
 The frontend does not implement any meaningful reusable business logic, instead it forwards the requests to the backend and displays the results.
 The backend communicates with the external data sources to gather information, and performs citation analysis.
 
-\subsubsection{Backend} \label{sec:backend-layers}
+\subsection{Backend} \label{sec:backend-layers}
 
 The backend is structured in layers of data flow separation.
 The layers and components are introduced below. 
 
-\paragraph{Services} is the only component containing the business logic to coordinate the collection and analysis of data.
+\subsubsection{Services}
+
+Services is the only component containing the business logic to coordinate the collection and analysis of data.
 
 Services are classes corresponding to entity domains, exposing methods that provide the functionality expected of each entity.
 They never see the request or the response objects.
@@ -81,7 +77,9 @@ There is one service for each subject:
 Dependencies are injected into each service to provide the underlying functionality needed to produce the results.
 For instance, the \textsf{MetricsService} orchestrates the flow to produce the citation collection described in Section~\ref{sec:processing-pipeline}: it requests the papers of the selected author by calling the \textsf{AuthorService}, the citations of each paper through the \textsf{PublicationService}, and the classification of each citation through the \textsf{ClassificationService}, to finally hand the assembled graph to the \textsf{CitationGraphService} to be stored.
 
-\paragraph{Connectors} handle the fetching and processing of data from external sources.
+\subsubsection{Connectors}
+
+Connectors handle the fetching and processing of data from external sources.
 
 Connectors are also classes, one per provider, implementing the communication with external data sources; no other component is allowed to contact a provider directly, instead all requests for external data go through the connectors.
 Every connector implements the same interface (\textsf{ProviderConnector}) with the operations described in Section~\ref{sec:providers}, so the rest of the system treats all sources in the same manner.
@@ -90,7 +88,9 @@ A connector transforms the responses into the internal model, that is used by th
 All provider specifics are isolated inside the respective connector: the endpoint structure, the request and response models, pagination, authentication etc.
 For instance, the \textsf{OpenAlex} connector paginates with 200 records per page, and the \textsf{Google Scholar} connector is limited to 20 records per page; both return the same data structure, regardless of how they gather the results.
 
-\paragraph{Controllers} receive user requests and pass them to services.
+\subsubsection{Controllers}
+
+Controllers receive user requests and pass them to services.
 
 Controllers are classes with one method for each API endpoint that the backend exposes.
 They contain minimal business logic, limited to the endpoint structure, as a function of the interface that the service provides.
@@ -99,7 +99,9 @@ For instance, a search request without a query parameter is rejected with a stat
 Controllers are separated by the use cases.
 There is \textsf{SearchController} for the author search, \textsf{AuthorController} for the author details, papers and stored metrics, \textsf{JobController} for submitting jobs and polling their status, and \textsf{StatusController} for the provider quotas and system resources.
 
-\paragraph{Repositories} read from and write to the database tables.
+\subsubsection{Repositories}
+
+Repositories read from and write to the database tables.
 
 Repositories, too, are classes with methods, implementing the functionality that depends on connection to the database; no other component is allowed to make database queries directly, instead all requests for data go through the methods exposed by the repositories.
 There is one repository for each table: \textsf{publications}, \textsf{authors}, \textsf{contributions}, \textsf{citations}, \textsf{cache} and \textsf{jobs}.
@@ -113,7 +115,7 @@ The schema of tables and columns is declared in code, as described in Section~\r
 As the repositories are isolated per entity, only the relevant repositories are injected into the respective services.
 For instance, the citation graph service (\textsf{CitationGraphService}) needs to read and update the tables \textsf{publications}, \textsf{authors}, \textsf{contributions} and \textsf{citations} to save a collected graph and load it back, so the four respective repositories (\textsf{PublicationRepository}, \textsf{AuthorRepository}, \textsf{ContributionRepository}, \textsf{CitationRepository}) must be provided in the constructor.
 
-\subsubsection{Frontend} \label{sec:frontend-layers}
+\subsection{Frontend} \label{sec:frontend-layers}
 
 The frontend serves as a presentation layer and interface controller, and follows a data flow similar to the backend.
 The building blocks of the UI are \emph{components}, \emph{containers}, and \emph{pages}.
@@ -128,15 +130,21 @@ Figure~\ref{fig:frontend-components} shows how the frontend is composed and how 
 \end{figure}
 
 
-\paragraph{Components} are the reusable atomic widgets that define how a piece of data should look and behave.
+\subsubsection{Components}
+
+Components are the reusable atomic widgets that define how a piece of data should look and behave.
 They are not responsible for retrieving the data, only for rendering and styling it.
 For example, a loading indicator or an error message are components, and can be used on different occasions by different containers.
 
-\paragraph{Containers} are meaningful groups of related components.
+\subsubsection{Containers}
+
+Containers are meaningful groups of related components.
 They manage and request data, implement all the presentation logic around orchestration of the components.
 They are responsible for calling the API, showing the loading or error state, as well as wiring together the components and supplying the data to them.
 
-\paragraph{Pages} are the largest units of the frontend, each page usually corresponds to a unique path of the address in the browser.
+\subsubsection{Pages}
+
+Pages are the largest units of the frontend, each page usually corresponds to a unique path of the address in the browser.
 The application currently consists of two pages: author search (\texttt{/authors}) and author details (\texttt{/author/:provider/:authorId}).
 Each page is built with one or more containers.
 
@@ -147,7 +155,7 @@ The following sections describe the provider choices, data model and processing 
 
 %\enote{done (mermaid is my tool)} \snote{Fine, but also put the sources in the repo. } \enote{done (previously they were all in the system-design.md, extracted also into docs/fiagrams; build by `make diagrams`)}
 
-\subsection{Providers and limitations} \label{sec:providers}
+\section{Providers and limitations} \label{sec:providers}
 
 Citation sources were analyzed in Section~\ref{sec:data-sources} by the supported data properties and the provided access methods (see also Figure~\ref{fig:providers-overview}). Among these, three data providers were supported in our system implementation, namely: 
 \begin{enumerate}
@@ -203,7 +211,7 @@ The largest source (\textsf{Google Scholar}), even when accessed via a paid prox
 Collecting the citations of an author with $n$ publications requires at least $n$ requests, growing the cost proportionally to the volume of data retrieved.
 The free sources (i.e., \textsf{OpenAlex} and \textsf{Semantic Scholar}) are used by default in the system.
 
-\subsection{Data} \label{sec:data}
+\section{Data} \label{sec:data}
 
 The conceptual model described in Section~\ref{sec:data-model} translates to four domain-specific tables: \textsf{authors}, \textsf{publications}, \textsf{contributions}, and \textsf{citations}.
 There is also a table to save the asynchronous jobs state (\textsf{jobs}), and a table for cached responses (\textsf{cache}), described in Section~\ref{sec:storage-caching}. 
@@ -212,6 +220,8 @@ Figure~\ref{fig:database-er} shows the database tables and the relationships bet
 \begin{figure}[tb]
     \centering
     \includegraphics[scale=.2]{include/fig-database-er-diagram}
+    \hspace{2em}
+    \includegraphics[scale=.2]{include/fig-database-aux-er-diagram}
     \caption{Database tables}
     \label{fig:database-er}
 \end{figure}
@@ -237,7 +247,7 @@ The \textsf{Semantic Scholar} connector also discards citing papers without a pa
 \textsf{Google Scholar} does not guarantee to return identifiers for the authors of citing papers, often it returns names as strings, which are inherently unreliable for uniquely identifying anything.
 When an identifier is missing, the respective connector uses the normalized name, but this remains a known issue, leading to self-citations being potentially under-represented in the \textsf{Google Scholar} results.
 
-\subsection{Storage and caching} \label{sec:storage-caching}
+\section{Storage and caching} \label{sec:storage-caching}
 
 \textsf{SQLite} was used in the system for the simplicity of its setup.
 It does not require a separate server, instead the database file (it is a single file) is opened directly by the backend server process, all updates and changes are stored in it, and it is closed when the server shuts down and closes the database connection.
@@ -298,7 +308,7 @@ Each cached record includes the date it was received, used to calculate when the
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[scale=.27]{include/fig-cache-flowchart-diagram}
+    \includegraphics[scale=.2]{include/fig-cache-flowchart-diagram}
     \caption{Cache request data flow}
     \label{fig:cache-flowchart-diagram}
 \end{figure}
@@ -309,7 +319,7 @@ Successful responses are stored as text under the same key and with the current 
 Expired cache records are replaced when requested again, but there is no periodic deletion of old entries, and there is no limit on the cache size.
 The database can grow forever, which is a limitation of a shared installation, that would need a retention policy and clean up procedures.
 
-\subsection{Processing pipeline} \label{sec:processing-pipeline}
+\section{Processing pipeline} \label{sec:processing-pipeline}
 Once the user has selected the author, the UI automatically checks if a citation graph for this author exists in the system for the currently selected provider, using the date of the last completed job for this author and provider, which the backend returns with the author details.
 If the citation graph exists, it is returned as a raw dataset in JSON format, and that date is shown as the time of the last update.
 The UI renders results, including an option to update the results, bypassing the previously stored graph and cache.
@@ -342,18 +352,18 @@ Once the job has been updated with the final result, the next time the client re
 
 \begin{figure}[tb]
     \centering
-    \includegraphics[scale=.27]{include/fig-classification-flowchart-diagram}
+    \includegraphics[scale=.2]{include/fig-classification-flowchart-diagram}
     \caption{Citation graph construction data flow}
     \label{fig:classification-flowchart-diagram}
 \end{figure}
 
-\subsection{User interface} \label{sec:user-interface}
+\section{User interface} \label{sec:user-interface}
 
 The software application responsible for interaction with the user, user interface (UI), consists of a single-page web application.
 User interface addresses the use cases described in Section~\ref{sec:system-overview}: finding an author, and getting citation metrics for a selected author.
 The application consists of a few individual components described below: \textsf{Search form}, \textsf{Search results}, \textsf{Author details}, \textsf{Status}.
 
-\subsubsection{Search form} \label{sec:ui-search-form}
+\subsection{Search form} \label{sec:ui-search-form}
 
 Figure~\ref{fig:ui-search-form} shows the initially empty search page, where the user enters a name to start the flow of selecting an author.
 Currently, there is no way to disable or enable some of the providers, this setting is controlled by the backend.
@@ -369,7 +379,7 @@ The page supports deep-linking to the search form with the name prefilled, when 
     \label{fig:ui-search-form}
 \end{figure}
 
-\subsubsection{Search results} \label{sec:ui-results}
+\subsection{Search results} \label{sec:ui-results}
 
 Figure~\ref{fig:ui-search-results} shows the search results page, displayed after the search form has been submitted, and the response has been returned.
 
@@ -378,6 +388,7 @@ Searching by name can return multiple results, matching the name, for each of th
 \begin{figure}[p]
 %\begin{figure}[tb]
 \snote{An idea when you have to many figures is to use [p] that puts them in a single page. Here it looks good this way!}
+\enote{I actually tried with [h] - here, and it looked maximum satisfactory, as it was right where the text spoke about it. but I assume it isn't what the reports usually do.}
 
     \centering
     \includegraphics[scale=.4]{include/ui/search-res-1}
@@ -517,7 +528,7 @@ A large graph is difficult to inspect with every citation visible; in the figure
     \label{fig:ui-graph-filter}
 \end{figure}
 
-\subsubsection{Author details} \label{sec:ui-details}
+\subsection{Author details} \label{sec:ui-details}
 
 \begin{figure}[tb]
     \centering
@@ -532,7 +543,7 @@ As any other link, it can be opened in a new browser tab, allowing multiple auth
 The author name, the provider and the affiliation are rendered in the header of the page.
 The remaining space on the page is occupied by the controls identical to the structure of the individual author details shown in the search results, as described in Section~\ref{sec:ui-results}.
 
-\subsubsection{Status} \label{sec:ui-status}
+\subsection{Status} \label{sec:ui-status}
 
 Figure~\ref{fig:ui-status} shows the provider and system details panel.
 Normally, it stays collapsed at the bottom of the page.
@@ -549,7 +560,7 @@ These details are useful when investigating service disruptions.
     \label{fig:ui-status}
 \end{figure}
 
-\subsection{Testing} \label{sec:testing}
+\section{Testing} \label{sec:testing}
 
 The backend, as the subsystem containing all business logic, is covered by automated tests, validating the outputs of all units of each component in isolation (such as services, repositories, connectors, controllers).
 The unit tests guarantee that the behavior of each unit remains within the expectations.
@@ -626,495 +637,3 @@ PASS src/lib/__tests__/RetryStrategy.test.js
 
 \snote{Colors on Listing \ref{lst:retry-test-run}}
 
-\section{Evaluation} \label{sec:evaluation}
-
-This section evaluates the results produced by the system: given an author, return the counts of their total citations by contribution category.
-Each author represents an atomic use case, where the entirety of their publications is considered at the time of evaluation.
-Section~\ref{sec:classification-checks} evaluates the classification algorithm in isolation, by comparing the output of the respective function to manually counted citations for a single use case.
-Section~\ref{sec:data-source-comparison} compares the data and results of the same author, retrieved from different providers.
-
-\subsection{Citation classification} \label{sec:classification-checks}
-
-To evaluate the work of the citation classification function, let us consider an author, for instance \emph{Spiros Skiadopoulos}.
-Following the implemented methodology, described in Section~\ref{sec:processing-pipeline}, the evaluation is carried out in the context of a single provider, for instance \emph{OpenAlex}.
-
-The classification function compares the authors of each cited and citing publication, to calculate the citation classification as \emph{direct}, \emph{co-author} or \emph{external}.
-
-To operate on realistic data, we have retrieved all records from the selected provider for the selected author on 9 October 2026, and stored a normalized citation graph in the local database.
-Going forward, to analyze data, we will be using SQL queries and their results; this will help make the evaluation framework clear to understand and reproducible.
-
-Tables~\ref{tab:sample-publications}--\ref{tab:sample-citations} demonstrate a sample of records in the tables of the local database.
-
-
-\begin{table}[tb]
-    \centering
-    \begin{tabular}{|l|l|}
-        \hline
-        Field & Value \\
-        \hline\hline
-        provider & openalex \\
-        pub\_id & W3141363959 \\
-        title & inTIME: A Machine Learning-Based Framework for \dots \\
-        normalised\_title & intime: a machine learning-based framework for \dots \\
-        external\_id & https://doi.org/10.3390/electronics10070818 \\
-        year & 2021 \\
-        citation\_count & \\
-        \hline
-    \end{tabular}
-    \caption{A sample record of the \texttt{publications} table}
-    \label{tab:sample-publications}
-\end{table}
-
-\begin{table}[tb]
-    \centering
-    \footnotesize
-    \begin{tabular}{|l|l|l|l|l|}
-        \hline
-        provider & author\_id & original\_name & normalised\_name & organisation \\
-        \hline\hline
-        openalex & A5046481193 & Paris Koloveas & paris koloveas & University of Peloponnese \\
-        openalex & A5054180455 & Thanasis Chantzios & thanasis chantzios & University of Peloponnese \\
-        \hline
-    \end{tabular}
-    \caption{Sample records of the \texttt{authors} table}
-    \label{tab:sample-authors}
-\end{table}
-
-\begin{table}[tb]
-    \centering
-    \begin{tabular}{|l|l|l|r|}
-        \hline
-        provider & pub\_id & author\_id & position \\
-        \hline\hline
-        openalex & W3141363959 & A5046481193 & 1 \\
-        openalex & W3141363959 & A5054180455 & 2 \\
-        \hline
-    \end{tabular}
-    \caption{Sample records of the \texttt{contributions} table}
-    \label{tab:sample-contributions}
-\end{table}
-
-\begin{table}[tb]
-    \centering
-    \begin{tabular}{|l|l|l|}
-        \hline
-        provider & source\_pub\_id & target\_pub\_id \\
-        \hline\hline
-        openalex & W4386028955 & W3141363959 \\
-        openalex & W4200158199 & W3141363959 \\
-        \hline
-    \end{tabular}
-    \caption{Sample records of the \texttt{citations} table}
-    \label{tab:sample-citations}
-\end{table}
-
-Each of the steps below defines a named query, building on the previously defined named queries.
-The complete query is built at the end, combining all the steps and producing the final result.
-
-The selected author is found in the \texttt{authors} table.
-
-\begin{quote}
-    \begin{vercode}
-WITH selected_author AS (
-    SELECT *
-    FROM authors
-    WHERE provider = 'openalex'
-        AND normalised_name = 'spiros skiadopoulos'
-)
-    \end{vercode}
-\end{quote}
-
-\begin{center}
-    \begin{tabular}{|l|l|}
-        \hline
-        Column & Value \\
-        \hline\hline
-        provider & openalex \\
-        author\_id & A5009411092 \\
-        original\_name & Spiros Skiadopoulos \\
-        normalised\_name & spiros skiadopoulos \\
-        organisation & University of Peloponnese \\
-        \hline
-    \end{tabular}
-\end{center}
-
-The selected author has multiple records in the \texttt{contributions} table.
-
-\begin{quote}
-    \begin{vercode}
-WITH author_contributions AS (
-    SELECT c.*
-    FROM contributions c
-        JOIN selected_author sa
-            ON c.provider = sa.provider
-                AND c.author_id = sa.author_id
-)
-    \end{vercode}
-\end{quote}
-
-\begin{center}
-    \begin{tabular}{|l|l|l|r|}
-        \hline
-        provider & pub\_id & author\_id & position \\
-        \hline\hline
-        openalex & W129833210 & A5009411092 & 3 \\
-        openalex & W141810174 & A5009411092 & 3 \\
-        \multicolumn{4}{|c|}{$\vdots$} \\
-        \multicolumn{4}{|c|}{Total: 117 records} \\
-        \hline
-    \end{tabular}
-\end{center}
-
-The selected author's publication citations are stored in the \texttt{citations} table.
-The column \texttt{target\_pub\_id} indicates that these are all incoming citations.
-
-\begin{quote}
-    \begin{vercode}
-WITH author_citations AS (
-    SELECT ci.*
-    FROM citations ci
-        JOIN author_contributions ac
-            ON ci.provider = ac.provider
-                AND ci.target_pub_id = ac.pub_id
-)
-    \end{vercode}
-\end{quote}
-
-\begin{center}
-    \begin{tabular}{|r|}
-        \hline
-        num\_citations\_total \\
-        \hline\hline
-        3584 \\
-        \hline
-    \end{tabular}
-\end{center}
-
-We select \emph{direct} citations from all author citations by matching the author contributions with the \texttt{source\_pub\_id} of the author citations.
-
-\begin{quote}
-    \begin{vercode}
-WITH direct_citations AS (
-    SELECT aci.*
-    FROM author_citations aci
-        JOIN author_contributions ac
-            ON aci.provider = ac.provider
-                AND aci.source_pub_id = ac.pub_id
-)
-    \end{vercode}
-\end{quote}
-
-\begin{center}
-    \begin{tabular}{|r|}
-        \hline
-        num\_citations\_direct \\
-        \hline\hline
-        115 \\
-        \hline
-    \end{tabular}
-\end{center}
-
-The remaining citations, where the selected author is not an author of a citing publication, are either \emph{co-author} or \emph{external} citations.
-
-\begin{quote}
-    \begin{vercode}
-WITH indirect_citations AS (
-    SELECT aci.*
-    FROM author_citations aci
-        LEFT OUTER JOIN direct_citations dc
-            ON aci.provider = dc.provider
-                AND aci.source_pub_id = dc.source_pub_id
-                AND aci.target_pub_id = dc.target_pub_id
-    WHERE dc.source_pub_id IS NULL
-)
-    \end{vercode}
-\end{quote}
-
-\begin{center}
-    \begin{tabular}{|r|}
-        \hline
-        num\_citations\_indirect \\
-        \hline\hline
-        3469 \\
-        \hline
-    \end{tabular}
-\end{center}
-
-The \emph{co-author} citations are those where the citing and cited publications share at least one other author, besides the selected author.
-
-\begin{quote}
-    \begin{vercode}
-WITH coauthor_citations AS (
-    SELECT DISTINCT ic.*
-    FROM indirect_citations ic
-        JOIN contributions cited
-            ON cited.provider = ic.provider
-                AND cited.pub_id = ic.target_pub_id
-        JOIN contributions citing
-            ON citing.provider = ic.provider
-                AND citing.pub_id = ic.source_pub_id
-                AND citing.author_id = cited.author_id
-)
-    \end{vercode}
-\end{quote}
-
-\begin{center}
-    \begin{tabular}{|r|}
-        \hline
-        num\_citations\_coauthor \\
-        \hline\hline
-        243 \\
-        \hline
-    \end{tabular}
-\end{center}
-
-The \emph{external} citations are those where the citing and cited publications share no author at all.
-
-\begin{quote}
-    \begin{vercode}
-WITH external_citations AS (
-    SELECT ic.*
-    FROM indirect_citations ic
-        LEFT OUTER JOIN coauthor_citations cc
-            ON ic.provider = cc.provider
-                AND ic.source_pub_id = cc.source_pub_id
-                AND ic.target_pub_id = cc.target_pub_id
-    WHERE cc.source_pub_id IS NULL
-)
-    \end{vercode}
-\end{quote}
-
-\begin{center}
-    \begin{tabular}{|r|}
-        \hline
-        num\_citations\_external \\
-        \hline\hline
-        3226 \\
-        \hline
-    \end{tabular}
-\end{center}
-
-The complete query combines all the steps above and returns all the counts at once.
-
-\begin{quote}
-    \begin{vercode}
-WITH
-selected_author AS (
-    SELECT *
-    FROM authors
-    WHERE provider = 'openalex'
-        AND normalised_name = 'spiros skiadopoulos'
-),
-author_contributions AS (
-    SELECT c.*
-    FROM contributions c
-        JOIN selected_author sa
-            ON c.provider = sa.provider
-                AND c.author_id = sa.author_id
-),
-author_citations AS (
-    SELECT ci.*
-    FROM citations ci
-        JOIN author_contributions ac
-            ON ci.provider = ac.provider
-                AND ci.target_pub_id = ac.pub_id
-),
-direct_citations AS (
-    SELECT aci.*
-    FROM author_citations aci
-        JOIN author_contributions ac
-            ON aci.provider = ac.provider
-                AND aci.source_pub_id = ac.pub_id
-),
-indirect_citations AS (
-    SELECT aci.*
-    FROM author_citations aci
-        LEFT OUTER JOIN direct_citations dc
-            ON aci.provider = dc.provider
-                AND aci.source_pub_id = dc.source_pub_id
-                AND aci.target_pub_id = dc.target_pub_id
-    WHERE dc.source_pub_id IS NULL
-),
-coauthor_citations AS (
-    SELECT DISTINCT ic.*
-    FROM indirect_citations ic
-        JOIN contributions cited
-            ON cited.provider = ic.provider
-                AND cited.pub_id = ic.target_pub_id
-        JOIN contributions citing
-            ON citing.provider = ic.provider
-                AND citing.pub_id = ic.source_pub_id
-                AND citing.author_id = cited.author_id
-),
-external_citations AS (
-    SELECT ic.*
-    FROM indirect_citations ic
-        LEFT OUTER JOIN coauthor_citations cc
-            ON ic.provider = cc.provider
-                AND ic.source_pub_id = cc.source_pub_id
-                AND ic.target_pub_id = cc.target_pub_id
-    WHERE cc.source_pub_id IS NULL
-)
-SELECT
-    (SELECT COUNT(*) FROM author_citations)
-        AS num_citations_total,
-    (SELECT COUNT(*) FROM direct_citations)
-        AS num_citations_direct,
-    (SELECT COUNT(*) FROM coauthor_citations)
-        AS num_citations_coauthor,
-    (SELECT COUNT(*) FROM external_citations)
-        AS num_citations_external;
-    \end{vercode}
-\end{quote}
-
-\begin{center}
-    \begin{tabular}{|r|r|r|r|}
-        \hline
-        total & direct & co-author & external \\
-        \hline\hline
-        3584 & 115 & 243 & 3226 \\
-        \hline
-    \end{tabular}
-\end{center}
-
-Figure~\ref{fig:sample-counts} shows the counts calculated by the system for the same author and provider.
-The three subtotals produce the expected total ($115 + 243 + 3226 = 3584$), matching the system counts.
-
-\begin{figure}[tb]
-    \centering
-    \includegraphics[scale=.4]{include/fig-sample-counts}
-    \caption{Sample counts calculated by the system}
-    \label{fig:sample-counts}
-\end{figure}
-
-\subsection{Comparison of data sources} \label{sec:data-source-comparison}
-
-To evaluate and compare the data sources, we used a sample of one author and searched the same author with each of the providers.
-The identifiers below represent the same author, \emph{Spiros Skiadopoulos}, as returned from different providers: \texttt{A5009411092} from \textsf{OpenAlex}, \texttt{1688897} from \textsf{Semantic Scholar} and \texttt{fxBHpbgAAAAJ} from \textsf{Google Scholar}.
-All data were updated on the same date, 10 October 2026.
-
-None of the provider data or the produced counts match precisely.
-
-Table~\ref{tab:provider-distribution} illustrates the distribution of the publications of the selected author across the providers.
-As each provider exposes their own publication identifier, and in an attempt to compare the papers returned by each source, we compared publications by normalized title, and discovered that there are 236 distinct titles for the same author in total, where only 71 match across all providers.
-
-\begin{table}[tb]
-    \centering
-    \begin{minipage}[c]{0.6\linewidth}
-        \centering
-        \small
-        \begin{tabular}{|l|r|}
-            \hline
-            Publications (by normalized\_title) & Count \\
-            \hline\hline
-            on any provider (union) & 236 \\
-            on all providers (intersection) & 71 \\
-            exclusive to \textsf{OpenAlex} & 12 \\
-            exclusive to \textsf{Semantic Scholar} & 101 \\
-            exclusive to \textsf{Google Scholar} & 32 \\
-            \hline
-        \end{tabular}
-    \end{minipage}
-
-    \medskip
-    \includegraphics[scale=.2]{include/fig-provider-distribution-diagram}
-    \caption{Distribution of author publications by source}
-    \label{tab:provider-distribution}
-\end{table}
-
-Table~\ref{tab:provider-comparison} contains the publication and citation counts, per provider.
-
-\begin{table}[tb]
-    \centering
-    \footnotesize
-    \setlength{\tabcolsep}{3pt}
-    \begin{tabular}{|l|r|r|r|r|r|r|r|r|}
-        \hline
-        Provider & \shortstack{Publi-\\cations} & \shortstack{With\\citations} & \shortstack{Without\\citations} & Citations & \shortstack{Self-\\citations} & Direct & Co-author & External \\
-        \hline\hline
-        \textsf{OpenAlex} & 117 & 85 & 32 & 3584 & \shortstack[r]{358\\(10.0\%)} & \shortstack[r]{115\\(3.2\%)} & \shortstack[r]{243\\(6.8\%)} & \shortstack[r]{3226\\(90.0\%)} \\
-        \textsf{Semantic Scholar} & 187 & 104 & 83 & 4093 & \shortstack[r]{351\\(8.6\%)} & \shortstack[r]{96\\(2.3\%)} & \shortstack[r]{255\\(6.2\%)} & \shortstack[r]{3742\\(91.4\%)} \\
-        \textsf{Google Scholar} & 157 & 86 & 71 & 5458 & \shortstack[r]{76\\(1.4\%)} & \shortstack[r]{76\\(1.4\%)} & \shortstack[r]{0\\(0.0\%)} & \shortstack[r]{5382\\(98.6\%)} \\
-        \hline
-    \end{tabular}
-    \caption{Publication and citation counts for \emph{Spiros Skiadopoulos}, by provider}
-    \label{tab:provider-comparison}
-\end{table}
-
-All three providers include papers for which no citations were found: 32/117 in \textsf{OpenAlex}, 83/187 in \textsf{Semantic Scholar} and 71/157 in \textsf{Google Scholar} (mainly these are duplicates and alternative versions of cited papers)..
-The most cited papers of the selected author are \emph{Conceptual modeling for ETL processes} and \emph{PRIVE: anonymous location-based queries in distributed mobile systems}, across all sources.
-
-In broad terms, the \textsf{OpenAlex} and \textsf{Semantic Scholar} numbers are the closest.
-\textsf{Semantic Scholar} returned more papers and more citations than \textsf{OpenAlex} in absolute numbers, but the proportions are similar, as shown in Table~\ref{tab:provider-comparison}.
-At the same time, \textsf{Google Scholar} returned more citations than the other two, though very few were classified as self-citations ($<$\,2\%), and all of them as \textsf{direct}.
-
-\textsf{OpenAlex} and \textsf{Semantic Scholar} produced the same classification for 1798/1811 (99\%) citations, including all 57 \textsf{direct}.
-The remaining 13 citations alternate between \textsf{co-author} and \textsf{external}, depending on the way providers resolve citing authors.
-
-\textsf{Google Scholar} numbers stand out and seem misleading, compared to either of the other two providers, where author identities are available.
-
-\begin{description}
-    \item [Compared to \textsf{OpenAlex}] all citations classified as \textsf{co-author}, and almost half (29/65) of those classified as \textsf{direct}, are \textsf{external} in \textsf{Google Scholar}.
-    \item [Compared to \textsf{Semantic Scholar}] almost all (165/167) \textsf{co-author} citations, and almost half (25/57) \textsf{direct} ones, are \textsf{external} in \textsf{Google Scholar}.
-\end{description}
-
-For \textsf{Google Scholar} the classification relies on matching authors by plain text names, as described in Section~\ref{sec:data}.
-This results in citations classified as \textsf{direct} when the author under analysis is on the citing publication; otherwise the citation is classified as \textsf{external}.
-The citing papers do not always include the profile identifier, resulting in even fewer matches for \textsf{direct}.
-
-The following examples demonstrate the differences.
-
-The first example is the citation discussed in Chapter~\ref{c1:intro}, where publication~\cite{Kalnis2007} cites publication~\cite{Ghinita2007}.
-\textsf{OpenAlex} and \textsf{Semantic Scholar} return author identities for both papers, so for Spiros Skiadopoulos the citation is classified as \textsf{co-author}.
-For \textsf{Google Scholar} data, the same citation is classified as \textsf{external}.
-Listing~\ref{lst:example-coauthor} shows the parsed data from the responses.
-
-\begin{lstlisting}[float=tb, basicstyle=\footnotesize\ttfamily, caption={Authors of {[GPK2007]} and {[KGMP2007]}, as returned by providers}, label={lst:example-coauthor}]
-// OpenAlex - [GPK2007]
-[["A5069236544", "Gabriel Ghinita"], ["A5014399734", "Panos Kalnis"],
- ["A5009411092", "Spiros Skiadopoulos"]]
-// OpenAlex - [KGMP2007]
-[["A5014399734", "Panos Kalnis"], ["A5069236544", "Gabriel Ghinita"],
- ["A5053720072", "Kyriakos Mouratidis"], ["A5091887420", "Dimitris Papadias"]]
-
-// Semantic Scholar - [GPK2007]
-[{"authorId": "2182067502", "name": "G. Ghinita"},
- {"authorId": "2000187", "name": "Panos Kalnis"},
- {"authorId": "1688897", "name": "S. Skiadopoulos"}]
-// Semantic Scholar - [KGMP2007]
-[{"authorId": "2000187", "name": "Panos Kalnis"},
- {"authorId": "2182067502", "name": "G. Ghinita"},
- {"authorId": "1753946", "name": "K. Mouratidis"},
- {"authorId": "1746338", "name": "Dimitris Papadias"}]
-
-// Google Scholar - [GPK2007]
-"authors": "G Ghinita, P Kalnis, S Skiadopoulos"
-// Google Scholar - [KGMP2007]
-[{"name": "P Kalnis", "author_id": "-NdSrrYAAAAJ"},
- {"name": "G Ghinita", "author_id": "t_AzcmUAAAAJ"},
- {"name": "K Mouratidis", "author_id": "vq5oTnEAAAAJ"}]
-\end{lstlisting}
-
-The second example demonstrates provider errors resulting in skewed citation counts.
-\textsf{OpenAlex} returns the paper~\cite{Terrovitis2004} as citing itself, which counts as a \textsf{direct} citation.
-At the same time, \textsf{Google Scholar} returns \texttt{S Skiadopoulost} as an author for the same work, with nothing else matching this name, and the name matching no profile.
-Listing~\ref{lst:example-errors} includes both records.
-
-\begin{lstlisting}[float=tb, basicstyle=\footnotesize\ttfamily, caption={Errors in the responses of \textsf{OpenAlex} and \textsf{Google Scholar}}, label={lst:example-errors}]
-// OpenAlex
-{"id": "https://openalex.org/W4241330289",
- "title": "Modeling and language support for the management of pattern-bases",
- "publication_year": 2004,
- "referenced_works": [..., "https://openalex.org/W4241330289", ...]}
-
-// Google Scholar
-{"result_id": "WY_w50sssDEJ",
- "title": "Modeling and Language Support for the Management of",
- "publication_info": {
-   "summary": "S Skiadopoulost, E Bertinos - International Conference on ..., 2004",
-   "authors": [{"name": "S Skiadopoulost"}, {"name": "E Bertinos"}]}}
-\end{lstlisting}
-
-Having analyzed one sample author, we have shown that the data returned by each provider does not overlap precisely with data returned by other providers.
-Also, we have demonstrated that none of the sources used in this work was 100\% accurate and curated.
-The accuracy of classification counts, derived from inaccurate data, are still a good statisticall approach, though should be treated with care.

@@ -1,7 +1,7 @@
 % !TEX encoding = UTF-8 Unicode
 % !TEX root = ../Saunkin.tex
 
-\chapter{Related work and systems} \label{c2:related-work}
+\chapter{Related work and methodology} \label{c2:related-work}
 
 The analysis of scientific citations has been an active area of research within the field of bibliometrics~\cite{Glnzel2003BIBLIOMETRICSAA}.
 A number of metrics, data sources, and analytical approaches have been developed to assess the impact of publications and authors~\cite{Hirsch2005, Boyack2005}.
@@ -110,7 +110,7 @@ The sources selected for this work are discussed in more detail in Section~\ref{
 %\enote{ID incostistency, insufficient data parity, difficulty matching the authors, limit rated access - all these aspects will become issues down the road of this investigation.}
 %\enote{The software I will create as part of this investigation, I will have to justify the preference of one of the data source over another (it might be due to the availability of papers on a data source), provide a solution for author matching, and a way around throttling.}
 
-%\snote{It flows OK. You could add more if needed. You may use LLM polish and extend. Do not use it to write it though and do not overdo it. We use turn-it-in to check the final thesis. It is obligatory.}
+%\snote{It flows OK. You could add more if needed. You may use LLM polish and extend. Do not use it to write it though and do not overdo it. We use turn-it-in to check the final thesis. It is obligatory.}\enote{noted}
 
 \section{Existing approaches} \label{sec:existing-approaches}
 
@@ -165,3 +165,102 @@ Figure~\ref{fig:scopus-ui} shows how self-citations can be excluded from the res
     \label{fig:scopus-ui}
 \end{figure}
 
+
+\section{Methodology} \label{sec:methodology}
+
+The previous sections presented an overview of existing systems and approaches to citation analysis.
+These approaches rely on structured representations of publications and their relationships, typically in the form of citation networks.
+This section introduces a data model representing publications and authors, and then proposes a methodology for distinguishing between self-citations and external citations.
+
+\subsection{Data model} \label{sec:data-model}
+
+The goal of the model proposed in this section is to define the minimum structure required for identifying and classifying citations.
+Figure~\ref{fig:er-model} presents the data model used in this work; its entities and relationships are described below. 
+
+\begin{figure}[tb]
+    \centering
+    \includegraphics[scale=.2]{include/fig-data-model-er-diagram}
+    \caption{Conceptual ER model for citation analysis}
+    \label{fig:er-model}
+\end{figure}
+
+We identify two entities in the data of this system:
+
+\begin{description}
+
+    \item [Author] represents a researcher associated with one or more scientific publications.
+    Each author is identified by the name listed in the publication.
+
+    \item[Publication] represents a published scientific work.
+    Each publication is described by a set of properties, forming a natural key: title, year of publication, and list of authors.
+
+\end{description}
+
+Two relationships are identified between the entities:
+
+\begin{description}
+
+    \item[Contribution] relationship connects authors and publications.
+    A publication has one or more authors, and an author may write one or more publications (many-to-many).
+
+    \item[Citation] represents a reference from one publication to another.
+    A publication may cite and be cited by multiple other publications (many-to-many).
+
+\end{description}
+
+In addition to the contribution relationship, the author list (as it appears in the publication) is also retained as a property of the publication.
+This reflects the way publications are usually identified, where author names form part of the citation string.
+While the \emph{contribution} provides the structural relationship between authors and publications, the \emph{authors} attribute is used for identification.
+
+
+\subsection{Classification of citations} \label{sec:citation-classification}
+
+Based on the data model defined in the previous section, each citation can be classified by the relationship between the authors of the citing and cited publications.
+The classification depends on whether the two publications share any authors.
+
+A citation is classified as a \emph{self-citation} if at least one author appears in both the citing and the cited publication.
+This definition is widely adopted in related studies, where self-citations are identified based on author overlap between publications~\cite{Glnzel2003BIBLIOMETRICSAA, Fowler2007}.
+If the citing and cited publications do not share any authors, the citation is classified as an \emph{external citation}.
+
+In addition to the basic distinction, self-citations can be further refined, to distinguish between citations made directly by the same author and those less strict, that arise naturally through citation of co-authored publications.
+A citation is classified as a \emph{direct self-citation} of the author under analysis, if the author appears in both the citing and the cited publication.
+A citation is classified as a \emph{co-author self-citation}, if the two publications share at least one author, but the author under analysis does not appear in the citing publication.
+
+\subsection{Aggregation and processing pipeline} \label{sec:aggregation-pipeline}
+
+The classification of citations is used to analyze citation behavior at the level of an individual author.
+
+For a given author \(a\), the goal is to evaluate the citations received by the publications authored by \(a\), and to distinguish between different types of citations.
+
+The process consists of the following steps:
+
+\begin{itemize}
+    \item All publications authored by \(a\) are identified.
+    \item For each publication \(P_i\), all incoming citations are collected.
+    \item These citations are classified according to the definitions provided in Section~\ref{sec:citation-classification}.
+\end{itemize}
+
+Following this process, the following counts can be evaluated for the author \(a\):
+
+\begin{itemize}
+    \item Total number of citations received by all publications authored by \(a\)
+    \item Number of self-citations
+    \item Breakdown into direct and co-author self-citations
+    \item Number of external citations
+\end{itemize}
+
+Optionally, numbers produced by this pipeline can be evaluated against known metrics (e.g., Fi-score).
+
+\subsection{Assumptions and limitations} \label{sec:assumption-and-limitations}
+
+The methodology presented in this section assumes the availability of structured data describing publications, authors, and citation relationships.
+In practice, the acquisition and quality of such data introduce several constraints.
+
+\begin{itemize}
+    \item Access to citation data is provided through external systems, typically imposing rate limits, which restricts the volume of data that can be retrieved within a time frame.
+    \item Different sources provide inconsistent coverage of publications and metadata, which affects the quality of the citation graph.
+    \item Identification of authors across publications is not uniquely standardized.
+    Difference in naming and identifiers leads to ambiguity when determining whether publications refer to the same author.
+\end{itemize}
+
+These factors do not affect the formal definitions introduced in this section, but they influence the practical application of the methodology and are considered in the implementation described in the following chapter.
