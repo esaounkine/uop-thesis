@@ -54,9 +54,7 @@ The backend communicates with the external data sources to gather information, a
 \subsubsection{Backend} \label{sec:backend-layers}
 
 The backend is structured in layers of data flow separation.
-The layers and components are introduced below. \snote{The backend consists of services, ... described as follows.} \enote{done}
-
-\snote{See also what I have changed.}
+The layers and components are introduced below. 
 
 \paragraph{Services} is the only component containing the business logic to coordinate the collection and analysis of data.
 
@@ -124,8 +122,6 @@ Figure~\ref{fig:frontend-components} shows how the frontend is composed and how 
 \begin{figure}[tb]
     \centering
     \includegraphics[scale=.2]{include/fig-frontend-component-diagram}
-
-\snote{This might be a nice scale. Still there is unnecessary space between the shapes. Mermaid is not very configurable}
 
     \caption{Frontend building blocks: pages, containers and components}
     \label{fig:frontend-components}
@@ -318,8 +314,6 @@ Once the user has selected the author, the UI automatically checks if a citation
 If the citation graph exists, it is returned as a raw dataset in JSON format, and that date is shown as the time of the last update.
 The UI renders results, including an option to update the results, bypassing the previously stored graph and cache.
 If the citation graph does not exist, or the user has requested to update the results, the backend receives a request to fetch the full graph.
-
-\snote{it goes "whether ... or not".  If you do not have "or not" use "if"}\enote{noted}
 
 Having received a request to fetch the full graph from a provider, the backend creates a new job (as an in-memory object) and stores it in the database.
 The job is initially placed in the \textsf{running} state, which is the only non-final state.
