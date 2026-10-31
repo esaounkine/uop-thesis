@@ -88,16 +88,14 @@ The complete query is built at the end, combining all the steps and producing th
 
 The selected author is found in the \texttt{authors} table.
 
-\begin{quote}
-    \begin{vercode}
+\begin{SQLcode}
 WITH selected_author AS (
     SELECT *
     FROM authors
     WHERE provider = 'openalex'
         AND normalised_name = 'spiros skiadopoulos'
 )
-    \end{vercode}
-\end{quote}
+\end{SQLcode}
 
 \begin{center}
     \begin{tabular}{|l|l|}
@@ -115,8 +113,7 @@ WITH selected_author AS (
 
 The selected author has multiple records in the \texttt{contributions} table.
 
-\begin{quote}
-    \begin{vercode}
+\begin{SQLcode}
 WITH author_contributions AS (
     SELECT c.*
     FROM contributions c
@@ -124,8 +121,7 @@ WITH author_contributions AS (
             ON c.provider = sa.provider
                 AND c.author_id = sa.author_id
 )
-    \end{vercode}
-\end{quote}
+\end{SQLcode}
 
 \begin{center}
     \begin{tabular}{|l|l|l|r|}
@@ -143,8 +139,7 @@ WITH author_contributions AS (
 The selected author's publication citations are stored in the \texttt{citations} table.
 The column \texttt{target\_pub\_id} indicates that these are all incoming citations.
 
-\begin{quote}
-    \begin{vercode}
+\begin{SQLcode}
 WITH author_citations AS (
     SELECT ci.*
     FROM citations ci
@@ -152,8 +147,7 @@ WITH author_citations AS (
             ON ci.provider = ac.provider
                 AND ci.target_pub_id = ac.pub_id
 )
-    \end{vercode}
-\end{quote}
+\end{SQLcode}
 
 \begin{center}
     \begin{tabular}{|r|}
@@ -167,8 +161,7 @@ WITH author_citations AS (
 
 We select \emph{direct} citations from all author citations by matching the author contributions with the \texttt{source\_pub\_id} of the author citations.
 
-\begin{quote}
-    \begin{vercode}
+\begin{SQLcode}
 WITH direct_citations AS (
     SELECT aci.*
     FROM author_citations aci
@@ -176,8 +169,7 @@ WITH direct_citations AS (
             ON aci.provider = ac.provider
                 AND aci.source_pub_id = ac.pub_id
 )
-    \end{vercode}
-\end{quote}
+\end{SQLcode}
 
 \begin{center}
     \begin{tabular}{|r|}
@@ -191,8 +183,7 @@ WITH direct_citations AS (
 
 The remaining citations, where the selected author is not an author of a citing publication, are either \emph{co-author} or \emph{external} citations.
 
-\begin{quote}
-    \begin{vercode}
+\begin{SQLcode}
 WITH indirect_citations AS (
     SELECT aci.*
     FROM author_citations aci
@@ -202,8 +193,7 @@ WITH indirect_citations AS (
                 AND aci.target_pub_id = dc.target_pub_id
     WHERE dc.source_pub_id IS NULL
 )
-    \end{vercode}
-\end{quote}
+\end{SQLcode}
 
 \begin{center}
     \begin{tabular}{|r|}
@@ -217,8 +207,7 @@ WITH indirect_citations AS (
 
 The \emph{co-author} citations are those where the citing and cited publications share at least one other author, besides the selected author.
 
-\begin{quote}
-    \begin{vercode}
+\begin{SQLcode}
 WITH coauthor_citations AS (
     SELECT DISTINCT ic.*
     FROM indirect_citations ic
@@ -230,8 +219,7 @@ WITH coauthor_citations AS (
                 AND citing.pub_id = ic.source_pub_id
                 AND citing.author_id = cited.author_id
 )
-    \end{vercode}
-\end{quote}
+\end{SQLcode}
 
 \begin{center}
     \begin{tabular}{|r|}
@@ -245,8 +233,7 @@ WITH coauthor_citations AS (
 
 The \emph{external} citations are those where the citing and cited publications share no author at all.
 
-\begin{quote}
-    \begin{vercode}
+\begin{SQLcode}
 WITH external_citations AS (
     SELECT ic.*
     FROM indirect_citations ic
@@ -256,8 +243,7 @@ WITH external_citations AS (
                 AND ic.target_pub_id = cc.target_pub_id
     WHERE cc.source_pub_id IS NULL
 )
-    \end{vercode}
-\end{quote}
+\end{SQLcode}
 
 \begin{center}
     \begin{tabular}{|r|}
@@ -271,8 +257,7 @@ WITH external_citations AS (
 
 The complete query combines all the steps above and returns all the counts at once.
 
-\begin{quote}
-    \begin{vercode}
+\begin{SQLcode}
 WITH
 selected_author AS (
     SELECT *
@@ -339,8 +324,7 @@ SELECT
         AS num_citations_coauthor,
     (SELECT COUNT(*) FROM external_citations)
         AS num_citations_external;
-    \end{vercode}
-\end{quote}
+\end{SQLcode}
 
 \begin{center}
     \begin{tabular}{|r|r|r|r|}
