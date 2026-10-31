@@ -361,12 +361,13 @@ Once the job has been updated with the final result, the next time the client re
 
 The software application responsible for interaction with the user, user interface (UI), consists of a single-page web application.
 User interface addresses the use cases described in Section~\ref{sec:system-overview}: finding an author, and getting citation metrics for a selected author.
-The application consists of a few individual components described below: \textsf{Search form}, \textsf{Search results}, \textsf{Author details}, \textsf{Status}.
+The application consists of a few individual components described below, in the order that user engages them: \textsf{Search form}, \textsf{Search results}, \textsf{Author details}, \textsf{Status}.
 
 \subsection{Search form} \label{sec:ui-search-form}
 
-Figure~\ref{fig:ui-search-form} shows the initially empty search page, where the user enters a name to start the flow of selecting an author.
-Currently, there is no way to disable or enable some of the providers, this setting is controlled by the backend.
+Figure~\ref{fig:ui-search-form} illustrates the initially empty search page, where the user enters a name to start the flow of selecting an author.
+There is no way to disable or enable some of the providers from the UI, this setting is controlled by the backend.
+A single search searches across all providers concurrently.
 
 The page supports deep-linking to the search form with the name prefilled, when the URL specifies the parameter \texttt{q=query}, for instance \texttt{http://localhost:3000/authors?q=skiadopoulos}.
 
@@ -383,7 +384,8 @@ The page supports deep-linking to the search form with the name prefilled, when 
 
 Figure~\ref{fig:ui-search-results} shows the search results page, displayed after the search form has been submitted, and the response has been returned.
 
-Searching by name can return multiple results, matching the name, for each of the supported providers; the figure shows the list of results returned for \texttt{skiadopoulos}.
+Searching by name can return multiple results, matching the name, for each of the supported providers; the figure demonstrates a list of results returned for \texttt{skiadopoulos}.
+Results often include different researchers with the same or a similar name, so the correct profile has to be identified before requesting metrics.
 
 \begin{figure}[p]
 %\begin{figure}[tb]
@@ -404,10 +406,10 @@ Searching by name can return multiple results, matching the name, for each of th
 Each author name on the result list is accompanied by an affiliation, when available, and the identifier assigned by the selected provider.
 The name is a link to the author detail page, described in Section~\ref{sec:ui-details}.
 
-Figure~\ref{fig:ui-search-controls} shows the stored metrics, the update date and the \uicontrol{btn-refresh} button of a profile.
+Figure~\ref{fig:ui-search-controls} has the stored metrics, the update date and the \uicontrol{btn-refresh} button of a profile.
 The profiles, where results have not been collected previously, include a \uicontrol{btn-get-metrics} button \snote{Ideally, buttons should look as it is in the figure, but do not try hard to do it. Only if it does not take time and energy! An inline includegraphics might to the trick.}\enote{done}, to request the citation counts.
 For profiles, where citation metrics have previously been requested, and the citation graphs are found in the database, the UI shows the metrics and the date of the last update.
-For these profiles there is a \uicontrol{btn-refresh} button to request the data, ignoring the stored graph and cached responses.
+For these profiles there is a \uicontrol{btn-refresh} button, to request the data again, ignoring the stored graph and cached responses.
 
 %\begin{figure}[tb]
 %    \centering
@@ -418,6 +420,7 @@ For these profiles there is a \uicontrol{btn-refresh} button to request the data
 
 Figure~\ref{fig:ui-provider-tabs} highlights the selected provider.
 The provider tabs keep results isolated per source, following the decision described in Section~\ref{sec:providers}.
+Switching between the tabs allows to view the profiles found by each provider.
 
 \begin{figure}[tb]
     \centering
@@ -428,9 +431,10 @@ The provider tabs keep results isolated per source, following the decision descr
 
 If search fails for a provider, its tab will display an error, not affecting the results of the other providers.
 
-Figure~\ref{fig:ui-show-papers} shows the \uicontrol{switch-show-papers-all} switch, which applies to all the authors in the selected tab.
+Figure~\ref{fig:ui-show-papers} has the \uicontrol{switch-show-papers-all} switch, which applies to all the authors in the selected tab.
 To help deterministically select the correct author, among ones with similar names and affiliations, the UI provides an option to display their publications.
 A familiar title could be easier to recognize, especially if the author has changed affiliation, or shows no affiliation in the UI.
+When the switch is on, a short list of papers appears for each author in the current provider tab.
 
 \begin{figure}[tb]
     \centering
@@ -439,8 +443,8 @@ A familiar title could be easier to recognize, especially if the author has chan
     \label{fig:ui-show-papers}
 \end{figure}
 
-Figure~\ref{fig:ui-unknown-affiliation} shows a profile without an affiliation, displayed as \uicontrol{chip-unknown-affiliation}: only such profiles include a switch to show the papers of the individual author.
-This is helpful to avoid waiting for other authors on the list, and consuming the provider quotas.
+Figure~\ref{fig:ui-unknown-affiliation} shows a profile without an affiliation, displayed as \uicontrol{chip-unknown-affiliation}: only unaffiliated profiles include a switch to show the papers of the individual author.
+It is a useful way to check a single profile, not having to wait for the rest of the authors.
 
 \begin{figure}[tb]
     \centering
@@ -450,6 +454,7 @@ This is helpful to avoid waiting for other authors on the list, and consuming th
 \end{figure}
 
 Figure~\ref{fig:ui-individual-papers} shows how the toggle \uicontrol{switch-show-papers-author} to show the papers of an individual author alone works.
+The papers are listed only for one author, while the rest of the list remains unaffected.
 
 \begin{figure}[tb]
     \centering
@@ -460,7 +465,8 @@ Figure~\ref{fig:ui-individual-papers} shows how the toggle \uicontrol{switch-sho
 
 Figure~\ref{fig:ui-paper-order} shows the two ways of ordering the papers of the same author.
 The list initially shows five papers, ordered by the publication date (\emph{most recent} first), with an option \uicontrol{switch-paper-order} to order by citation count (\emph{most cited} first).
-The \uicontrol{btn-show-more} button allows to load the rest of the list, beyond the initially shown five papers.
+These are two obvious ways to recognize the most prominent work of an author.
+The \uicontrol{btn-show-more} button allows to load the rest of the list, not only the five papers, shown initially.
 
 \begin{figure}[tb]
     \centering
@@ -481,7 +487,8 @@ Figure~\ref{fig:ui-get-metrics} shows the button \uicontrol{btn-get-metrics} tha
     \label{fig:ui-get-metrics}
 \end{figure}
 
-Figure~\ref{fig:ui-metrics-progress} shows the progress under the selected author name, with the number of requests \textsf{completed}, \textsf{queued} and \textsf{failed}, updated while the job is running.
+Collecting the citations of an author can take a while, depending on the number of their publications, and the rate limits of the selected provider.
+Figure~\ref{fig:ui-metrics-progress} shows the progress under the selected author name, with the number of requests \textsf{done}, \textsf{queued} and \textsf{failed}, updated while the job is running.
 
 \begin{figure}[tb]
     \centering
@@ -491,7 +498,7 @@ Figure~\ref{fig:ui-metrics-progress} shows the progress under the selected autho
 \end{figure}
 
 Figure~\ref{fig:ui-metrics} shows the completed citation breakdown.
-The completed result returns the breakdown of the number of citations, with counts for: \textsf{total}, \textsf{external}, and \textsf{direct} and \textsf{co-author} self-citations.
+The completed result returns the breakdown of the number of citations, with counts for: \textsf{total}, \textsf{external}, and \textsf{direct} and \textsf{co-author} self-citations, as described in Section~\ref{sec:citation-classification}.
 
 \begin{figure}[tb]
     \centering
@@ -514,7 +521,7 @@ It represents the selected author, their own papers and the citing papers.
 
 The connecting lines (graph edges) represent the relations between the selected author and their papers (\textsf{contribution}), and the selected author papers and citing papers (\textsf{citation}).
 
-The graph supports zooming and panning, and hovering over a node reveals its details.
+The graph supports zooming, hovering over a node reveals its details.
 
 Figure~\ref{fig:ui-graph-filter} shows the graph filtered by excluding one of the node types.
 There is a legend at the bottom of the chart explaining the shapes and colors of the graph, and acting as a filter, to hide or show the respective nodes by clicking on each category.
@@ -551,7 +558,7 @@ Clicking the \uicontrol{btn-show-status} button opens the panel, showing the req
 API keys are shown masked, only to identify that an API key is used, which can be helpful for providers that allow access with or without an API key, for instance \textsf{Semantic Scholar}.
 
 The application version, together with the system resources (including the available memory and disk space) appear below the table.
-These details are useful when investigating service disruptions.
+These details are useful when investigating service disruptions, for instance when exhausting the provider quota.
 
 \begin{figure}[tb]
     \centering
