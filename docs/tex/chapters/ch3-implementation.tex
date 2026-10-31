@@ -404,10 +404,10 @@ Searching by name can return multiple results, matching the name, for each of th
 Each author name on the result list is accompanied by an affiliation, when available, and the identifier assigned by the selected provider.
 The name is a link to the author detail page, described in Section~\ref{sec:ui-details}.
 
-Figure~\ref{fig:ui-search-controls} shows the stored metrics, the update date and the refresh button of a profile.
-The profiles, where results have not been collected previously, include a \emph{Get metrics} button \snote{Ideally, buttons should look as it is in the figure, but do not try hard to do it. Only if it does not take time and energy! An inline includegraphics might to the trick.}, to request the citation counts.
+Figure~\ref{fig:ui-search-controls} shows the stored metrics, the update date and the \uicontrol{btn-refresh} button of a profile.
+The profiles, where results have not been collected previously, include a \uicontrol{btn-get-metrics} button \snote{Ideally, buttons should look as it is in the figure, but do not try hard to do it. Only if it does not take time and energy! An inline includegraphics might to the trick.}\enote{done}, to request the citation counts.
 For profiles, where citation metrics have previously been requested, and the citation graphs are found in the database, the UI shows the metrics and the date of the last update.
-For these profiles there is a \emph{Refresh} button to request the data, ignoring the stored graph and cached responses.
+For these profiles there is a \uicontrol{btn-refresh} button to request the data, ignoring the stored graph and cached responses.
 
 %\begin{figure}[tb]
 %    \centering
@@ -428,7 +428,7 @@ The provider tabs keep results isolated per source, following the decision descr
 
 If search fails for a provider, its tab will display an error, not affecting the results of the other providers.
 
-Figure~\ref{fig:ui-show-papers} shows the \emph{Show papers for all} switch, which applies to all the authors in the selected tab.
+Figure~\ref{fig:ui-show-papers} shows the \uicontrol{switch-show-papers-all} switch, which applies to all the authors in the selected tab.
 To help deterministically select the correct author, among ones with similar names and affiliations, the UI provides an option to display their publications.
 A familiar title could be easier to recognize, especially if the author has changed affiliation, or shows no affiliation in the UI.
 
@@ -439,7 +439,7 @@ A familiar title could be easier to recognize, especially if the author has chan
     \label{fig:ui-show-papers}
 \end{figure}
 
-Figure~\ref{fig:ui-unknown-affiliation} shows a profile without an affiliation, displayed as \emph{Unknown affiliation}: only such profiles include a switch to show the papers of the individual author.
+Figure~\ref{fig:ui-unknown-affiliation} shows a profile without an affiliation, displayed as \uicontrol{chip-unknown-affiliation}: only such profiles include a switch to show the papers of the individual author.
 This is helpful to avoid waiting for other authors on the list, and consuming the provider quotas.
 
 \begin{figure}[tb]
@@ -449,7 +449,7 @@ This is helpful to avoid waiting for other authors on the list, and consuming th
     \label{fig:ui-unknown-affiliation}
 \end{figure}
 
-Figure~\ref{fig:ui-individual-papers} shows how the toggle to show the papers of an individual author alone works.
+Figure~\ref{fig:ui-individual-papers} shows how the toggle \uicontrol{switch-show-papers-author} to show the papers of an individual author alone works.
 
 \begin{figure}[tb]
     \centering
@@ -459,8 +459,8 @@ Figure~\ref{fig:ui-individual-papers} shows how the toggle to show the papers of
 \end{figure}
 
 Figure~\ref{fig:ui-paper-order} shows the two ways of ordering the papers of the same author.
-The list initially shows five papers, ordered by the publication date (\emph{most recent} first), with an option to order by citation count (\emph{most cited} first).
-The \emph{Show more} button allows to load the rest of the list, beyond the initially shown five papers.
+The list initially shows five papers, ordered by the publication date (\emph{most recent} first), with an option \uicontrol{switch-paper-order} to order by citation count (\emph{most cited} first).
+The \uicontrol{btn-show-more} button allows to load the rest of the list, beyond the initially shown five papers.
 
 \begin{figure}[tb]
     \centering
@@ -472,7 +472,7 @@ The \emph{Show more} button allows to load the rest of the list, beyond the init
 
 Users must explicitly request publication lists to be shown, to avoid unnecessary provider requests when the author is already recognizable.
 
-Figure~\ref{fig:ui-get-metrics} shows the button \emph{Get metrics} that is available for every author, the user can click to request the citation metrics, starting the job as described in Section~\ref{sec:processing-pipeline}.
+Figure~\ref{fig:ui-get-metrics} shows the button \uicontrol{btn-get-metrics} that is available for every author, the user can click to request the citation metrics, starting the job as described in Section~\ref{sec:processing-pipeline}.
 
 \begin{figure}[tb]
     \centering
@@ -502,7 +502,7 @@ The completed result returns the breakdown of the number of citations, with coun
 
 Counts summarize the result, but to provide more detailed information and a graph visualization, there are two initially collapsed options at the bottom of an author section.
 
-Figure~\ref{fig:ui-graph} shows the graph chart, opened by clicking the \emph{Citation graph} link.
+Figure~\ref{fig:ui-graph} shows the graph chart, opened by clicking the \uicontrol{link-citation-graph} link.
 It represents the selected author, their own papers and the citing papers.
 
 \begin{figure}[tb]
@@ -547,7 +547,7 @@ The remaining space on the page is occupied by the controls identical to the str
 
 Figure~\ref{fig:ui-status} shows the provider and system details panel.
 Normally, it stays collapsed at the bottom of the page.
-Clicking the \emph{Show status} button opens the panel, showing the request rate limit (requests per second), quotas, and the number of stored records for each provider, as well as jobs.
+Clicking the \uicontrol{btn-show-status} button opens the panel, showing the request rate limit (requests per second), quotas, and the number of stored records for each provider, as well as jobs.
 API keys are shown masked, only to identify that an API key is used, which can be helpful for providers that allow access with or without an API key, for instance \textsf{Semantic Scholar}.
 
 The application version, together with the system resources (including the available memory and disk space) appear below the table.
