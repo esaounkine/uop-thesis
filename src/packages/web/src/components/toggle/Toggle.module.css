@@ -5,11 +5,12 @@
     --thumb-bg-color: #f8f8f8;
     --option-text-color-inactive: #f8f8f8;
     --option-text-color-active: #555;
-    --thumb-height: 25px;
-    --thumb-width: 25px;
+    /* same outer size as the Pico switch (input[role=switch]) */
+    --toggle-height: 1.25em;
+    --toggle-width: 2.25em;
+    --thumb-height: calc(var(--toggle-height) - var(--toggle-border-width) * 2);
+    --thumb-width: calc(var(--toggle-width) / 2 - var(--toggle-border-width));
     --thumb-border-radius: calc(var(--thumb-height) / 2);
-    --toggle-width: calc(var(--thumb-width) * 2 + calc(var(--toggle-border-width) * 2));
-    --toggle-height: calc(var(--thumb-height) + calc(var(--toggle-border-width) * 2));
     --toggle-border-radius: calc(var(--toggle-height) / 2);
 }
 
