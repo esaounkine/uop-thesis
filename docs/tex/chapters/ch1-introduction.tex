@@ -4,12 +4,12 @@
 \chapter{Introduction} \label{c1:intro}
 
 Scientific publications build upon previously published work by referencing related research.
-If a publication $y$ \emph{refers} to another publication $x$, we say that $y$ \emph{cites} $x$, and the reference is called a \emph{citation}.
+If a publication $c$ \emph{refers} to another publication $p$, we say that $c$ \emph{cites} $p$, and the reference is called a \emph{citation}.
 
 Citations form a directed relationship between publications and induce a citation network, where nodes correspond to publications, and edges correspond to citation links.
 This network is widely used to assess the impact and relevance of scientific work.
 
-For a given publication $x$, the \emph{number of citations} it receives is the number of distinct publications that reference it.
+For a given publication $p$, the \emph{number of citations} it receives is the number of distinct publications that reference it.
 The citation counts can be aggregated per author to estimate the influence of a researcher.
 
 Not all citations carry the same meaning.
@@ -69,7 +69,7 @@ Let us clarify, our idea with the help of the example presented in Section~\ref{
 %
 %For Spiros Skiadopoulos this counts as a \emph{external citation}.
 
-Let us consider the researchers named Gabriel Ghinita, Panos Kalnis and Spiros Skiadopoulos that had published article [GPK2007]~\cite{Ghinita2007} that is described as follows. 
+Let us consider the researchers named Gabriel Ghinita, Panos Kalnis and Spiros Skiadopoulos that had published article [GPK2007]~\cite{Ghinita2007} that is described as follows.
 
 \begin{myquote}
 [GPK2007] & Gabriel Ghinita, Panos Kalnis, Spiros Skiadopoulos:
@@ -84,24 +84,32 @@ Panos Kalnis, a co-author of [GPK2007], later in the same year published article
 \emph{Preventing Location-Based Identity Inference in Anonymous Spatial Queries}. IEEE Trans. Knowl. Data Eng. 19(12): 1719-1733 (2007)
 \end{myquote}
 
-It is clear that when we consider the third-party citations of Panos Kalnis and Gabriel Ghinita the citation of [GPK2007] in [KGMP2007] should be classified as \emph{self-citation}, as Panos Kalnis and Gabriel Ghinita co-authored both articles.
-At the same time, the same citation should be classified as \emph{external citation} for Spiros Skiadopoulos, for having contributed to [GPK2007], but not to [KGMP2007].
+A formal classification of the citation types is described in Section~\ref{sec:citation-classification}.
+But we can already determine the role of the authors in both papers.
+Panos Kalnis and Gabriel Ghinita authored both papers, so for them the citation of [GPK2007] in [KGMP2007] is a \emph{self-citation}.
+For Spiros Skiadopoulos, who only contributed to [GPK2007], there are different approaches resulting in different outcomes: the citation can be classified as an \emph{external citation}, or as a lighter version of \emph{self-citation}, as the papers do share some authors, even though Skiadopoulos is not one of them.
+In Section~\ref{sec:citation-classification}, we call the first a \emph{direct self-citation}, and its lighter version a \emph{co-author self-citation}.
 
-\snote{Carry on! Εδώ θα πεις ότι μάλλον δεν είναι σωστά να θεωρηθεί η [KGMP2007] self citation γιατί δεν την έχει γράψει ο Σκιαδόπουλος. Κάποιοι θα το μετρούσαν κάποιοι όχι. } 
+To help gather the data and visualize the results, we build a system that shows the citation category metrics for any author.
+
+\snote{Carry on! Εδώ θα πεις ότι μάλλον δεν είναι σωστά να θεωρηθεί η [KGMP2007] self citation γιατί δεν την έχει γράψει ο Σκιαδόπουλος. Κάποιοι θα το μετρούσαν κάποιοι όχι. }
+\enote{done}
 
 \snote{Οπότε εμείς θέλουμε να παρουσιάσουμε όλες τις περιπτώσεις. External citations, Strict self citations, other citations. Βρες κατάλληλα ονόματα δεν μου έρχεται κάτι τώρα. }
+\enote{done}
 
 \snote{Μετά θα πεις ότι θα σας φτιάξουμε ένα σύστημα στο οποίο θα εμφανίζει όλες τις επιλογές.}
+\enote{done}
 
 \snote{
 Γενικά σχόλια:
 \begin{itemize}
 \item
-Μην σβήνεις τα σχόλιά μου. Θέλω να βλέπω τι σου είχα γράψει. Αν είμαι ΟΚ θα τα σβήνω εγώ. Επίσης θα αφήνω πολλά πράγματα σε σχόλια αν πιστεύω ότι θα μου είναι χρήσιμα αργότερα. Μην τα σβήνεις. 
+Μην σβήνεις τα σχόλιά μου. Θέλω να βλέπω τι σου είχα γράψει. Αν είμαι ΟΚ θα τα σβήνω εγώ. Επίσης θα αφήνω πολλά πράγματα σε σχόλια αν πιστεύω ότι θα μου είναι χρήσιμα αργότερα. Μην τα σβήνεις. \enote{noted}
 \item
-Μην αλλάζεις το κείμενό μου. Εκτός αν έχω κάνει typo ή λέω κάτι λάθος. Έφαγα χρόνο να το γράψω... 
+Μην αλλάζεις το κείμενό μου. Εκτός αν έχω κάνει typo ή λέω κάτι λάθος. Έφαγα χρόνο να το γράψω... \enote{noted}
 \item
-use American english dictionary. 
+use American english dictionary. \enote{noted}
 \end{itemize}
 }
 
