@@ -226,24 +226,35 @@ In addition to the basic distinction, self-citations can be further refined, to 
 A citation is classified as a \emph{direct self-citation} of the author under analysis, if the author appears in both the citing and the cited publication.
 A citation is classified as a \emph{co-author self-citation}, if the two publications share at least one author, but the author under analysis does not appear in the citing publication.
 
+In more formal terms, for any author $A$, a citation $c_j$ of their publication $p_i$ is classified as one of the following.
+
+\begin{description}
+    \item
+    [Direct self-citations] where $A$ is also an author of $c_j$.
+    \item
+    [Co-author self-citations] where $A$ is not an author of $c_j$, but $p_i$ and $c_j$ share at least one author.
+    \item
+    [External citations] where there is no overlap between the authors of $p_i$ and $c_j$.
+\end{description}
+
 \subsection{Aggregation and processing pipeline} \label{sec:aggregation-pipeline}
 
 The classification of citations is used to analyze citation behavior at the level of an individual author.
 
-For a given author \(a\), the goal is to evaluate the citations received by the publications authored by \(a\), and to distinguish between different types of citations.
+For a given author $A$, the goal is to evaluate the citations received by the publications authored by $A$, and to distinguish between different types of citations.
 
 The process consists of the following steps:
 
 \begin{itemize}
-    \item All publications authored by \(a\) are identified.
-    \item For each publication \(P_i\), all incoming citations are collected.
+    \item All publications $p_i$ authored by $A$ are identified.
+    \item For each publication $p_i$, all incoming citations $c_j$ are collected.
     \item These citations are classified according to the definitions provided in Section~\ref{sec:citation-classification}.
 \end{itemize}
 
-Following this process, the following counts can be evaluated for the author \(a\):
+Following this process, the following counts can be evaluated for the author $A$:
 
 \begin{itemize}
-    \item Total number of citations received by all publications authored by \(a\)
+    \item Total number of citations received by all publications authored by $A$
     \item Number of self-citations
     \item Breakdown into direct and co-author self-citations
     \item Number of external citations
