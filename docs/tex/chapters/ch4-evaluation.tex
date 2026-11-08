@@ -15,7 +15,7 @@ Following the implemented methodology, described in Section~\ref{sec:processing-
 
 The classification function compares the authors of each cited and citing publication, to calculate the citation classification as \emph{direct}, \emph{co-author} or \emph{external}.
 
-To operate on realistic data, we have retrieved all records from the selected provider for the selected author on 9 October 2026, and stored a normalized citation graph in the local database.
+To operate on realistic data, we have retrieved all records from the selected provider for the selected author on 10 October 2026, and stored a normalized citation graph in the local database.
 Going forward, to analyze data, we will be using SQL queries and their results; this will help make the evaluation framework clear to understand and reproducible.
 
 Tables~\ref{tab:sample-publications}--\ref{tab:sample-citations} demonstrate a sample of records in the tables of the local database.
@@ -400,7 +400,7 @@ Table~\ref{tab:provider-comparison} contains the publication and citation counts
     \label{tab:provider-comparison}
 \end{table}
 
-All three providers include papers for which no citations were found: 32/117 in \textsf{OpenAlex}, 83/187 in \textsf{Semantic Scholar} and 71/157 in \textsf{Google Scholar} (mainly these are duplicates and alternative versions of cited papers)..
+All three providers include papers for which no citations were found: 32/117 in \textsf{OpenAlex}, 83/187 in \textsf{Semantic Scholar} and 71/157 in \textsf{Google Scholar} (mainly these are duplicates and alternative versions of cited papers).
 The most cited papers of the selected author are \emph{Conceptual modeling for ETL processes} and \emph{PRIVE: anonymous location-based queries in distributed mobile systems}, across all sources.
 
 In broad terms, the \textsf{OpenAlex} and \textsf{Semantic Scholar} numbers are the closest.
@@ -476,4 +476,4 @@ Listing~\ref{lst:example-errors} includes both records.
 
 Having analyzed one sample author, we have shown that the data returned by each provider does not overlap precisely with data returned by other providers.
 Also, we have demonstrated that none of the sources used in this work was 100\% accurate and curated.
-The accuracy of classification counts, derived from inaccurate data, are still a good statisticall approach, though should be treated with care.
+The accuracy of classification counts, derived from inaccurate data, are still a good statistical approach, though should be treated with care.

@@ -26,7 +26,7 @@ Metadata is inconsistent across articles,
 \item
 Authors are not uniquely defined across data sources, 
 \item
-There's no consistent Application Programming Interface (API) for each data source.
+There is no consistent Application Programming Interface (API) for each data source.
 \end{enumerate}
 
 To objectively compare the sources, we define a few aspects important for citation analysis: method of access, cost, extent and scope of coverage, data structure (especially when the citing publications are treated as a first-class citizen), author identification.
@@ -42,7 +42,7 @@ The sources considered for this work are the following:
     has the widest coverage of all sources across every domain.
     It offers no structured interface and blocks automated access.
 
-    There is a number of third-party services, such as \textsf{SerpApi}\footnote{\url{https://serpapi.com}}, that scrape \textsf{Google Scholar} pages on demand, to extract the information, allowing to retrieve structured data via an API.
+    There are a number of third-party services, such as \textsf{SerpApi}\footnote{\url{https://serpapi.com}}, that scrape \textsf{Google Scholar} pages on demand, to extract the information, allowing to retrieve structured data via an API.
     These services supply a fleet of devices to automatically handle robot detection, IP rotation, solve Captcha challenges, and avoid other traps, to reliably extract data from the pages, but, they charge a fee per request.
     Still, these services inherit the coverage and specifics of \textsf{Google Scholar} (identify authors by profile page and expose contribution lists as plain comma-separated text).
     Some of these services provide an interface to collect the citing publications (exposed by \textsf{Google Scholar}).
@@ -98,7 +98,7 @@ The sources present trade-offs when considering the most suitable for our task:
     \item 
     [The largest source] (\textsf{Google Scholar}) is the hardest to access and returns unstructured data.
     \item 
-    [The open sources] (\textsf{OpenAlex}, \textsf{Semantic Scholar}, \textsf{CrossRef}, \textsf{OpenCitations} and \textsf{DBLP})  differ in coverage and data they expose.
+    [The open sources] (\textsf{OpenAlex}, \textsf{Semantic Scholar}, \textsf{CrossRef}, \textsf{OpenCitations} and \textsf{DBLP}) differ in coverage and data they expose.
     \item 
     [The most curated source] (\textsf{Scopus}) is not freely available.
 \end{description}
