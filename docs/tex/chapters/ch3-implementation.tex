@@ -337,7 +337,7 @@ The successful path is as follows:
 \begin{itemize}
     \item The \textsf{Metrics service}, which orchestrates the flow, hands it over to the \textsf{Author service}.
     \item The \textsf{Author service} requests the list of papers for the selected author identifier, and paginates to reach the end of the response list.
-    \item Having reached the end of the list, the \textsf{Author service} calls the \textsf{Publication service} to fetch the citations, for each of the gathered publications
+    \item Having reached the end of the list, the \textsf{Author service} calls the \textsf{Publication service} to fetch the citations, for each of the gathered publications.
     \item The \textsf{Publication service} requests the list of citations, and extracts the authors from each item of the list.
     In practice, the requests for all publications are queued in bulk, at the same time, and the per-provider request queue dispatches them sequentially, limiting concurrent requests to the number of requests per second that the provider allows.
     \item Having gathered details of each of the citing publications, the control returns to the \textsf{Metrics service} to aggregate final results.
