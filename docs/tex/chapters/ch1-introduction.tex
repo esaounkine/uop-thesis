@@ -39,10 +39,14 @@ identify the publications of $A$
 \item
 compute the total number of citations received by these publications
 \item
-distinguish between self-citations and external citations
+distinguish between
+    \begin{enumerate}
+    \item self-citations and
+    \item external citations
+    \end{enumerate}
 \end{enumerate}
 
-The most important step of the above process is the distinction between self-citations and external citations (Item 3).
+The most important (and difficult) step of the above process is the distinction between self-citations and external citations (Item 3).
 In our work, we focus on the identification and classification of citations based on author overlap, providing a more clear interpretation of citation metrics.
 
 Let us clarify our idea with the help of the example presented in Section~\ref{sec:intro-example}.
@@ -69,26 +73,33 @@ Let us clarify our idea with the help of the example presented in Section~\ref{s
 %
 %For Spiros Skiadopoulos this counts as a \emph{external citation}.
 
-Let us consider the researchers named Gabriel Ghinita, Panos Kalnis and Spiros Skiadopoulos that had published article [GPK2007]~\cite{Ghinita2007} that is described as follows.
+Let us consider the researchers
+Gabriel Ghinita, Panos Kalnis and Spiros Skiadopoulos
+that had published article [GPK2007]
+%~\cite{Ghinita2007}
+that is described as follows.
 
 \begin{myquote}
 [GPK2007] & Gabriel Ghinita, Panos Kalnis, Spiros Skiadopoulos:
 \emph{PRIVE: anonymous location-based queries in distributed mobile systems}. WWW 2007: 371-380
 \end{myquote}
 
-
-Panos Kalnis, a co-author of [GPK2007], later in the same year published article [KGMP2007]~\cite{Kalnis2007} that cites [GPK2007] and is detailed as follows.
+Panos Kalnis, a co-author of [GPK2007], later in the same year published article [KGMP2007]
+%~\cite{Kalnis2007}
+that cites [GPK2007] and is detailed as follows.
 
 \begin{myquote}
 [KGMP2007] & Panos Kalnis, Gabriel Ghinita, Kyriakos Mouratidis, Dimitris Papadias:
 \emph{Preventing Location-Based Identity Inference in Anonymous Spatial Queries}. IEEE Trans. Knowl. Data Eng. 19(12): 1719-1733 (2007)
 \end{myquote}
 
-A formal classification of the citation types is described in Section~\ref{sec:citation-classification}.
-But we can already determine the role of the authors in both papers.
-Panos Kalnis and Gabriel Ghinita authored both papers, so for them the citation of [GPK2007] in [KGMP2007] is a \emph{self-citation}.
+With the above example we may already determine the role of the authors in both papers.
+Panos Kalnis and Gabriel Ghinita authored both papers, so for them the citation of [GPK2007] in [KGMP2007] is clearly a \emph{self-citation}.
+
 For Spiros Skiadopoulos, who only contributed to [GPK2007], there are different approaches resulting in different outcomes: the citation can be classified as an \emph{external citation}, or as a lighter version of \emph{self-citation}, as the papers do share some authors, even though Skiadopoulos is not one of them.
 In Section~\ref{sec:citation-classification}, we call the first a \emph{direct self-citation}, and its lighter version a \emph{co-author self-citation}.
+
+A formal classification of the citation types is described in Section~\ref{sec:citation-classification}.
 
 To help gather the data and visualize the results, we build a system that shows the citation category metrics for any author.
 
