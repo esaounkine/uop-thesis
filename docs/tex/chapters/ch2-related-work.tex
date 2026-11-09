@@ -165,6 +165,8 @@ Figure~\ref{fig:scopus-ui} shows how self-citations can be excluded from the res
 
 \section{Methodology} \label{sec:methodology}
 
+\snote{This is your work, right? Should this be highlighted? Let us discuss it. I believe it should go in a separate chapter. }
+
 The previous sections presented an overview of existing systems and approaches to citation analysis.
 These approaches rely on structured representations of publications and their relationships, typically in the form of citation networks.
 This section introduces a data model representing publications and authors, and then proposes a methodology for distinguishing between self-citations and external citations.
@@ -213,7 +215,7 @@ While the \emph{contribution} provides the structural relationship between autho
 \subsection{Classification of citations} \label{sec:citation-classification}
 
 Based on the data model defined in the previous section, each citation can be classified by the relationship between the authors of the citing and cited publications.
-The classification depends on whether the two publications share any authors.
+The classification depends on whether the two publications share any authors or not.
 
 A citation is classified as a \emph{self-citation} if at least one author appears in both the citing and the cited publication.
 This definition is widely adopted in related studies, where self-citations are identified based on author overlap between publications~\cite{Glnzel2003BIBLIOMETRICSAA, Fowler2007}.
@@ -242,11 +244,11 @@ For a given author $A$, the goal is to evaluate the citations received by the pu
 
 The process consists of the following steps:
 
-\begin{itemize}
+\begin{enumerate}
     \item All publications $p_i$ authored by $A$ are identified.
     \item For each publication $p_i$, all incoming citations $c_j$ are collected.
     \item These citations are classified according to the definitions provided in Section~\ref{sec:citation-classification}.
-\end{itemize}
+\end{enumerate}
 
 Following this process, the following counts can be evaluated for the author $A$:
 
