@@ -14,6 +14,11 @@ The output is generated in the `out/tex` (gitignored) directory.
 
 NOTE: this project is set up for Mac - it relies on Homebrew and MacTeX. For other systems adjust the `Makefile` and install the required dependencies manually.
 
+### Presentation
+
+The defense slides are in `docs/presentation/presentation.tex`, with speaker notes and likely questions in `docs/presentation/notes.md`.
+Run `make presentation` to build them into `out/presentation` (gitignored).
+
 ## Application
 
 The application (backend API + web) runs with docker compose (both run on the same server):

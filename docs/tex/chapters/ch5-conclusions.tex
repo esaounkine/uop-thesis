@@ -5,13 +5,43 @@
 
 %Στο προηγούμενο κεφάλαιο παρουσιάσαμε σχετικά συστήματα και ερευνητικές εργασίες που μας βοήθησαν στην ανάλυση των απαιτήσεων του \textlatin{MeL}.  Σε αυτό το κεφάλαιο το οποίο είναι και το τελευταίο της πτυχιακής εργασίας, θα συνοψίσουμε τα επιτεύγματά μας και θα αναφέρουμε τα συμπεράσματά μας από το σχεδιασμό και τη χρήση αυτού του συστήματος. Στη συνέχεια θα παρουσιάσουμε κάποιες μελλοντικές επεκτάσεις για το \textlatin{MeL}.
 
-\section{Conclusions}
-
-
-\section{Future work}
-%Στην ενότητα αυτή αναφέρουμε κάποιες πιθανές επεκτάσεις του \textlatin{MeL}. ... Οι πιθανές μελλοντικές επεκτάσεις είναι οι εξής: 
+%Στην ενότητα αυτή αναφέρουμε κάποιες πιθανές επεκτάσεις του \textlatin{MeL}. ... Οι πιθανές μελλοντικές επεκτάσεις είναι οι εξής:
 %
 %\begin{itemize}
 %  \item
 %...
 %\end{itemize}
+
+The goal of this work, set out in Section~\ref{sec:problem-statement}, was to describe the methodology and produce a system capable of classifying the citations received by the papers of a given author.
+In this final chapter of the thesis, we summarize what was done and present our conclusions.
+Then we discuss possible extensions of this work.
+
+\section{Conclusions} \label{sec:conclusions}
+
+The main conclusion of this work is that the state of the available data sources remains an open problem.
+For our purpose, \textsf{OpenAlex} proved to be the most dependable source, by making a rich dataset freely available to the public, and by exposing well-structured data that we could use in our work (Section~\ref{sec:data-sources}).
+Without it, the task would have been considerably harder, as the remaining sources come with limitations around access, data completeness, and the quality of data.
+
+A second conclusion is that, to this day, there is no consensus on the definition of citation classification and the methodology~\cite{Glnzel2003BIBLIOMETRICSAA, Costas2010}.
+This is in part due to the ambiguous nature of author contributions to the papers: when a publication lists a number of authors, it is inherently difficult to attribute the origin of a citation to an individual author.
+Several classifications of citations have been defined in the previous related publications, and in this work we introduced our own variation (Section~\ref{sec:citation-classification}) and supported it in the implemented system.
+
+A third conclusion confirms the observation of the papers mentioned in Chapter~\ref{c2:related-work}~\cite{Boyack2005, Chronis2020, Chronis2021}: citations can be expressed and analyzed as graphs.
+Our original problem was reduced to the construction of a graph (of authors, papers, contributions and citations), and its traversal, to aggregate the metrics (Section~\ref{sec:storage-caching}).
+
+As for the system prototype that we built, with no scaling or maintenance in mind, current technologies made it straightforward to develop a single-user interactive service with rich visuals (Chapter~\ref{c3:implementation}).
+
+\section{Future work} \label{sec:future-work}
+
+\begin{description}
+\item
+[Combining the data sources.] Currently, the results are kept separate per provider (Section~\ref{sec:system-overview}), and, for instance, in the example analyzed in Section~\ref{sec:data-source-comparison}, only about 1/3 of the author papers were found in all sources.
+Combining the results across providers would allow the sources to complement each other, and produce a more complete citation graph for an author.
+This initiative requires identifying the authors and papers across different sources, which was not possible in this work due to various limitations.
+Currently, there are no universally adopted identifiers for authors and papers across the sources, as described in Section~\ref{sec:data-sources}, so this initiative would require a strategy for matching similar names and titles.
+\item
+[Detecting circular citations.] The classification methodology in this work is limited to a single level of the citation graph: the graph is constructed following a predefined flow, from the author to their papers, to the citing papers, and to the citing authors.
+A group of more than two unrelated authors (i.e., those who have not authored papers together) could avoid detection by citing each other in a circle: for instance, an author $A_1$ cites a publication of author $A_2$, $A_2$ cites a publication of $A_3$, $A_3$ cites a publication of $A_4$, and $A_4$ cites a publication of $A_1$.
+In the example above, none of the citations would be reported as self-citations by the existing system, as the immediately linked papers do not share authors, and only when the full picture is put together it would be possible to detect circles.
+Detecting such circles would require extending the graph beyond a single level, which would dramatically increase the number of papers that should be collected for a single search, though the final graph would offer a much more valuable dataset, which could make the detection more effective.
+\end{description}
