@@ -24,7 +24,7 @@ In particular, citations can be divided into two main categories:
 
 
 This distinction is important because external citations are typically considered a stronger indicator of influence, as they reflect recognition from independent researchers.
-While self-citations are not inherently bad, and may occur naturally in continuous cumulative research, they can inflate citation-based metrics if used excessively.
+While self-citations are not inherently bad, and may occur naturally in continuous cumulative research; still, they can inflate citation-based metrics if used excessively.
 
 
 \section{Problem statement} \label{sec:problem-statement}
@@ -93,13 +93,15 @@ that cites [GPK2007] and is detailed as follows.
 \emph{Preventing Location-Based Identity Inference in Anonymous Spatial Queries}. IEEE Trans. Knowl. Data Eng. 19(12): 1719-1733 (2007)
 \end{myquote}
 
-With the above example we may already determine the role of the authors in both papers.
-Panos Kalnis and Gabriel Ghinita authored both papers, so for them the citation of [GPK2007] in [KGMP2007] is clearly a \emph{self-citation}.
+Using the above example we may already determine the role of the authors in both papers.
+For Panos Kalnis and Gabriel Ghinita that authored both papers, it is clear that for of them the citation of [GPK2007] in [KGMP2007] is a \emph{self-citation}.
 
-For Spiros Skiadopoulos, who only contributed to [GPK2007], there are different approaches resulting in different outcomes: the citation can be classified as an \emph{external citation}, or as a lighter version of \emph{self-citation}, as the papers do share some authors, even though Skiadopoulos is not one of them.
+For Spiros Skiadopoulos, who only contributed to [GPK2007] the determining whether the citation of [GPK2007] in [KGMP2007] is a self-citation on not is not that clear. There are different approaches resulting in different outcomes: the citation can be classified as an \emph{external citation}, or as a lighter version of \emph{self-citation}, as the papers do share some authors, even though Skiadopoulos is not one of them.
 In Section~\ref{sec:citation-classification}, we call the first a \emph{direct self-citation}, and its lighter version a \emph{co-author self-citation}.
 
 A formal classification of the citation types is described in Section~\ref{sec:citation-classification}.
+
+\snote{the above still need work. Use LLMs! Δες τι έχω γράψει παρακάτω. Θέλει ακόμα μπλα μπλα. Αν το διαβάσει κάποιος που δεν ξέρει τίποτα σχτικό θα το καταλάβει; }
 
 To help gather the data and visualize the results, we build a system that shows the citation category metrics for any author.
 
@@ -112,26 +114,24 @@ To help gather the data and visualize the results, we build a system that shows 
 \snote{Μετά θα πεις ότι θα σας φτιάξουμε ένα σύστημα στο οποίο θα εμφανίζει όλες τις επιλογές.}
 \enote{done}
 
-\snote{
-Γενικά σχόλια:
-\begin{itemize}
-\item
-Μην σβήνεις τα σχόλιά μου. Θέλω να βλέπω τι σου είχα γράψει. Αν είμαι ΟΚ θα τα σβήνω εγώ. Επίσης θα αφήνω πολλά πράγματα σε σχόλια αν πιστεύω ότι θα μου είναι χρήσιμα αργότερα. Μην τα σβήνεις. \enote{noted}
-\item
-Μην αλλάζεις το κείμενό μου. Εκτός αν έχω κάνει typo ή λέω κάτι λάθος. Έφαγα χρόνο να το γράψω... \enote{noted}
-\item
-use American english dictionary. \enote{noted}
-\end{itemize}
-}
+%\snote{
+%Γενικά σχόλια:
+%\begin{itemize}
+%\item
+%Μην σβήνεις τα σχόλιά μου. Θέλω να βλέπω τι σου είχα γράψει. Αν είμαι ΟΚ θα τα σβήνω εγώ. Επίσης θα αφήνω πολλά πράγματα σε σχόλια αν πιστεύω ότι θα μου είναι χρήσιμα αργότερα. Μην τα σβήνεις. \enote{noted}
+%\item
+%Μην αλλάζεις το κείμενό μου. Εκτός αν έχω κάνει typo ή λέω κάτι λάθος. Έφαγα χρόνο να το γράψω... \enote{noted}
+%\item
+%%use American english dictionary. \enote{noted}
+%\end{itemize}
+%}
 
 
 \section{Structure of work} \label{sec:structure-of-work}
 
 The remainder of this work is organized as follows.
 
-
 \begin{description}
-
 \item
 [Chapter 2] presents related work and existing systems for citation analysis, including commonly used citation indices and data sources, and describes the proposed methodology for detecting and classifying citations, including the underlying data model and processing approach.
 
