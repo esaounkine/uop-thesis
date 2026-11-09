@@ -17,11 +17,21 @@ jobs:
       - name: Build the tex file
         run: cd docs/tex && latexmk -pdf -output-directory=../../out Saunkin.tex
 
+      - name: Build the presentation
+        run: cd docs/presentation && latexmk -pdf -output-directory=../../out/presentation presentation.tex
+
       - name: Upload document
         uses: actions/upload-artifact@v6
         with:
           name: tex-pdf
           path: out/Saunkin.pdf
+          if-no-files-found: error
+
+      - name: Upload presentation
+        uses: actions/upload-artifact@v6
+        with:
+          name: presentation-pdf
+          path: out/presentation/presentation.pdf
           if-no-files-found: error
 
       - name: Upload Latex build logs
