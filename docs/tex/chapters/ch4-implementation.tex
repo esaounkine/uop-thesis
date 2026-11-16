@@ -1,11 +1,17 @@
 % !TEX encoding = UTF-8 Unicode
 % !TEX root = ../Saunkin.tex
 
-\chapter{Implementation} \label{c3:implementation}
+\chapter{Implementation} \label{c4:implementation}
 
-The system implements the citation analysis described in Section~\ref{sec:methodology}.
+The system implements the citation analysis described in Chapter~\ref{c3:methodology}.
 It takes an author name as input and returns citation counts, broken down into direct, co-author or external citations.
 This chapter describes the component structure, data handling and processing steps to produce the results.
+Section~\ref{sec:system-overview} presents the use cases and the architecture of the system.
+Section~\ref{sec:providers} describes the data providers we implemented connection to.
+Sections~\ref{sec:data} and~\ref{sec:storage-caching} describe how the data is stored and cached.
+Section~\ref{sec:processing-pipeline} includes the steps that produce the results.
+Section~\ref{sec:user-interface} presents the user interface.
+Finally, the testing strategy for this system is described in Section~\ref{sec:testing}.
 
 \section{System overview} \label{sec:system-overview}
 
@@ -21,7 +27,7 @@ There are two major use cases that the system attempts to satisfy.
     Matching a profile from one source to a profile from another would require a new algorithm to match identities, which is out of scope for this work.
 
     \item[Citation classification.] Having selected an author, collect all publications and incoming citations, classify them into the groups, to produce the aggregate counts.
-    The backend compares author lists of each citing paper to classify citations according to the algorithm from Section~\ref{sec:methodology}.
+    The backend compares author lists of each citing paper to classify citations according to the algorithm from Chapter~\ref{c3:methodology}.
     The results returned to the frontend contain counts and raw data.
 \end{description}
 
@@ -52,11 +58,11 @@ The layers and components are introduced below.
 
 \subsubsection{Services}
 
-Services is the only component containing the business logic to coordinate the collection and analysis of data.
+Services are classes, and the only component, containing the business logic to coordinate the collection and analysis of data.
 
-Services are classes corresponding to entity domains, exposing methods that provide the functionality expected of each entity.
-They never see the request or the response objects.
-Instead, they receive transformed and sanitized arguments, and return data structures corresponding to their own internal model.
+Each service corresponds to an entity domain, exposing methods that provide the functionality expected of each entity.
+They focus on the main topic of the implementation, and never have to process the request or response objects.
+Instead, they receive transformed and sanitized arguments, and return or throw data structures corresponding to their own internal model.
 This separation keeps the business logic independent of the transport protocol: the same service can be invoked by a controller, injected into another service, or unit tested.
 There is one service for each subject:
 \begin{enumerate}
@@ -79,9 +85,9 @@ For instance, the \textsf{MetricsService} orchestrates the flow to produce the c
 
 \subsubsection{Connectors}
 
-Connectors handle the fetching and processing of data from external sources.
+Connectors are classes that handle the fetching and processing of data from external sources.
 
-Connectors are also classes, one per provider, implementing the communication with external data sources; no other component is allowed to contact a provider directly, instead all requests for external data go through the connectors.
+There is one connector per provider, implementing the communication with an external data source; no other component is allowed to contact a provider directly, instead all requests for external data go through the connectors.
 Every connector implements the same interface (\textsf{ProviderConnector}) with the operations described in Section~\ref{sec:providers}, so the rest of the system treats all sources in the same manner.
 
 A connector transforms the responses into the internal model, that is used by the rest of the system.
@@ -90,10 +96,10 @@ For instance, the \textsf{OpenAlex} connector paginates with 200 records per pag
 
 \subsubsection{Controllers}
 
-Controllers receive user requests and pass them to services.
+Controllers are classes that receive user requests and pass them to services.
 
-Controllers are classes with one method for each API endpoint that the backend exposes.
-They contain minimal business logic, limited to the endpoint structure, as a function of the interface that the service provides.
+Controllers contain one method for each API endpoint that the backend exposes.
+They contain minimal (mostly none) business logic, limited to the endpoint structure, as a function of the interface that the service provides.
 Their responsibility is to validate the incoming parameters, transform the requests into the internal model, call the respective service, transform the service result into a response.
 For instance, a search request without a query parameter is rejected with a status code \textsf{400}, not having reached a service.
 Controllers are separated by the use cases.
@@ -101,9 +107,9 @@ There is \textsf{SearchController} for the author search, \textsf{AuthorControll
 
 \subsubsection{Repositories}
 
-Repositories read from and write to the database tables.
+Repositories are classes that read from and write to the database tables.
 
-Repositories, too, are classes with methods, implementing the functionality that depends on connection to the database; no other component is allowed to make database queries directly, instead all requests for data go through the methods exposed by the repositories.
+Repositories implement the functionality that depends on connection to the database; no other component is allowed to make database queries directly, instead all requests for data go through the methods exposed by the repositories.
 There is one repository for each table: \textsf{publications}, \textsf{authors}, \textsf{contributions}, \textsf{citations}, \textsf{cache} and \textsf{jobs}.
 
 Repositories implement only the SQL operations that the application needs, not every possible operation on every table.
@@ -132,19 +138,19 @@ Figure~\ref{fig:frontend-components} shows how the frontend is composed and how 
 
 \subsubsection{Components}
 
-Components are the reusable atomic widgets that define how a piece of data should look and behave.
+In our implementation, we call Components the stateless \textsf{React} components, that contain the reusable atomic widgets defining how a piece of user interface (UI) or data should look and behave.
 They are not responsible for retrieving the data, only for rendering and styling it.
 For example, a loading indicator or an error message are components, and can be used on different occasions by different containers.
 
 \subsubsection{Containers}
 
-Containers are meaningful groups of related components.
-They manage and request data, implement all the presentation logic around orchestration of the components.
+Containers are also \textsf{React} components that group related components into meaningful units.
+They manage and request data, implement all the coordination logic around orchestration and the lifecycle of the individual stateless \textsf{Components} and other \textsf{Containers}.
 They are responsible for calling the API, showing the loading or error state, as well as wiring together the components and supplying the data to them.
 
 \subsubsection{Pages}
 
-Pages are the largest units of the frontend, each page usually corresponds to a unique path of the address in the browser.
+Pages are the largest \textsf{React} components of the frontend, and each page usually corresponds to a unique path of the address in the browser.
 The application currently consists of two pages: author search (\texttt{/authors}) and author details (\texttt{/author/:provider/:authorId}).
 Each page is built with one or more containers.
 
@@ -644,3 +650,6 @@ PASS src/lib/__tests__/RetryStrategy.test.js
 
 \snote{Colors on Listing \ref{lst:retry-test-run}}
 
+
+In this chapter, we described the implementation of the system: the architecture, the connectors to the supported data sources, the storage of the citation graph and the caching of responses, the processing pipeline that collects and classifies the citations, the user interface, and the automated tests.
+In the next chapter, we attempt to evaluate the results produced by the system.

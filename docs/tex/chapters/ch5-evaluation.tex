@@ -1,7 +1,7 @@
 % !TEX encoding = UTF-8 Unicode
 % !TEX root = ../Saunkin.tex
 
-\chapter{Evaluation} \label{c4:evaluation}
+\chapter{Evaluation} \label{c5:evaluation}
 
 This chapter evaluates the results produced by the system: given an author, return the counts of their total citations by contribution category.
 Each author represents an atomic use case, where the entirety of their publications is considered at the time of evaluation.
@@ -25,7 +25,8 @@ Tables~\ref{tab:sample-publications}--\ref{tab:sample-citations} demonstrate a s
     \centering
     \begin{tabular}{|l|l|}
         \hline
-        Field & Value \\
+        \rowcolor{gray}
+        \tablehead Field & \tablehead Value \\
         \hline\hline
         provider & openalex \\
         pub\_id & W3141363959 \\
@@ -45,7 +46,8 @@ Tables~\ref{tab:sample-publications}--\ref{tab:sample-citations} demonstrate a s
     \footnotesize
     \begin{tabular}{|l|l|l|l|l|}
         \hline
-        provider & author\_id & original\_name & normalised\_name & organisation \\
+        \rowcolor{gray}
+        \tablehead\footnotesize provider & \tablehead\footnotesize author\_id & \tablehead\footnotesize original\_name & \tablehead\footnotesize normalised\_name & \tablehead\footnotesize organisation \\
         \hline\hline
         openalex & A5046481193 & Paris Koloveas & paris koloveas & University of Peloponnese \\
         openalex & A5054180455 & Thanasis Chantzios & thanasis chantzios & University of Peloponnese \\
@@ -59,7 +61,8 @@ Tables~\ref{tab:sample-publications}--\ref{tab:sample-citations} demonstrate a s
     \centering
     \begin{tabular}{|l|l|l|r|}
         \hline
-        provider & pub\_id & author\_id & position \\
+        \rowcolor{gray}
+        \tablehead provider & \tablehead pub\_id & \tablehead author\_id & \tablehead position \\
         \hline\hline
         openalex & W3141363959 & A5046481193 & 1 \\
         openalex & W3141363959 & A5054180455 & 2 \\
@@ -73,7 +76,8 @@ Tables~\ref{tab:sample-publications}--\ref{tab:sample-citations} demonstrate a s
     \centering
     \begin{tabular}{|l|l|l|}
         \hline
-        provider & source\_pub\_id & target\_pub\_id \\
+        \rowcolor{gray}
+        \tablehead provider & \tablehead source\_pub\_id & \tablehead target\_pub\_id \\
         \hline\hline
         openalex & W4386028955 & W3141363959 \\
         openalex & W4200158199 & W3141363959 \\
@@ -100,7 +104,8 @@ WITH selected_author AS (
 \begin{center}
     \begin{tabular}{|l|l|}
         \hline
-        Column & Value \\
+        \rowcolor{gray}
+        \tablehead Column & \tablehead Value \\
         \hline\hline
         provider & openalex \\
         author\_id & A5009411092 \\
@@ -126,7 +131,8 @@ WITH author_contributions AS (
 \begin{center}
     \begin{tabular}{|l|l|l|r|}
         \hline
-        provider & pub\_id & author\_id & position \\
+        \rowcolor{gray}
+        \tablehead provider & \tablehead pub\_id & \tablehead author\_id & \tablehead position \\
         \hline\hline
         openalex & W129833210 & A5009411092 & 3 \\
         openalex & W141810174 & A5009411092 & 3 \\
@@ -152,7 +158,8 @@ WITH author_citations AS (
 \begin{center}
     \begin{tabular}{|r|}
         \hline
-        num\_citations\_total \\
+        \rowcolor{gray}
+        \tablehead num\_citations\_total \\
         \hline\hline
         3584 \\
         \hline
@@ -174,7 +181,8 @@ WITH direct_citations AS (
 \begin{center}
     \begin{tabular}{|r|}
         \hline
-        num\_citations\_direct \\
+        \rowcolor{gray}
+        \tablehead num\_citations\_direct \\
         \hline\hline
         115 \\
         \hline
@@ -198,7 +206,8 @@ WITH indirect_citations AS (
 \begin{center}
     \begin{tabular}{|r|}
         \hline
-        num\_citations\_indirect \\
+        \rowcolor{gray}
+        \tablehead num\_citations\_indirect \\
         \hline\hline
         3469 \\
         \hline
@@ -224,7 +233,8 @@ WITH coauthor_citations AS (
 \begin{center}
     \begin{tabular}{|r|}
         \hline
-        num\_citations\_coauthor \\
+        \rowcolor{gray}
+        \tablehead num\_citations\_coauthor \\
         \hline\hline
         243 \\
         \hline
@@ -248,7 +258,8 @@ WITH external_citations AS (
 \begin{center}
     \begin{tabular}{|r|}
         \hline
-        num\_citations\_external \\
+        \rowcolor{gray}
+        \tablehead num\_citations\_external \\
         \hline\hline
         3226 \\
         \hline
@@ -329,7 +340,8 @@ SELECT
 \begin{center}
     \begin{tabular}{|r|r|r|r|}
         \hline
-        total & direct & co-author & external \\
+        \rowcolor{gray}
+        \tablehead total & \tablehead direct & \tablehead co-author & \tablehead external \\
         \hline\hline
         3584 & 115 & 243 & 3226 \\
         \hline
@@ -364,7 +376,8 @@ As each provider exposes their own publication identifier, and in an attempt to 
         \small
         \begin{tabular}{|l|r|}
             \hline
-            Publications (by normalized\_title) & Count \\
+            \rowcolor{gray}
+            \tablehead\small Publications (by normalized\_title) & \tablehead\small Count \\
             \hline\hline
             on any provider (union) & 236 \\
             on all providers (intersection) & 71 \\
@@ -389,7 +402,8 @@ Table~\ref{tab:provider-comparison} contains the publication and citation counts
     \setlength{\tabcolsep}{3pt}
     \begin{tabular}{|l|r|r|r|r|r|r|r|r|}
         \hline
-        Provider & \shortstack{Publi-\\cations} & \shortstack{With\\citations} & \shortstack{Without\\citations} & Citations & \shortstack{Self-\\citations} & Direct & Co-author & External \\
+        \rowcolor{gray}
+        \tablehead\scriptsize Provider & \tablehead\scriptsize\shortstack{Publi-\\cations} & \tablehead\scriptsize\shortstack{With\\citations} & \tablehead\scriptsize\shortstack{Without\\citations} & \tablehead\scriptsize Citations & \tablehead\scriptsize\shortstack{Self-\\citations} & \tablehead\scriptsize Direct & \tablehead\scriptsize Co-author & \tablehead\scriptsize External \\
         \hline\hline
         \textsf{OpenAlex} & 117 & 85 & 32 & 3584 & \shortstack[r]{358\\(10.0\%)} & \shortstack[r]{115\\(3.2\%)} & \shortstack[r]{243\\(6.8\%)} & \shortstack[r]{3226\\(90.0\%)} \\
         \textsf{Semantic Scholar} & 187 & 104 & 83 & 4093 & \shortstack[r]{351\\(8.6\%)} & \shortstack[r]{96\\(2.3\%)} & \shortstack[r]{255\\(6.2\%)} & \shortstack[r]{3742\\(91.4\%)} \\
@@ -477,3 +491,6 @@ Listing~\ref{lst:example-errors} includes both records.
 Having analyzed one sample author, we have shown that the data returned by each provider does not overlap precisely with data returned by other providers.
 Also, we have demonstrated that none of the sources used in this work was 100\% accurate and curated.
 The accuracy of classification counts, derived from inaccurate data, are still a good statistical approach, though should be treated with care.
+
+In this chapter, we verified how the system classifies the citations of a sample author, by comparing the produced counts with counts calculated independently by the SQL queries.
+We also compared the data of the same author returned by the supported providers, and saw how their coverage differs.
