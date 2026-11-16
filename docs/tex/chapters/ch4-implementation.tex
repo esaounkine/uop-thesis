@@ -395,13 +395,15 @@ Results often include different researchers with the same or a similar name, so 
 
 \begin{figure}[p]
 %\begin{figure}[tb]
-\snote{An idea when you have to many figures is to use [p] that puts them in a single page. Here it looks good this way!}
-\enote{I actually tried with [h] - here, and it looked maximum satisfactory, as it was right where the text spoke about it. but I assume it isn't what the reports usually do.}
+%\snote{An idea when you have to many figures is to use [p] that puts them in a single page. Here it looks good this way!}
+%\enote{I actually tried with [h] - here, and it looked maximum satisfactory, as it was right where the text spoke about it. but I assume it isn't what the reports usually do.}
 
     \centering
     \includegraphics[scale=.4]{include/ui/search-res-1}
     \caption{Authors returned by one of the providers}
     \label{fig:ui-search-results}
+
+~\\~\\
 
     \includegraphics[scale=.4]{include/ui/search-res-2}
     \caption{Stored citation metrics, update date and refresh button}
@@ -413,7 +415,7 @@ Each author name on the result list is accompanied by an affiliation, when avail
 The name is a link to the author detail page, described in Section~\ref{sec:ui-details}.
 
 Figure~\ref{fig:ui-search-controls} has the stored metrics, the update date and the \uicontrol{btn-refresh} button of a profile.
-The profiles, where results have not been collected previously, include a \uicontrol{btn-get-metrics} button \snote{Ideally, buttons should look as it is in the figure, but do not try hard to do it. Only if it does not take time and energy! An inline includegraphics might to the trick.}\enote{done}, to request the citation counts.
+The profiles, where results have not been collected previously, include a \uicontrol{btn-get-metrics} button to request the citation counts.
 For profiles, where citation metrics have previously been requested, and the citation graphs are found in the database, the UI shows the metrics and the date of the last update.
 For these profiles there is a \uicontrol{btn-refresh} button, to request the data again, ignoring the stored graph and cached responses.
 
@@ -513,17 +515,19 @@ The completed result returns the breakdown of the number of citations, with coun
     \label{fig:ui-metrics}
 \end{figure}
 
-Counts summarize the result, but to provide more detailed information and a graph visualization, there are two initially collapsed options at the bottom of an author section.
-
-Figure~\ref{fig:ui-graph} shows the graph chart, opened by clicking the \uicontrol{link-citation-graph} link.
-It represents the selected author, their own papers and the citing papers.
-
 \begin{figure}[p]
     \centering
     \includegraphics[width=\textwidth]{include/ui/author-details-2}
     \caption{The expanded citation graph}
     \label{fig:ui-graph}
 \end{figure}
+
+Counts summarize the result, but to provide more detailed information and a graph visualization, there are two initially collapsed options at the bottom of an author section.
+
+Figure~\ref{fig:ui-graph} shows the graph chart, opened by clicking the \uicontrol{link-citation-graph} link.
+It represents the selected author, their own papers and the citing papers.
+
+
 
 The connecting lines (graph edges) represent the relations between the selected author and their papers (\textsf{contribution}), and the selected author papers and citing papers (\textsf{citation}).
 
@@ -648,8 +652,8 @@ PASS src/lib/__tests__/RetryStrategy.test.js
             ✓ tries maxRetries + 1 times
 \end{lstlisting}
 
-\snote{Colors on Listing \ref{lst:retry-test-run}}
+%\snote{Colors on Listing \ref{lst:retry-test-run}}
 
-
+\section{Conclutions}
 In this chapter, we described the implementation of the system: the architecture, the connectors to the supported data sources, the storage of the citation graph and the caching of responses, the processing pipeline that collects and classifies the citations, the user interface, and the automated tests.
-In the next chapter, we attempt to evaluate the results produced by the system.
+In the next chapter (Chapter \ref{c5:evaluation}), we attempt to evaluate the results produced by the system.

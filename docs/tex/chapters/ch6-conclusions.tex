@@ -16,7 +16,7 @@ The goal of this work, set out in Section~\ref{sec:problem-statement}, was to de
 In this final chapter of the thesis, we summarize what was done and present our conclusions.
 Then we discuss possible extensions of this work.
 
-\section{Conclusions} \label{sec:conclusions}
+%\section{Conclusions} \label{sec:conclusions}
 
 The main conclusion of this work is that the state of the available data sources remains an open problem.
 For our purpose, \textsf{OpenAlex} proved to be the most dependable source, by making a rich dataset freely available to the public, and by exposing well-structured data that we could use in our work (Section~\ref{sec:data-sources}).
@@ -32,10 +32,10 @@ Our original problem was reduced to the construction of a graph (of authors, pap
 As for the system prototype that we built, with no scaling or maintenance in mind, current technologies made it straightforward to develop a single-user interactive service with rich visuals (Chapter~\ref{c4:implementation}).
 
 \section{Future work} \label{sec:future-work}
-
+For future study we may consider two directions: Combining data sources and detecting circular citations. In more details: 
 \begin{description}
 \item
-[Combining the data sources.] Currently, the results are kept separate per provider (Section~\ref{sec:system-overview}), and, for instance, in the example analyzed in Section~\ref{sec:data-source-comparison}, only about 1/3 of the author papers were found in all sources.
+[Combining data sources.] Currently, the results are kept separate per provider (Section~\ref{sec:system-overview}), and, for instance, in the example analyzed in Section~\ref{sec:data-source-comparison}, only about 1/3 of the author papers were found in all sources.
 Combining the results across providers would allow the sources to complement each other, and produce a more complete citation graph for an author.
 This initiative requires identifying the authors and papers across different sources, which was not possible in this work due to various limitations.
 Currently, there are no universally adopted identifiers for authors and papers across the sources, as described in Section~\ref{sec:data-sources}, so this initiative would require a strategy for matching similar names and titles.
