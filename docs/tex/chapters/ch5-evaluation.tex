@@ -3,7 +3,7 @@
 
 \chapter{Evaluation} \label{c5:evaluation}
 
-This chapter evaluates the results produced by the system: given an author, return the counts of their total citations by contribution category.
+This chapter evaluates the results produced by the system that takes as input the name of an author and returns as output the counts of the author's total citations by contribution category.
 Each author represents an atomic use case, where the entirety of their publications is considered at the time of evaluation.
 Section~\ref{sec:classification-checks} evaluates the classification algorithm in isolation, by comparing the output of the respective function to manually counted citations for a single use case.
 Section~\ref{sec:data-source-comparison} compares the data and results of the same author, retrieved from different providers.
@@ -11,17 +11,11 @@ Section~\ref{sec:data-source-comparison} compares the data and results of the sa
 \section{Citation classification} \label{sec:classification-checks}
 
 To evaluate the work of the citation classification function, let us consider an author, for instance \emph{Spiros Skiadopoulos}.
-Following the implemented methodology, described in Section~\ref{sec:processing-pipeline}, the evaluation is carried out in the context of a single provider, for instance \emph{OpenAlex}.
+Following the implemented methodology, described in Section~\ref{sec:processing-pipeline}, the evaluation is carried out in the context of a single provider, for instance \emph{OpenAlex} \snote{Is this the right font? Check all document.}.
 
 The classification function compares the authors of each cited and citing publication, to calculate the citation classification as \emph{direct}, \emph{co-author} or \emph{external}.
 
-To operate on realistic data, we have retrieved all records from the selected provider for the selected author on 10 October 2026, and stored a normalized citation graph in the local database.
-Going forward, to analyze data, we will be using SQL queries and their results; this will help make the evaluation framework clear to understand and reproducible.
-
-Tables~\ref{tab:sample-publications}--\ref{tab:sample-citations} demonstrate a sample of records in the tables of the local database.
-
-
-\begin{table}[tb]
+\begin{table}[p]
     \centering
     \begin{tabular}{|l|l|}
         \hline
@@ -39,9 +33,9 @@ Tables~\ref{tab:sample-publications}--\ref{tab:sample-citations} demonstrate a s
     \end{tabular}
     \caption{A sample record of the \texttt{publications} table}
     \label{tab:sample-publications}
-\end{table}
-
-\begin{table}[tb]
+%\end{table}
+~\\~\\~\\\sla
+%\begin{table}[tb]
     \centering
     \footnotesize
     \begin{tabular}{|l|l|l|l|l|}
@@ -55,9 +49,9 @@ Tables~\ref{tab:sample-publications}--\ref{tab:sample-citations} demonstrate a s
     \end{tabular}
     \caption{Sample records of the \texttt{authors} table}
     \label{tab:sample-authors}
-\end{table}
-
-\begin{table}[tb]
+%\end{table}
+~\\~\\~\\\sla
+%\begin{table}[tb]
     \centering
     \begin{tabular}{|l|l|l|r|}
         \hline
@@ -70,9 +64,9 @@ Tables~\ref{tab:sample-publications}--\ref{tab:sample-citations} demonstrate a s
     \end{tabular}
     \caption{Sample records of the \texttt{contributions} table}
     \label{tab:sample-contributions}
-\end{table}
-
-\begin{table}[tb]
+%\end{table}
+    ~\\~\\~\\\sla
+%\begin{table}[tb]
     \centering
     \begin{tabular}{|l|l|l|}
         \hline
@@ -86,6 +80,11 @@ Tables~\ref{tab:sample-publications}--\ref{tab:sample-citations} demonstrate a s
     \caption{Sample records of the \texttt{citations} table}
     \label{tab:sample-citations}
 \end{table}
+
+To operate on realistic data, we have retrieved all records from the selected provider for the selected author on 10 October 2026, and stored a normalized citation graph in the local database.
+Going forward, to analyze data, we will be using SQL queries and their results; this will help make the evaluation framework clear to understand and reproducible.
+
+Tables~\ref{tab:sample-publications}--\ref{tab:sample-citations} demonstrate a sample of records in the tables of the local database.
 
 Each of the steps below defines a named query, building on the previously defined named queries.
 The complete query is built at the end, combining all the steps and producing the final result.
@@ -105,7 +104,7 @@ WITH selected_author AS (
     \begin{tabular}{|l|l|}
         \hline
         \rowcolor{gray}
-        \tablehead Column & \tablehead Value \\
+        \tableheadnorm Column & \tableheadnorm Value \\
         \hline\hline
         provider & openalex \\
         author\_id & A5009411092 \\
@@ -132,7 +131,7 @@ WITH author_contributions AS (
     \begin{tabular}{|l|l|l|r|}
         \hline
         \rowcolor{gray}
-        \tablehead provider & \tablehead pub\_id & \tablehead author\_id & \tablehead position \\
+        \tableheadnorm provider & \tableheadnorm pub\_id & \tableheadnorm author\_id & \tableheadnorm position \\
         \hline\hline
         openalex & W129833210 & A5009411092 & 3 \\
         openalex & W141810174 & A5009411092 & 3 \\
@@ -159,7 +158,7 @@ WITH author_citations AS (
     \begin{tabular}{|r|}
         \hline
         \rowcolor{gray}
-        \tablehead num\_citations\_total \\
+        \tableheadnorm num\_citations\_total \\
         \hline\hline
         3584 \\
         \hline
@@ -182,7 +181,7 @@ WITH direct_citations AS (
     \begin{tabular}{|r|}
         \hline
         \rowcolor{gray}
-        \tablehead num\_citations\_direct \\
+        \tableheadnorm num\_citations\_direct \\
         \hline\hline
         115 \\
         \hline
@@ -207,7 +206,7 @@ WITH indirect_citations AS (
     \begin{tabular}{|r|}
         \hline
         \rowcolor{gray}
-        \tablehead num\_citations\_indirect \\
+        \tableheadnorm num\_citations\_indirect \\
         \hline\hline
         3469 \\
         \hline
@@ -234,7 +233,7 @@ WITH coauthor_citations AS (
     \begin{tabular}{|r|}
         \hline
         \rowcolor{gray}
-        \tablehead num\_citations\_coauthor \\
+        \tableheadnorm num\_citations\_coauthor \\
         \hline\hline
         243 \\
         \hline
@@ -259,7 +258,7 @@ WITH external_citations AS (
     \begin{tabular}{|r|}
         \hline
         \rowcolor{gray}
-        \tablehead num\_citations\_external \\
+        \tableheadnorm num\_citations\_external \\
         \hline\hline
         3226 \\
         \hline
@@ -341,7 +340,7 @@ SELECT
     \begin{tabular}{|r|r|r|r|}
         \hline
         \rowcolor{gray}
-        \tablehead total & \tablehead direct & \tablehead co-author & \tablehead external \\
+        \tableheadnorm total & \tableheadnorm direct & \tableheadnorm co-author & \tableheadnorm external \\
         \hline\hline
         3584 & 115 & 243 & 3226 \\
         \hline
