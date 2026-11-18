@@ -11,7 +11,7 @@ Section~\ref{sec:data-source-comparison} compares the data and results of the sa
 \section{Citation classification} \label{sec:classification-checks}
 
 To evaluate the work of the citation classification function, let us consider an author, for instance \emph{Spiros Skiadopoulos}.
-Following the implemented methodology, described in Section~\ref{sec:processing-pipeline}, the evaluation is carried out in the context of a single provider, for instance \emph{OpenAlex} \snote{Is this the right font? Check all document.}.
+Following the implemented methodology, described in Section~\ref{sec:processing-pipeline}, the evaluation is carried out in the context of a single provider, for instance \textsf{OpenAlex} \snote{Is this the right font? Check all document.}\enote{done}.
 
 The classification function compares the authors of each cited and citing publication, to calculate the citation classification as \emph{direct}, \emph{co-author} or \emph{external}.
 
@@ -437,7 +437,7 @@ The citing papers do not always include the profile identifier, resulting in eve
 The following examples demonstrate the differences.
 
 The first example is the citation discussed in Chapter~\ref{c1:intro}, where publication~\cite{Kalnis2007} cites publication~\cite{Ghinita2007}.
-\textsf{OpenAlex} and \textsf{Semantic Scholar} return author identities for both papers, so for Spiros Skiadopoulos the citation is classified as \textsf{co-author}.
+\textsf{OpenAlex} and \textsf{Semantic Scholar} return author identities for both papers, so for \emph{Spiros Skiadopoulos} the citation is classified as \textsf{co-author}.
 For \textsf{Google Scholar} data, the same citation is classified as \textsf{external}.
 Listing~\ref{lst:example-coauthor} shows the parsed data from the responses.
 

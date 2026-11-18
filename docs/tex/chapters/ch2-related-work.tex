@@ -100,7 +100,7 @@ The comparison of the sources is summarized in Table~\ref{tab:data-sources}. The
         \textsf{CrossRef} & Open API, free & Over 180M \textsf{DOI} records & Count only & No author IDs \\
         \textsf{OpenCitations} & Open API and dumps, free & Over 2B citation links & Yes & \textsf{ORCID} only \\
         \textsf{DBLP} & Open API and dump, free & 6.6M works; CS only & No & Strong disambiguation \\
-        \textsf{Scopus} & Paid subscription & About 90M curated records & Yes & Scopus author IDs \\
+        \textsf{Scopus} & Paid subscription & About 90M curated records & Yes & \textsf{Scopus} author IDs \\
         LLM & Model query & Broad, unverifiable & Yes & No identifiers \\
         \hline
     \end{tabular}
@@ -132,7 +132,7 @@ This representation enables the application of graph-based methods to quantify i
 %Let me get some citations....
 %}
 
-In addition to trivial citation counts, other metrics have been proposed to evaluate research impact, such as the \textsf{Hirsch index} (h-index)~\cite{Hirsch2005}, which attempts to capture both productivity and citation influence.
+In addition to trivial citation counts, other metrics have been proposed to evaluate research impact, such as the \textsf{Hirsch index} (\textsf{h-index})~\cite{Hirsch2005}, which attempts to capture both productivity and citation influence.
 
 These approaches form the base of many existing citation analysis systems and are commonly used in the evaluation of scientific output.
 
@@ -147,19 +147,19 @@ Several studies have highlighted the importance of distinguishing self-citations
 Nevertheless, definitions and methodologies vary across studies, and many systems do not provide explicit or consistent classification~\cite{Glnzel2003BIBLIOMETRICSAA, Costas2010}.
 
 Recent work has focused specifically on the impact of self-citations.
-For example, Fiorillo~\cite{Fiorillo2024} introduces the Fi-score, a metric designed to assess the influence of self-citations on academic impact.
+For example, Fiorillo~\cite{Fiorillo2024} introduces the \textsf{Fi-score}, a metric designed to assess the influence of self-citations on academic impact.
 
 Some academic databases also recognize the importance of distinguishing self-citations from external citations.
 For instance, \textsf{Scopus} platform allows to filter out self-citations at the author level.
 While the algorithm followed in each case is not always well understood, the availability of these metrics indicates that self-citation is considered as a factor in the evaluation of scientific impact.
 This observation supports the need for explicit definition and transparent methodology in identifying and classifying self-citations.
 
-Figure~\ref{fig:scopus-ui} shows how self-citations can be excluded from the results in Scopus interface.
+Figure~\ref{fig:scopus-ui} shows how self-citations can be excluded from the results in \textsf{Scopus} interface.
 
 \begin{figure}[tb]
     \centering
     \includegraphics[scale=.3]{include/fig-scopus-2}
-    \caption{Scopus interface allows to remove self-citations from the metrics}
+    \caption{\textsf{Scopus} interface allows to remove self-citations from the metrics}
     \label{fig:scopus-ui}
 \end{figure}
 
