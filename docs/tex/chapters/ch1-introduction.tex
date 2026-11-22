@@ -27,7 +27,14 @@ In particular, citations can be divided into two main categories:
 
 
 This distinction is important because external citations are typically considered a stronger indicator of influence, as they reflect recognition from independent researchers.
-Self-citations are not inherently bad, and may occur naturally in continuous cumulative research; still, they can inflate citation-based metrics if used excessively.
+Self-citations are not inherently bad, and may occur naturally in continuous research; still, they can inflate citation-based metrics if used excessively.
+
+The effects of self-citation go beyond the count.
+Papers with more citations are easier to discover, and carry more authority with the reader.
+This makes them more likely to be cited by others, even when the first citations came from the same authors~\cite{Fowler2007, R2008ImpactReinforcing}.
+None of this makes self-citations wrong on their own.
+For authors to build on their earlier work is a normal practice, and citing their own work is natural and expected.
+
 When considering the citation count of an author, we want to know what part of it comes from independent publications, and what part from the same author and their collaborators.
 
 \section{Problem statement} \label{sec:problem-statement}
@@ -103,7 +110,17 @@ In citing [GPK2007], they refer to their own earlier publication, and this citat
 For Spiros Skiadopoulos, who only contributed to [GPK2007], determining whether the citation of [GPK2007] in [KGMP2007] is a self-citation or not is not that clear.
 He did not write [KGMP2007], and had no part in the decision to cite [GPK2007]; from this perspective, the citation came from other researchers.
 On the other hand, the citing article was written by two of his co-authors, who know [GPK2007] well, so the citation is not fully independent either.
-Some would count it as his self-citation and some would not, and indeed the definitions vary across studies~\cite{Glnzel2003BIBLIOMETRICSAA, Costas2010}.
+
+Generally, considering how to classify the citation, where an author had no input presents a dilemma.
+If counted as external, the citation will credit the author with recognition that came from their own collaborators.
+If counted as a self-citation, it attributes to them a reference they did not make, and turns their past collaboration into a reason to discount it.
+Though neither of the described outcomes reflects their actual role.
+In our example, the decision to cite [GPK2007] was made by Panos Kalnis and Gabriel Ghinita, and the citation record of Spiros Skiadopoulos depends on their choice rather than on his own: he has no input in it, but has to bear the consequences.
+
+Some would count it as his self-citation and some would not, the definitions vary across studies~\cite{Glnzel2003BIBLIOMETRICSAA, Costas2010}.
+The services reporting the citations, and presenting attribution and classification of these citations, do not separate self-citations at all, while others allow excluding them without explaining which citations are removed (Section~\ref{sec:research-on-self-citation}).
+As a result, the same researcher may look different depending on where the numbers come from, and the numbers taken from two services cannot be compared directly.
+For the same example of Spiros Skiadopoulos, the share of self-citations among his citations ranges from 10\% in \textsf{OpenAlex} to 1.4\% in \textsf{Google Scholar}, depending only on the source of the data (Chapter~\ref{c5:evaluation}).
 There are different approaches resulting in different outcomes: the citation can be classified as an \emph{external citation}, or as a lighter version of \emph{self-citation}, as the papers do share some authors, even though Skiadopoulos is not one of them.
 In Section~\ref{sec:citation-classification}, we call the self-citation of Panos Kalnis and Gabriel Ghinita a \emph{direct self-citation}, and its lighter version a \emph{co-author self-citation}.
 
