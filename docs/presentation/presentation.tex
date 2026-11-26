@@ -435,18 +435,6 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}[noframenumbering]{Backup: classification in SQL}
-  \footnotesize
-  \begin{itemize}
-    \item \texttt{author\_citations}: citations whose target is a publication of the author
-    \item \texttt{direct\_citations}: the source is also a publication of the author
-    \item \texttt{coauthor\_citations}: the rest, where the source and target share any author
-    \item \texttt{external\_citations}: the rest, with no shared author
-  \end{itemize}
-  \vspace{1ex}
-  The three subsets are disjoint and add up to the total, which is how the system output was checked.
-\end{frame}
-
 \begin{frame}[noframenumbering]{Backup: testing}
   \begin{itemize}
     \item Backend unit tests with Jest, one suite per component
